@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">MyWishListApp</string>
+    <string name="update_wish">Update Wish</string>
+    <string name="add_wish">Add Wish</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="wish_created">Wish has been created</string>
+    <string name="wish_updated">Wish has been updated</string>
+    <string name="fill_all_fields">Please fill in all fields</string>
+</resources>
