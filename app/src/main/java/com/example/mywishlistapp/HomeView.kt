@@ -84,8 +84,7 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
 
     Scaffold(
         modifier = Modifier
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+            .fillMaxSize(),
         topBar = {
             AppBarView(
                 title = "WishList",

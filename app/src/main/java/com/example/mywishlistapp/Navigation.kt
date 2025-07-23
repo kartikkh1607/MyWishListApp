@@ -16,12 +16,12 @@ import androidx.navigation.navArgument
 
 @Composable
 fun Navigation(
-    viewModel: WishViewModel = viewModel(),
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController,
+    viewModel: WishViewModel
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.HomeScreen.route
+        startDestination = Screen.DashboardScreen.route
     ) {
         // Home Screen with Material Shared-Axis Horizontal Transition
         composable(
@@ -155,6 +155,26 @@ fun Navigation(
             }
         ) {
             SearchScreen(navController = navController, viewModel = viewModel)
+        }
+
+        // Dashboard Screen
+        composable(route = Screen.DashboardScreen.route) {
+            DashboardScreen(navController = navController, viewModel = viewModel)
+        }
+
+        // WishList Screen (modified HomeView)
+        composable(route = Screen.WishListScreen.route) {
+            HomeView(navController, viewModel = viewModel)
+        }
+
+        // Calendar Screen (placeholder)
+        composable(route = Screen.CalendarScreen.route) {
+            CalendarScreen(navController = navController, viewModel = viewModel)
+        }
+
+        // Settings Screen (placeholder)
+        composable(route = Screen.SettingsScreen.route) {
+            SettingsScreen(navController = navController, viewModel = viewModel)
         }
     }
 }

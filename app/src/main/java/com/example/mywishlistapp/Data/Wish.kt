@@ -54,7 +54,22 @@ data class Wish(
     @ColumnInfo(name = "wish-tags")
     val tags: List<String> = emptyList(),
     @ColumnInfo(name = "wish-priority")
-    val priority: Priority = Priority.MEDIUM
+    val priority: Priority = Priority.MEDIUM,
+    // New fields for modern design
+    @ColumnInfo(name = "wish-image-url")
+    val imageUrl: String = "",
+    @ColumnInfo(name = "wish-price")
+    val price: String = "",
+    @ColumnInfo(name = "wish-rating")
+    val rating: Float = 0f,
+    @ColumnInfo(name = "wish-is-completed")
+    val isCompleted: Boolean = false,
+    @ColumnInfo(name = "wish-due-date")
+    val dueDate: Long? = null, // Timestamp
+    @ColumnInfo(name = "wish-created-date")
+    val createdDate: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "wish-notes")
+    val notes: String = ""
 )
 
 object DummyWish {

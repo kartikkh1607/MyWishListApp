@@ -73,6 +73,12 @@ dependencies {
     
     // Gson for TypeConverters
     implementation("com.google.code.gson:gson:2.10.1")
+    
+    // Image loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    
+    // Date picker
+    implementation("io.github.vanpra.compose-material-dialogs:datetime:0.9.0")
 
     // Testing
     testImplementation(libs.junit)
