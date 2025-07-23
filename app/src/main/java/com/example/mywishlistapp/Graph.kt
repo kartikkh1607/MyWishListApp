@@ -14,7 +14,9 @@ object Graph {
     }
 
     fun provide(context: Context){
-        dataBase = Room.databaseBuilder(context , WishDataBase::class.java , "wishList.db").build()
+        dataBase = Room.databaseBuilder(context , WishDataBase::class.java , "wishList.db")
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
 }

@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.mywishlistapp"
-    compileSdk = 34 // ✅ SDK 36 is not released yet. Use stable: 34
+compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.mywishlistapp"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -52,6 +52,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
 
+    implementation("androidx.compose.material:material-icons-extended")
     // Navigation
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
@@ -69,6 +70,9 @@ dependencies {
 
     // Material (classic for SwipeToDismiss)
     implementation("androidx.compose.material:material:1.6.1")
+    
+    // Gson for TypeConverters
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // Testing
     testImplementation(libs.junit)
