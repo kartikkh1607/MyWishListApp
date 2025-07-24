@@ -70,6 +70,7 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
 
     val context = LocalContext.current
     val wishList = viewModel.getAllWishes.collectAsState(initial = emptyList())
+    val unreadNotificationCount by viewModel.getUnreadNotificationCount().collectAsState()
     
     // Loading and UI states
     var isLoading by remember { mutableStateOf(true) }

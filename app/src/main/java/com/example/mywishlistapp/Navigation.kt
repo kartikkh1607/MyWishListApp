@@ -162,9 +162,9 @@ fun Navigation(
             DashboardScreen(navController = navController, viewModel = viewModel)
         }
 
-        // WishList Screen (modified HomeView)
+        // WishList Screen (modern design)
         composable(route = Screen.WishListScreen.route) {
-            HomeView(navController, viewModel = viewModel)
+            WishListScreen(navController = navController, viewModel = viewModel)
         }
 
         // Calendar Screen (placeholder)
@@ -175,6 +175,11 @@ fun Navigation(
         // Settings Screen (placeholder)
         composable(route = Screen.SettingsScreen.route) {
             SettingsScreen(navController = navController, viewModel = viewModel)
+        }
+        
+        // Notifications Screen
+        composable(route = Screen.NotificationsScreen.route) {
+            NotificationsScreen(navController = navController, viewModel = viewModel)
         }
     }
 }

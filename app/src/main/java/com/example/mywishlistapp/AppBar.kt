@@ -38,7 +38,9 @@ fun AppBarView(
     title: String,
     onBackNavClicked: () -> Unit = {},
     onSearchClicked: () -> Unit = {},
-    showActions: Boolean = title.contains("wishlist", ignoreCase = true)
+    onNotificationClicked: () -> Unit = {},
+    showActions: Boolean = title.contains("wishlist", ignoreCase = true),
+    hasNotifications: Boolean = false
 ) {
     var isPressed by remember { mutableStateOf(false) }
     

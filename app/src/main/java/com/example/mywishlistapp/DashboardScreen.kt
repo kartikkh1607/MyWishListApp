@@ -1,5 +1,7 @@
 package com.example.mywishlistapp
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,119 +30,239 @@ import com.example.mywishlistapp.Data.Wish
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Data class for category items
+data class CategoryItem(
+    val name: String,
+    val icon: ImageVector,
+    val color: Color
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) {
     val wishList = viewModel.getAllWishes.collectAsState(initial = emptyList())
+    val unreadNotificationCount by viewModel.getUnreadNotificationCount().collectAsState()
     val currentTime = Calendar.getInstance().time
     val dateFormat = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val hourOfDay = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    
+    val greeting = when (hourOfDay) {
+        in 5..11 -> "Good Morning"
+        in 12..16 -> "Good Afternoon"
+        in 17..20 -> "Good Evening"
+        else -> "Good Night"
+    }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFF8FAFF),
-                        Color(0xFFE8F0FE)
-                    )
-                )
-            ),
-        contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 16.dp,
-            bottom = 24.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+            .background(Color(0xFFF8F9FA))
     ) {
-        // User Greeting Section
-        item {
-            GreetingSection(currentTime = dateFormat.format(currentTime))
-        }
+        // Top Header with functional icons
+        TopHeaderSection(
+            onNotificationClick = {
+                // Navigate to Notifications screen
+                navController.navigate(Screen.NotificationsScreen.route)
+            },
+            onSearchClick = {
+                navController.navigate(Screen.SearchScreen.route)
+            },
+            hasNotifications = unreadNotificationCount > 0
+        )
+        
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 8.dp,
+                bottom = 12.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Enhanced User Greeting Section
+            item {
+                GreetingSection(
+                    greeting = greeting,
+                    currentTime = dateFormat.format(currentTime),
+                    userName = "Kartik",
+                    navController = navController
+                )
+            }
 
-        // Main Dashboard Illustration
-        item {
-            DashboardIllustration()
-        }
+            // Quick Stats
+            item {
+                QuickStatsSection(wishList = wishList.value)
+            }
 
-        // Quick Stats
-        item {
-            QuickStatsSection(wishList = wishList.value)
-        }
+            // Category Shortcuts
+            item {
+                CategoryShortcuts(navController = navController)
+            }
 
-        // Category Shortcuts
-        item {
-            CategoryShortcuts(navController = navController)
-        }
-
-        // Recent Wishes
-        item {
-            RecentWishesSection(
-                wishes = wishList.value.take(3),
-                onWishClick = { wish ->
-                    navController.navigate(Screen.AddScreen.route + "/${wish.id}")
+            // Recent Wishes (only if there are wishes)
+            if (wishList.value.isNotEmpty()) {
+                item {
+                    RecentWishesSection(
+                        wishes = wishList.value.take(2), // Reduced to 2 for less clutter
+                        onWishClick = { wish ->
+                            navController.navigate(Screen.AddScreen.route + "/${wish.id}")
+                        },
+                        onViewAllClick = {
+                            navController.navigate(Screen.WishListScreen.route)
+                        }
+                    )
                 }
-            )
-        }
-
-        // Today's To-Do Section
-        item {
-            TodayToDoSection(wishes = wishList.value.filter { !it.isCompleted })
+            }
         }
     }
 }
 
 @Composable
-fun GreetingSection(currentTime: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+fun TopHeaderSection(
+    onNotificationClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
+    hasNotifications: Boolean = false
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+        IconButton(
+            onClick = onNotificationClick,
+            modifier = Modifier.size(48.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF667EEA),
-                                Color(0xFF764BA2)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
+            Box {
                 Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = Color.White,
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Notifications",
+                    tint = Color(0xFF1A1D29),
                     modifier = Modifier.size(24.dp)
                 )
+                // Notification badge (only show when there are notifications)
+                if (hasNotifications) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE91E63))
+                            .align(Alignment.TopEnd)
+                    )
+                }
             }
+        }
+        
+        Text(
+            text = "WISHLIST",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF667EEA),
+            letterSpacing = 1.2.sp
+        )
+        
+        IconButton(
+            onClick = onSearchClick,
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Search",
+                tint = Color(0xFF1A1D29),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.width(16.dp))
+@Composable
+fun GreetingSection(
+    greeting: String,
+    currentTime: String,
+    userName: String,
+    navController: NavHostController
+){
+    var visible by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+    
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(600)) + slideInVertically(
+            initialOffsetY = { -40 },
+            animationSpec = tween(600)
+        )
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF667EEA),
+                                    Color(0xFF764BA2)
+                                )
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = userName.first().uppercase(),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
 
-            Column {
-                Text(
-                    text = "Hello, User! 👋",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1D29)
-                )
-                Text(
-                    text = currentTime,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF64748B)
-                )
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "$greeting, $userName! 👋",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1D29)
+                    )
+                    Text(
+                        text = currentTime,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF64748B)
+                    )
+                }
+                
+                // Add quick action button
+                FloatingActionButton(
+                    onClick = { 
+                        // Navigate to AddScreen to create a new wish
+                        navController.navigate(Screen.AddScreen.route + "/0")
+                    },
+                    modifier = Modifier.size(40.dp),
+                    containerColor = Color(0xFFE91E63),
+                    contentColor = Color.White
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Wish",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }
@@ -239,47 +361,68 @@ fun StatCard(
     color: Color,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    var visible by remember { mutableStateOf(false) }
+    val animationDelay = remember { (0..300).random() }
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(animationDelay.toLong())
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(500, delayMillis = animationDelay)) +
+                slideInVertically(
+                    initialOffsetY = { 60 },
+                    animationSpec = tween(
+                        500,
+                        delayMillis = animationDelay,
+                        easing = FastOutSlowInEasing
+                    )
+                )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Card(
+            modifier = modifier,
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(color.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(20.dp)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(color.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1D29)
+                )
+
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF64748B),
+                    textAlign = TextAlign.Center
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1D29)
-            )
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFF64748B),
-                textAlign = TextAlign.Center
-            )
         }
     }
 }
@@ -366,32 +509,71 @@ fun CategoryShortcutCard(
 @Composable
 fun RecentWishesSection(
     wishes: List<Wish>,
-    onWishClick: (Wish) -> Unit
+    onWishClick: (Wish) -> Unit,
+    onViewAllClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = "Recent Wishes",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1D29),
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Recent Wishes",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1D29)
+                )
+                
+                if (wishes.isNotEmpty()) {
+                    TextButton(
+                        onClick = onViewAllClick
+                    ) {
+                        Text(
+                            text = "View All",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color(0xFF667EEA)
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
 
             if (wishes.isEmpty()) {
-                Text(
-                    text = "No wishes yet. Add your first wish!",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF64748B),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.StarBorder,
+                        contentDescription = null,
+                        tint = Color(0xFF94A3B8),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "No wishes yet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF64748B),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Add your first wish to get started!",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF94A3B8),
+                        textAlign = TextAlign.Center
+                    )
+                }
             } else {
                 wishes.forEach { wish ->
                     RecentWishItem(
@@ -536,9 +718,3 @@ fun ToDoItem(wish: Wish) {
         }
     }
 }
-
-data class CategoryItem(
-    val name: String,
-    val icon: ImageVector,
-    val color: Color
-)

@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Notification permissions -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:name=".WishListApp"
         android:allowBackup="true"
@@ -15,7 +21,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.MyWishListApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,6 +28,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
+        <!-- Broadcast Receivers for Reminders -->
+        <receiver
+            android:name=".notifications.ReminderReceiver"
+            android:enabled="true"
+            android:exported="false" />
+            
+        <receiver
+            android:name=".notifications.ReminderActionReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

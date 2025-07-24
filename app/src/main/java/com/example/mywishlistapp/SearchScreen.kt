@@ -27,6 +27,7 @@ import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Priority
 import com.example.mywishlistapp.Data.Wish
 import com.example.mywishlistapp.ui.components.*
+import com.example.mywishlistapp.ui.theme.Spacing
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 

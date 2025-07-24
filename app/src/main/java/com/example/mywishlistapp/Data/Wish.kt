@@ -69,7 +69,12 @@ data class Wish(
     @ColumnInfo(name = "wish-created-date")
     val createdDate: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "wish-notes")
-    val notes: String = ""
+    val notes: String = "",
+    // Calendar and reminder fields
+    @ColumnInfo(name = "wish-scheduled-date")
+    val scheduledDate: String? = null, // Format: yyyy-MM-dd
+    @ColumnInfo(name = "wish-reminder-set")
+    val reminderSet: Boolean = false
 )
 
 object DummyWish {

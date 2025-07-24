@@ -14,6 +14,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +29,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -37,6 +41,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import java.text.DecimalFormat
+import java.util.Locale
 import com.example.mywishlistapp.Data.Wish
 import com.example.mywishlistapp.Data.Priority
 import com.example.mywishlistapp.ui.components.*
@@ -70,6 +77,8 @@ fun AddEditDetailView(
             viewModel.wishCategoryState = ""
             viewModel.wishTagsState = ""
             viewModel.wishPriorityState = Priority.MEDIUM
+            viewModel.wishPriceState = ""
+            viewModel.wishImageUrlState = ""
         }
     }
 
@@ -83,6 +92,8 @@ fun AddEditDetailView(
                 viewModel.wishCategoryState = wish.value.category
                 viewModel.wishTagsState = wish.value.tags.joinToString(", ")
                 viewModel.wishPriorityState = wish.value.priority
+                viewModel.wishPriceState = wish.value.price?.toString() ?: ""
+                viewModel.wishImageUrlState = wish.value.imageUrl ?: ""
             }
         }
     }
@@ -133,6 +144,17 @@ fun AddEditDetailView(
                             .fillMaxWidth()
                             .padding(bottom = 4.dp),
                         textAlign = TextAlign.Center
+                    )
+                }
+
+                // Basic Information Section
+                item {
+                    Text(
+                        text = "📝 Basic Information",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF667EEA),
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
                     )
                 }
 
@@ -226,6 +248,42 @@ fun AddEditDetailView(
                     )
                 }
 
+                // Price and Image Section
+                item {
+                    Text(
+                        text = "💰 Price & Image",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF667EEA),
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
+                    )
+                }
+
+                item {
+                    CurrencyTextField(
+                        value = viewModel.wishPriceState,
+                        onValueChange = { viewModel.onWishPriceChanged(it) }
+                    )
+                }
+
+                item {
+                    ImageUrlField(
+                        value = viewModel.wishImageUrlState,
+                        onValueChange = { viewModel.onWishImageUrlChanged(it) }
+                    )
+                }
+
+                // Categories and Tags Section
+                item {
+                    Text(
+                        text = "🏷️ Categories & Tags",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF667EEA),
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
+                    )
+                }
+
                 item {
                     CategoryDropdown(
                         selectedCategory = viewModel.wishCategoryState,
@@ -239,6 +297,17 @@ fun AddEditDetailView(
                         onValueChanged = { viewModel.onWishTagsChanged(it) },
                         label = "Enter tags (comma separated)",
                         placeholder = "e.g., smartphone, android, budget"
+                    )
+                }
+
+                // Priority Section
+                item {
+                    Text(
+                        text = "⭐ Priority",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF667EEA),
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
                     )
                 }
 
@@ -270,7 +339,9 @@ item {
                             description = viewModel.wishDescriptionState.trim(),
                             category = viewModel.wishCategoryState,
                             tags = viewModel.getTagsList(),
-                            priority = viewModel.wishPriorityState
+                            priority = viewModel.wishPriorityState,
+                            price = viewModel.wishPriceState.trim(),
+                            imageUrl = viewModel.wishImageUrlState.takeIf { it.isNotBlank() } ?: ""
                         )
                     )
                     navController.navigateUp()
@@ -281,7 +352,9 @@ item {
                             description = viewModel.wishDescriptionState.trim(),
                             category = viewModel.wishCategoryState,
                             tags = viewModel.getTagsList(),
-                            priority = viewModel.wishPriorityState
+                            priority = viewModel.wishPriorityState,
+                            price = viewModel.wishPriceState.trim(),
+                            imageUrl = viewModel.wishImageUrlState.takeIf { it.isNotBlank() } ?: ""
                         )
                     )
                     navController.navigateUp()
@@ -393,6 +466,138 @@ fun ModernTextField(
                 imeAction = if (isDescription) ImeAction.Default else ImeAction.Next
             )
         )
+    }
+}
+
+@Composable
+fun CurrencyTextField(
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = { newValue ->
+            // Only allow numbers and decimal point
+            if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
+                onValueChange(newValue)
+            }
+        },
+        label = {
+            Text(
+                text = "Price (Optional)",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF667EEA),
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        placeholder = {
+            Text(
+                text = "e.g., 299.99",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF9CA3AF).copy(alpha = 0.8f)
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.AttachMoney,
+                contentDescription = null,
+                tint = Color(0xFF667EEA)
+            )
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(28.dp),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal,
+            imeAction = ImeAction.Next
+        ),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = Color(0xFF667EEA),
+            unfocusedBorderColor = Color(0xFFE1E8FF),
+            cursorColor = Color(0xFF667EEA),
+            focusedLabelColor = Color(0xFF667EEA),
+            unfocusedLabelColor = Color(0xFF8B9DC3),
+            focusedTextColor = Color(0xFF1A1D29),
+            unfocusedTextColor = Color(0xFF2D3748),
+            focusedContainerColor = Color.White.copy(alpha = 0.8f),
+            unfocusedContainerColor = Color.White.copy(alpha = 0.6f)
+        )
+    )
+}
+
+@Composable
+fun ImageUrlField(
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    Column {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = {
+                Text(
+                    text = "Image URL (Optional)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF667EEA),
+                    fontWeight = FontWeight.SemiBold
+                )
+            },
+            placeholder = {
+                Text(
+                    text = "https://example.com/image.jpg",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF9CA3AF).copy(alpha = 0.8f)
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Image,
+                    contentDescription = null,
+                    tint = Color(0xFF667EEA)
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            shape = RoundedCornerShape(28.dp),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Uri,
+                imeAction = ImeAction.Next
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF667EEA),
+                unfocusedBorderColor = Color(0xFFE1E8FF),
+                cursorColor = Color(0xFF667EEA),
+                focusedLabelColor = Color(0xFF667EEA),
+                unfocusedLabelColor = Color(0xFF8B9DC3),
+                focusedTextColor = Color(0xFF1A1D29),
+                unfocusedTextColor = Color(0xFF2D3748),
+                focusedContainerColor = Color.White.copy(alpha = 0.8f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.6f)
+            )
+        )
+        
+        // Image preview
+        if (value.isNotBlank() && (value.startsWith("http://") || value.startsWith("https://"))) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                AsyncImage(
+                    model = value,
+                    contentDescription = "Wish image preview",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .padding(8.dp),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+            }
+        }
     }
 }
 

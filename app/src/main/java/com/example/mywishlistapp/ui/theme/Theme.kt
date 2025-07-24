@@ -28,9 +28,9 @@ private val DarkColorScheme = darkColorScheme(
     secondaryContainer = AccentBlue,
     onSecondaryContainer = Color.White,
     
-    tertiary = Gold80,
-    onTertiary = Color.Black,
-    tertiaryContainer = Gold40,
+    tertiary = AccentOrange,
+    onTertiary = Color.White,
+    tertiaryContainer = CategoryWork,
     onTertiaryContainer = Color.White,
     
     background = BackgroundDark,
@@ -53,41 +53,41 @@ private val DarkColorScheme = darkColorScheme(
     inversePrimary = Color(0xFF6750A4)
 )
 
-// Enhanced Light Color Scheme
+// Enhanced Light Color Scheme - Clean Mockup Style
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryPurple,
+    primary = PrimaryPink,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFEADDFF),
-    onPrimaryContainer = Color(0xFF21005D),
+    primaryContainer = PrimaryPinkLight,
+    onPrimaryContainer = TextPrimary,
     
     secondary = AccentBlue,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE8DEF8),
-    onSecondaryContainer = Color(0xFF1D192B),
+    secondaryContainer = Color(0xFFE8F0FE),
+    onSecondaryContainer = TextPrimary,
     
-    tertiary = Gold40,
+    tertiary = AccentGreen,
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFFFD8E4),
-    onTertiaryContainer = Color(0xFF31111D),
+    tertiaryContainer = Color(0xFFE8F5E8),
+    onTertiaryContainer = TextPrimary,
     
     background = BackgroundLight,
     onBackground = TextPrimary,
-    surface = SurfaceLight,
+    surface = SurfaceWhite,
     onSurface = TextPrimary,
-    surfaceVariant = Color(0xFFE7E0EC),
-    onSurfaceVariant = Color(0xFF49454F),
+    surfaceVariant = BackgroundSecondary,
+    onSurfaceVariant = TextSecondary,
     
-    error = ErrorRed,
+    error = AccentRed,
     onError = Color.White,
-    errorContainer = Color(0xFFFFDAD6),
-    onErrorContainer = Color(0xFF410E0B),
+    errorContainer = Color(0xFFFFEBEE),
+    onErrorContainer = Color(0xFFB71C1C),
     
-    outline = Color(0xFF79747E),
-    outlineVariant = Color(0xFFCAC4D0),
+    outline = Color(0xFFE2E8F0),
+    outlineVariant = Color(0xFFF1F5F9),
     scrim = Color(0xFF000000),
-    inverseSurface = Color(0xFF313033),
-    inverseOnSurface = Color(0xFFF4EFF4),
-    inversePrimary = Color(0xFFD0BCFF)
+    inverseSurface = TextPrimary,
+    inverseOnSurface = SurfaceWhite,
+    inversePrimary = PrimaryPinkLight
 )
 
 @Composable

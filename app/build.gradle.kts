@@ -11,7 +11,7 @@ compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.mywishlistapp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -41,23 +41,28 @@ compileSdk = 36
     buildFeatures {
         compose = true
     }
+    
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
 }
 
 dependencies {
-    val nav_version = "2.7.5"
-    val room_version = "2.6.0"
+    val nav_version = "2.9.2"
+    val room_version = "2.7.2"
 
     // Room
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
 
+
     implementation("androidx.compose.material:material-icons-extended")
     // Navigation
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
     // Core & Compose BOM
-    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.core:core-ktx:1.16.0")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -69,13 +74,13 @@ dependencies {
     implementation(libs.androidx.activity.compose)
 
     // Material (classic for SwipeToDismiss)
-    implementation("androidx.compose.material:material:1.6.1")
+    implementation("androidx.compose.material:material:1.8.3")
     
     // Gson for TypeConverters
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.13.1")
     
     // Image loading
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
     
     // Date picker
     implementation("io.github.vanpra.compose-material-dialogs:datetime:0.9.0")

@@ -10,5 +10,6 @@ sealed class Screen(val route : String) {
     object DashboardScreen : Screen("dashboard_screen")
     object WishListScreen : Screen("wishlist_screen")
     object CalendarScreen : Screen("calendar_screen")
-    object SettingsScreen : Screen("settings_screen")
+object SettingsScreen : Screen("settings_screen")
+    object NotificationsScreen : Screen("notifications_screen")
 }
