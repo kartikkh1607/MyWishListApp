@@ -5,7 +5,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -180,6 +184,18 @@ fun Navigation(
         // Notifications Screen
         composable(route = Screen.NotificationsScreen.route) {
             NotificationsScreen(navController = navController, viewModel = viewModel)
+        }
+
+        // Profile Screen
+        composable(route = Screen.ProfileScreen.route) {
+            val userProfile by viewModel.userProfile.collectAsState()
+            val achievements by viewModel.achievements.collectAsState()
+            ProfileScreen(
+                userProfile = userProfile,
+                achievements = achievements,
+                navController = navController,
+                modifier = Modifier.fillMaxSize()
+            )
         }
     }
 }

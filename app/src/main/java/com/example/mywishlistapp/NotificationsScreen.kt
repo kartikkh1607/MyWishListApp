@@ -9,13 +9,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DismissDirection
-import androidx.compose.material.DismissState
-import androidx.compose.material.DismissValue
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.FractionalThreshold
-import androidx.compose.material.SwipeToDismiss
-import androidx.compose.material.rememberDismissState
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -362,46 +359,45 @@ private fun formatNotificationTime(timestamp: Date): String {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeableNotificationCard(
     notification: NotificationItem,
     onDismiss: () -> Unit,
     onClick: () -> Unit
 ) {
-    val dismissState = rememberDismissState(
-        confirmStateChange = { dismissValue ->
-            if (dismissValue == DismissValue.DismissedToStart || dismissValue == DismissValue.DismissedToEnd) {
+val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
                 onDismiss()
                 true
             } else {
                 false
             }
-        }
+        },
+        positionalThreshold = { it * 0.3f }
     )
 
-    SwipeToDismiss(
+    SwipeToDismissBox(
         state = dismissState,
-        directions = setOf(DismissDirection.EndToStart),
-        dismissThresholds = { FractionalThreshold(0.3f) },
-        background = {
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
             SwipeToDeleteBackground(dismissState)
-        },
-        dismissContent = {
-            EnhancedNotificationCard(
-                notification = notification,
-                onClick = onClick
-            )
         }
-    )
+    ) {
+        EnhancedNotificationCard(
+            notification = notification,
+            onClick = onClick
+        )
+    }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SwipeToDeleteBackground(dismissState: DismissState) {
+fun SwipeToDeleteBackground(dismissState: androidx.compose.material3.SwipeToDismissBoxState) {
     val color by animateColorAsState(
         when (dismissState.dismissDirection) {
-            DismissDirection.EndToStart -> AccentRed
+            SwipeToDismissBoxValue.EndToStart -> AccentRed
             else -> Color.Transparent
         },
         label = "swipe_color"
@@ -409,7 +405,7 @@ fun SwipeToDeleteBackground(dismissState: DismissState) {
     
     val scale by animateFloatAsState(
         when (dismissState.dismissDirection) {
-            DismissDirection.EndToStart -> 1.2f
+            SwipeToDismissBoxValue.EndToStart -> 1.2f
             else -> 0.8f
         },
         label = "icon_scale"

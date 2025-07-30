@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +30,11 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
     var reminderSounds by remember { mutableStateOf(true) }
     var autoBackup by remember { mutableStateOf(false) }
     var biometricLock by remember { mutableStateOf(false) }
+    
+    // Dialog states
+    var showExportDialog by remember { mutableStateOf(false) }
+    var showClearDataDialog by remember { mutableStateOf(false) }
+    var showVersionDialog by remember { mutableStateOf(false) }
     
     // Dynamic theme colors based on dark mode selection
     val backgroundColor = if (isDarkTheme) BackgroundDark else BackgroundLight
@@ -93,7 +99,7 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     SettingsSwitchItem(
-                        icon = Icons.Default.VolumeUp,
+                        icon = Icons.AutoMirrored.Filled.VolumeUp,
                         title = "Reminder Sounds",
                         subtitle = "Play sound with reminder notifications",
                         checked = reminderSounds,
@@ -133,9 +139,7 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
                         icon = Icons.Default.Download,
                         title = "Export Data",
                         subtitle = "Export your wishes to a file",
-                        onClick = {
-                            // TODO: Implement export functionality
-                        }
+                        onClick = { showExportDialog = true }
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
@@ -144,9 +148,7 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
                         icon = Icons.Default.DeleteSweep,
                         title = "Clear All Data",
                         subtitle = "Permanently delete all wishes and data",
-                        onClick = {
-                            // TODO: Show confirmation dialog
-                        },
+                        onClick = { showClearDataDialog = true },
                         textColor = AccentRed
                     )
                 }
@@ -159,16 +161,16 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
                         icon = Icons.Default.Info,
                         title = "App Version",
                         subtitle = "1.0.0",
-                        onClick = { /* Show version info */ }
+                        onClick = { showVersionDialog = true }
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     SettingsClickableItem(
-                        icon = Icons.Default.Help,
+                        icon = Icons.AutoMirrored.Filled.Help,
                         title = "Help & Support",
                         subtitle = "Get help and contact support",
-                        onClick = { /* Open help */ }
+                        onClick = { /* TODO: Open help */ }
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
@@ -177,11 +179,77 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
                         icon = Icons.Default.Star,
                         title = "Rate This App",
                         subtitle = "Share your feedback on the app store",
-                        onClick = { /* Open app store rating */ }
+                        onClick = { /* TODO: Open app store rating */ }
                     )
                 }
             }
         }
+    }
+    
+    // Dialogs
+    if (showExportDialog) {
+        AlertDialog(
+            onDismissRequest = { showExportDialog = false },
+            title = { Text("Export Data") },
+            text = { Text("This feature will allow you to export your wishes to a JSON file.") },
+            confirmButton = {
+                Button(onClick = { 
+                    // TODO: Implement export functionality
+                    showExportDialog = false 
+                }) {
+                    Text("Export")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExportDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showClearDataDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDataDialog = false },
+            title = { Text("Clear All Data?") },
+            text = { Text("Are you sure you want to delete all your wishes and data? This action cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        // TODO: Implement clear all data functionality
+                        // viewModel.clearAllData()
+                        showClearDataDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Clear Data", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDataDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showVersionDialog) {
+        AlertDialog(
+            onDismissRequest = { showVersionDialog = false },
+            title = { Text("App Version") },
+            text = { 
+                Column {
+                    Text("MyWishListApp")
+                    Text("Version 1.0.0")
+                    Text("Built with ❤️ using Jetpack Compose")
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showVersionDialog = false }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 

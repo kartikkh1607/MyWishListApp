@@ -11,6 +11,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.mywishlistapp.Data.Priority
 import com.example.mywishlistapp.Data.Wish
 import com.example.mywishlistapp.Data.WishRepository
+import com.example.mywishlistapp.Data.UserProfile
+import com.example.mywishlistapp.Data.UserProfileRepository
+import com.example.mywishlistapp.Data.AchievementSystem
+import com.example.mywishlistapp.Data.Achievement
 import com.example.mywishlistapp.models.NotificationItem
 import com.example.mywishlistapp.models.NotificationType
 import com.example.mywishlistapp.notifications.ReminderSystem
@@ -30,48 +34,28 @@ import java.util.*
 
 class WishViewModel(
     private val wishRepository: WishRepository = Graph.wishRepository,
+    private val userProfileRepository: UserProfileRepository = Graph.userProfileRepository,
     private val context: Context? = null
 ) : ViewModel() {
     
     private val reminderSystem = context?.let { ReminderSystem(it) }
+    private val achievementSystem = AchievementSystem
 
     // Notification state management
-    private val _notifications = MutableStateFlow(
-        listOf(
-            NotificationItem(
-                1,
-                "Wish Reminder",
-                "Your wish 'New Gaming Laptop' is still pending. Don't forget to work towards it!",
-                Date(),
-                NotificationType.REMINDER
-            ),
-            NotificationItem(
-                2,
-                "Achievement Unlocked!",
-                "Congratulations! You've added 10 wishes to your list.",
-                Calendar.getInstance().apply { add(Calendar.HOUR, -2) }.time,
-                NotificationType.ACHIEVEMENT,
-                true
-            ),
-            NotificationItem(
-                3,
-                "Wish Update",
-                "Your wish 'Learn Guitar' has been updated successfully.",
-                Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -1) }.time,
-                NotificationType.WISH_UPDATE,
-                true
-            ),
-            NotificationItem(
-                4,
-                "Welcome!",
-                "Welcome to WishList! Start adding your dreams and make them come true.",
-                Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -3) }.time,
-                NotificationType.GENERAL,
-                true
-            )
-        )
-    )
+    private val _notifications = MutableStateFlow<List<NotificationItem>>(emptyList())
     val notifications: StateFlow<List<NotificationItem>> = _notifications.asStateFlow()
+    
+    // User profile and achievements
+    private val _userProfile = MutableStateFlow(UserProfile())
+    val userProfile: StateFlow<UserProfile> = _userProfile.asStateFlow()
+    
+    private val _achievements = MutableStateFlow<List<Achievement>>(emptyList())
+    val achievements: StateFlow<List<Achievement>> = _achievements.asStateFlow()
+    
+    init {
+        loadUserProfile()
+        loadAchievements()
+    }
 
     var wishTitleState by mutableStateOf("")
     var wishDescriptionState by mutableStateOf("")
@@ -266,6 +250,190 @@ class WishViewModel(
             scope = viewModelScope,
             started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
             initialValue = 0
+        )
+    }
+    
+    // Gamification methods
+    private fun loadUserProfile() {
+        viewModelScope.launch {
+            val existingProfile = userProfileRepository.getUserProfile()
+            if (existingProfile != null) {
+                _userProfile.value = existingProfile
+            } else {
+                // Create default profile if none exists
+                val defaultProfile = UserProfile(
+                    id = 1,
+                    username = "Player",
+                    level = 1,
+                    experiencePoints = 0,
+                    totalWishes = 0,
+                    completedWishes = 0,
+                    currentStreak = 0,
+                    longestStreak = 0
+                )
+                userProfileRepository.saveUserProfile(defaultProfile)
+                _userProfile.value = defaultProfile
+            }
+        }
+    }
+    
+    private fun loadAchievements() {
+        viewModelScope.launch {
+            _achievements.value = achievementSystem.getAllAchievements()
+        }
+    }
+    
+    private suspend fun updateUserProfile(updater: (UserProfile) -> UserProfile) {
+        val currentProfile = _userProfile.value
+        val updatedProfile = updater(currentProfile)
+        _userProfile.value = updatedProfile
+        userProfileRepository.saveUserProfile(updatedProfile)
+    }
+    
+    private suspend fun checkAndUnlockAchievements(profile: UserProfile) {
+        val unlockedAchievements = achievementSystem.checkAchievements(profile)
+        val newAchievements = unlockedAchievements.filter { !it.isUnlocked }
+        
+        if (newAchievements.isNotEmpty()) {
+            // Mark achievements as unlocked
+            achievementSystem.unlockAchievements(newAchievements.map { it.id })
+            
+            // Update achievements list
+            _achievements.value = achievementSystem.getAllAchievements()
+            
+            // Notify user about new achievements
+            newAchievements.forEach { achievement ->
+                addNotification(
+                    title = "Achievement Unlocked!",
+                    message = "🏆 ${achievement.name}: ${achievement.description}",
+                    type = NotificationType.ACHIEVEMENT
+                )
+            }
+        }
+    }
+    
+    private suspend fun onWishAdded() {
+        updateUserProfile { profile ->
+            profile.copy(
+                totalWishes = profile.totalWishes + 1,
+                experiencePoints = profile.experiencePoints + 10
+            )
+        }
+        checkAndUnlockAchievements(_userProfile.value)
+    }
+    
+    private suspend fun onWishCompleted() {
+        updateUserProfile { profile ->
+            profile.copy(
+                completedWishes = profile.completedWishes + 1,
+                experiencePoints = profile.experiencePoints + 25
+            )
+        }
+        checkAndUnlockAchievements(_userProfile.value)
+    }
+    
+    private suspend fun onWishDeleted() {
+        updateUserProfile { profile ->
+            profile.copy(
+                totalWishes = maxOf(0, profile.totalWishes - 1)
+            )
+        }
+    }
+    
+    // Update username method
+    fun updateUsername(newUsername: String) {
+        viewModelScope.launch {
+            updateUserProfile { profile ->
+                profile.copy(username = newUsername)
+            }
+        }
+    }
+    
+    // Enhanced wish management with gamification
+    fun addWishWithGamification(wish: Wish) {
+        viewModelScope.launch(Dispatchers.IO) {
+            wishRepository.addWish(wish = wish)
+            
+            // Schedule reminder for high-priority wishes
+            if (wish.priority == Priority.HIGH && reminderSystem != null) {
+                reminderSystem.scheduleSmartReminder(wish)
+            }
+            
+            // Update gamification stats
+            onWishAdded()
+        }
+    }
+    
+    fun completeWish(wish: Wish) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val completedWish = wish.copy(isCompleted = true)
+            wishRepository.updateWish(completedWish)
+            
+            // Cancel reminders for completed wishes
+            if (reminderSystem != null) {
+                reminderSystem.cancelReminder(wish.id)
+            }
+            
+            // Update gamification stats
+            onWishCompleted()
+            
+            // Add completion notification
+            addNotification(
+                title = "Wish Completed!",
+                message = "🎉 Congratulations! You've completed '${wish.title}'",
+                type = NotificationType.WISH_UPDATE
+            )
+        }
+    }
+    
+    fun deleteWishWithGamification(wish: Wish) {
+        viewModelScope.launch(Dispatchers.IO) {
+            wishRepository.deleteWish(wish = wish)
+            
+            // Cancel any existing reminders for deleted wish
+            if (reminderSystem != null) {
+                reminderSystem.cancelReminder(wish.id)
+            }
+            
+            // Update gamification stats
+            onWishDeleted()
+        }
+    }
+    
+    // Get user level based on experience points
+    fun getUserLevel(): StateFlow<Int> {
+        return _userProfile.map { profile ->
+            profile.experiencePoints / 100 + 1
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 1
+        )
+    }
+    
+    // Get progress to next level
+    fun getLevelProgress(): StateFlow<Float> {
+        return _userProfile.map { profile ->
+            val currentLevelXP = (profile.experiencePoints / 100) * 100
+            val progressInLevel = profile.experiencePoints - currentLevelXP
+            progressInLevel / 100f
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0f
+        )
+    }
+    
+    // Get recent achievements (last 5)
+    fun getRecentAchievements(): StateFlow<List<Achievement>> {
+        return _achievements.map { achievements ->
+            achievements.filter { achievement -> achievement.isUnlocked }
+                       .sortedByDescending { achievement -> achievement.unlockedAt }
+                       .take(5)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
         )
     }
 }

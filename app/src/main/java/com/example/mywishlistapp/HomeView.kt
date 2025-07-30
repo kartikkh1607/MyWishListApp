@@ -13,9 +13,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.material.*
+import androidx.compose.material3.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.FabPosition
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.List
@@ -36,6 +40,10 @@ import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.SwipeToDismissBoxState
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -64,7 +72,7 @@ import com.example.mywishlistapp.ui.components.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
 
@@ -91,7 +99,8 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
                 title = "WishList",
                 onSearchClicked = {
                     navController.navigate(Screen.SearchScreen.route)
-                }
+                },
+                showActions = true
             )
         },
         floatingActionButton = {
@@ -134,28 +143,26 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(wishList.value, key = { it.id }) { wish ->
-                        val dismissState = rememberDismissState(
-                            confirmStateChange = { dismissValue ->
-                                if (dismissValue == DismissValue.DismissedToEnd || dismissValue == DismissValue.DismissedToStart) {
+val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = { dismissValue ->
+                                if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
                                     viewModel.deleteWish(wish)
                                     true
                                 } else false
-                            }
+                            },
+                            positionalThreshold = { it * 0.3f }
                         )
 
-                        SwipeToDismiss(
+                        SwipeToDismissBox(
                             state = dismissState,
-                            directions = setOf(DismissDirection.EndToStart),
-                            dismissThresholds = { FractionalThreshold(0.3f) },
-                            background = {
+                            enableDismissFromStartToEnd = false,
+                            backgroundContent = {
                                 SwipeBackground(dismissState)
                             },
-                            dismissContent = {
-                                EnhancedWishItem(wish = wish) {
-                                    navController.navigate(Screen.AddScreen.route + "/${wish.id}")
-                                }
-                            }
-                        )
+                        ) { EnhancedWishItem(wish = wish) {
+                            navController.navigate(Screen.AddScreen.route + "/${wish.id}")
+                        }
+                        }
                     }
                 }
             }
@@ -242,12 +249,12 @@ fun EmptyWishListState(onAddWish: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SwipeBackground(dismissState: DismissState) {
+fun SwipeBackground(dismissState: SwipeToDismissBoxState) {
     val color by animateColorAsState(
         when (dismissState.dismissDirection) {
-            DismissDirection.EndToStart -> Color(0xFFE74C3C)
+            SwipeToDismissBoxValue.EndToStart -> Color(0xFFE74C3C)
             else -> Color.Transparent
         },
         label = "swipe_color"
@@ -255,7 +262,7 @@ fun SwipeBackground(dismissState: DismissState) {
     
     val scale by animateFloatAsState(
         when (dismissState.dismissDirection) {
-            DismissDirection.EndToStart -> 1.3f
+            SwipeToDismissBoxValue.EndToStart -> 1.3f
             else -> 0.8f
         },
         label = "icon_scale"
@@ -529,7 +536,7 @@ fun NavigationFAB(
         label = "fab_scale"
     )
     
-    FloatingActionButton(
+FloatingActionButton(
         onClick = {
             isPressed = true
             onClick()
@@ -548,7 +555,7 @@ fun NavigationFAB(
                 ambientColor = Color(0xFF667EEA).copy(alpha = 0.3f),
                 spotColor = Color(0xFF667EEA).copy(alpha = 0.3f)
             ),
-        backgroundColor = Color(0xFF667EEA),
+        containerColor = Color(0xFF667EEA),
         contentColor = Color.White,
         elevation = FloatingActionButtonDefaults.elevation(
             defaultElevation = 12.dp,
