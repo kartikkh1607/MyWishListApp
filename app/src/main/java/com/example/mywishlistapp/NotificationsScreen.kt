@@ -213,6 +213,10 @@ fun EnhancedNotificationCard(
                                     AccentBlue.copy(alpha = 0.2f),
                                     AccentBlue.copy(alpha = 0.1f)
                                 )
+                                NotificationType.SYSTEM -> listOf(
+                                    Color(0xFF9C27B0).copy(alpha = 0.2f),
+                                    Color(0xFF9C27B0).copy(alpha = 0.1f)
+                                )
                                 NotificationType.GENERAL -> listOf(
                                     PrimaryPurple.copy(alpha = 0.2f),
                                     PrimaryPurple.copy(alpha = 0.1f)
@@ -227,6 +231,7 @@ fun EnhancedNotificationCard(
                         NotificationType.REMINDER -> Icons.Default.Schedule
                         NotificationType.ACHIEVEMENT -> Icons.Default.EmojiEvents
                         NotificationType.WISH_UPDATE -> Icons.Default.Update
+                        NotificationType.SYSTEM -> Icons.Default.Settings
                         NotificationType.GENERAL -> Icons.Default.Info
                     },
                     contentDescription = null,
@@ -234,6 +239,7 @@ fun EnhancedNotificationCard(
                         NotificationType.REMINDER -> AccentOrange
                         NotificationType.ACHIEVEMENT -> AccentGreen
                         NotificationType.WISH_UPDATE -> AccentBlue
+                        NotificationType.SYSTEM -> Color(0xFF9C27B0)
                         NotificationType.GENERAL -> PrimaryPurple
                     },
                     modifier = Modifier.size(24.dp)

@@ -31,8 +31,6 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import kotlinx.coroutines.delay
 
 import com.example.mywishlistapp.Data.Wish
@@ -375,65 +373,33 @@ fun WishesContent(
     viewModel: WishViewModel,
     modifier: Modifier = Modifier
 ) {
-    // Pull-to-refresh state
-    val pullToRefreshState = rememberPullToRefreshState()
-    var isRefreshing by remember { mutableStateOf(false) }
-    
-    // Handle refresh action
-    LaunchedEffect(pullToRefreshState.isRefreshing) {
-        if (pullToRefreshState.isRefreshing) {
-            isRefreshing = true
-            // Simulate network call or data refresh
-            delay(1500) // 1.5 seconds refresh delay
-            isRefreshing = false
-            pullToRefreshState.endRefresh()
-            
-            // Show refresh notification
-            viewModel.addNotification(
-                title = "Refreshed!",
-                message = "Your wish list has been updated",
-                type = com.example.mywishlistapp.models.NotificationType.SYSTEM
-            )
-        }
-    }
-    
-    Box(
-        modifier = modifier.nestedScroll(pullToRefreshState.nestedScrollConnection)
-    ) {
-        if (wishes.isEmpty()) {
-            // Pull-to-refresh for empty state
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                item {
-                    EmptyWishesState(modifier = Modifier.fillParentMaxSize())
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    horizontal = 16.dp,
-                    vertical = 8.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(wishes, key = { it.id }) { wish ->
-                    SwipeToDeleteWishCard(
-                        wish = wish,
-                        onWishClick = { onWishClick(wish) },
-                        onDelete = { viewModel.deleteWishWithGamification(wish) },
-                        viewModel = viewModel
-                    )
-                }
+    if (wishes.isEmpty()) {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp)
+        ) {
+            item {
+                EmptyWishesState(modifier = Modifier.fillParentMaxSize())
             }
         }
-        
-        PullToRefreshContainer(
-            state = pullToRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
+    } else {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                horizontal = 16.dp,
+                vertical = 8.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(wishes, key = { it.id }) { wish ->
+                SwipeToDeleteWishCard(
+                    wish = wish,
+                    onWishClick = { onWishClick(wish) },
+                    onDelete = { viewModel.deleteWishWithGamification(wish) },
+                    viewModel = viewModel
+                )
+            }
+        }
     }
 }
 

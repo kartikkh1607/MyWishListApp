@@ -13,5 +13,5 @@ data class NotificationItem(
 )
 
 enum class NotificationType {
-    REMINDER, ACHIEVEMENT, GENERAL, WISH_UPDATE
+    REMINDER, ACHIEVEMENT, GENERAL, WISH_UPDATE, SYSTEM
 }
