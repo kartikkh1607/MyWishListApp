@@ -2,12 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    kotlin("kapt")
+    id("com.google.devtools.ksp") version "2.0.0-1.0.21"
 }
 
 android {
     namespace = "com.example.mywishlistapp"
-compileSdk = 36
+compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.mywishlistapp"
@@ -48,13 +48,13 @@ compileSdk = 36
 }
 
 dependencies {
-    val nav_version = "2.9.2"
-    val room_version = "2.7.2"
+    val nav_version = "2.7.7"
+    val room_version = "2.6.1"
 
     // Room
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
-    kapt("androidx.room:room-compiler:$room_version")
+    ksp("androidx.room:room-compiler:$room_version")
 
 
     implementation("androidx.compose.material:material-icons-extended")
@@ -62,7 +62,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
     // Core & Compose BOM
-    implementation("androidx.core:core-ktx:1.16.0")
+    implementation(libs.androidx.core.ktx)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -74,19 +74,21 @@ dependencies {
     implementation(libs.androidx.activity.compose)
 
     // Material (classic for SwipeToDismiss)
-    implementation("androidx.compose.material:material:1.8.3")
+    implementation("androidx.compose.material:material:1.6.7")
     
     // Gson for TypeConverters
-    implementation("com.google.code.gson:gson:2.13.1")
+    implementation("com.google.code.gson:gson:2.11.0")
     
     // Image loading
-    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     
     // Date picker
     implementation("io.github.vanpra.compose-material-dialogs:datetime:0.9.0")
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation("org.mockito:mockito-core:5.7.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

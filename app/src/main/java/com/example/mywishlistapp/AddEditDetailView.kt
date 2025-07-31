@@ -149,128 +149,12 @@ fun AddEditDetailView(
 
                 // Basic Information Section
                 item {
-                    Text(
-                        text = "📝 Basic Information",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF667EEA),
-                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
-                    )
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = viewModel.wishTitleState,
-                        onValueChange = { viewModel.onWishTitleChanged(it) },
-                        label = { 
-                            Text(
-                                text = "Enter wish title",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF667EEA),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        },
-                        placeholder = { 
-                            Text(
-                                text = "e.g., New Bike",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF9CA3AF).copy(alpha = 0.8f)
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = null,
-                                tint = Color(0xFF667EEA)
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF667EEA),
-                            unfocusedBorderColor = Color(0xFFE1E8FF),
-                            cursorColor = Color(0xFF667EEA),
-                            focusedLabelColor = Color(0xFF667EEA),
-                            unfocusedLabelColor = Color(0xFF8B9DC3),
-                            focusedTextColor = Color(0xFF1A1D29),
-                            unfocusedTextColor = Color(0xFF2D3748),
-                            focusedContainerColor = Color.White.copy(alpha = 0.8f),
-                            unfocusedContainerColor = Color.White.copy(alpha = 0.6f)
-                        )
-                    )
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = viewModel.wishDescriptionState,
-                        onValueChange = { viewModel.onWishDescriptionChanged(it) },
-                        label = { 
-                            Text(
-                                text = "Enter wish description",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF667EEA),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        },
-                        placeholder = { 
-                            Text(
-                                text = "e.g., Looking for a mountain bike with good suspension",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF9CA3AF).copy(alpha = 0.8f)
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Description,
-                                contentDescription = null,
-                                tint = Color(0xFF667EEA)
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        shape = RoundedCornerShape(28.dp),
-                        singleLine = false,
-                        maxLines = 4,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF667EEA),
-                            unfocusedBorderColor = Color(0xFFE1E8FF),
-                            cursorColor = Color(0xFF667EEA),
-                            focusedLabelColor = Color(0xFF667EEA),
-                            unfocusedLabelColor = Color(0xFF8B9DC3),
-                            focusedTextColor = Color(0xFF1A1D29),
-                            unfocusedTextColor = Color(0xFF2D3748),
-                            focusedContainerColor = Color.White.copy(alpha = 0.8f),
-                            unfocusedContainerColor = Color.White.copy(alpha = 0.6f)
-                        )
-                    )
+                    BasicInfoSection(viewModel)
                 }
 
                 // Price and Image Section
                 item {
-                    Text(
-                        text = "💰 Price & Image",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF667EEA),
-                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
-                    )
-                }
-
-                item {
-                    CurrencyTextField(
-                        value = viewModel.wishPriceState,
-                        onValueChange = { viewModel.onWishPriceChanged(it) }
-                    )
-                }
-
-                item {
-                    ImageUrlField(
-                        value = viewModel.wishImageUrlState,
-                        onValueChange = { viewModel.onWishImageUrlChanged(it) }
-                    )
+                    PriceAndImageSection(viewModel)
                 }
 
                 // Categories and Tags Section
@@ -801,6 +685,153 @@ fun PrioritySelector(
 
 
 
+
+@Composable
+fun BasicInfoSection(viewModel: WishViewModel) {
+    Column {
+        Text(
+            text = "📝 Basic Information",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF667EEA),
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
+        )
+
+        OutlinedTextField(
+            value = viewModel.wishTitleState,
+            onValueChange = { viewModel.onWishTitleChanged(it) },
+            label = {
+                Text(
+                    text = "Enter wish title",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF667EEA),
+                    fontWeight = FontWeight.SemiBold
+                )
+            },
+            placeholder = {
+                Text(
+                    text = "e.g., New Bike",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF9CA3AF).copy(alpha = 0.8f)
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = Color(0xFF667EEA)
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            shape = RoundedCornerShape(28.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF667EEA),
+                unfocusedBorderColor = Color(0xFFE1E8FF),
+                cursorColor = Color(0xFF667EEA),
+                focusedLabelColor = Color(0xFF667EEA),
+                unfocusedLabelColor = Color(0xFF8B9DC3),
+                focusedTextColor = Color(0xFF1A1D29),
+                unfocusedTextColor = Color(0xFF2D3748),
+                focusedContainerColor = Color.White.copy(alpha = 0.8f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.6f)
+            )
+        )
+
+        OutlinedTextField(
+            value = viewModel.wishDescriptionState,
+            onValueChange = { viewModel.onWishDescriptionChanged(it) },
+            label = {
+                Text(
+                    text = "Enter wish description",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF667EEA),
+                    fontWeight = FontWeight.SemiBold
+                )
+            },
+            placeholder = {
+                Text(
+                    text = "e.g., Looking for a mountain bike with good suspension",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF9CA3AF).copy(alpha = 0.8f)
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Description,
+                    contentDescription = null,
+                    tint = Color(0xFF667EEA)
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            shape = RoundedCornerShape(28.dp),
+            singleLine = false,
+            maxLines = 4,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF667EEA),
+                unfocusedBorderColor = Color(0xFFE1E8FF),
+                cursorColor = Color(0xFF667EEA),
+                focusedLabelColor = Color(0xFF667EEA),
+                unfocusedLabelColor = Color(0xFF8B9DC3),
+                focusedTextColor = Color(0xFF1A1D29),
+                unfocusedTextColor = Color(0xFF2D3748),
+                focusedContainerColor = Color.White.copy(alpha = 0.8f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.6f)
+            )
+        )
+    }
+}
+
+@Composable
+fun PriceAndImageSection(viewModel: WishViewModel) {
+    Column {
+        Text(
+            text = "💰 Price & Image",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF667EEA),
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
+        )
+
+        CurrencyTextField(
+            value = viewModel.wishPriceState,
+            onValueChange = { viewModel.onWishPriceChanged(it) }
+        )
+
+        ImageUrlField(
+            value = viewModel.wishImageUrlState,
+            onValueChange = { viewModel.onWishImageUrlChanged(it) }
+        )
+    }
+}
+
+@Composable
+fun CategoryAndTagsSection(viewModel: WishViewModel) {
+    Column {
+        Text(
+            text = "🏷️ Categories & Tags",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF667EEA),
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
+        )
+
+        CategoryDropdown(
+            selectedCategory = viewModel.wishCategoryState,
+            onCategorySelected = { viewModel.onWishCategoryChanged(it) }
+        )
+
+        VoiceInputField(
+            value = viewModel.wishTagsState,
+            onValueChanged = { viewModel.onWishTagsChanged(it) },
+            label = "Enter tags (comma separated)",
+            placeholder = "e.g., smartphone, android, budget"
+        )
+    }
+}
 
 @Preview(showBackground = true)
 @Composable

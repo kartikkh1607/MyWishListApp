@@ -1,12 +1,13 @@
 package com.example.mywishlistapp
 
+import android.app.Application
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mywishlistapp.Data.Priority
 import com.example.mywishlistapp.Data.Wish
@@ -33,12 +34,12 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 class WishViewModel(
+    application: Application,
     private val wishRepository: WishRepository = Graph.wishRepository,
-    private val userProfileRepository: UserProfileRepository = Graph.userProfileRepository,
-    private val context: Context? = null
-) : ViewModel() {
+    private val userProfileRepository: UserProfileRepository = Graph.userProfileRepository
+) : AndroidViewModel(application) {
     
-    private val reminderSystem = context?.let { ReminderSystem(it) }
+    private val reminderSystem = ReminderSystem(getApplication())
     private val achievementSystem = AchievementSystem
 
     // Notification state management
@@ -52,11 +53,15 @@ class WishViewModel(
     private val _achievements = MutableStateFlow<List<Achievement>>(emptyList())
     val achievements: StateFlow<List<Achievement>> = _achievements.asStateFlow()
     
+    // Consolidated wish state
+    var wishState by mutableStateOf(Wish())
+    
     init {
         loadUserProfile()
         loadAchievements()
     }
 
+    // Legacy individual state properties for backward compatibility
     var wishTitleState by mutableStateOf("")
     var wishDescriptionState by mutableStateOf("")
     var wishCategoryState by mutableStateOf("")
@@ -65,32 +70,32 @@ class WishViewModel(
     var wishPriceState by mutableStateOf("")
     var wishImageUrlState by mutableStateOf("")
 
-    fun onWishTitleChanged(newString : String){
-        wishTitleState = newString
+    fun onWishTitleChanged(newString: String) {
+        wishState = wishState.copy(title = newString)
     }
 
-    fun onWishDescriptionChanged(newString : String){
-        wishDescriptionState = newString
+    fun onWishDescriptionChanged(newString: String) {
+        wishState = wishState.copy(description = newString)
     }
-    
+
     fun onWishCategoryChanged(newString: String) {
-        wishCategoryState = newString
+        wishState = wishState.copy(category = newString)
     }
-    
+
     fun onWishTagsChanged(newString: String) {
-        wishTagsState = newString
+        wishState = wishState.copy(tags = newString.split(",").map { it.trim() }.filter { it.isNotEmpty() })
     }
-    
+
     fun onWishPriorityChanged(newPriority: Priority) {
-        wishPriorityState = newPriority
+        wishState = wishState.copy(priority = newPriority)
     }
-    
+
     fun onWishPriceChanged(newString: String) {
-        wishPriceState = newString
+        wishState = wishState.copy(price = newString)
     }
-    
+
     fun onWishImageUrlChanged(newString: String) {
-        wishImageUrlState = newString
+        wishState = wishState.copy(imageUrl = newString)
     }
     
     // Convert tags string to list
@@ -109,7 +114,7 @@ class WishViewModel(
             wishRepository.addWish(wish = wish)
             
             // Schedule reminder for high-priority wishes
-            if (wish.priority == Priority.HIGH && reminderSystem != null) {
+            if (wish.priority == Priority.HIGH) {
                 reminderSystem.scheduleSmartReminder(wish)
             }
         }
@@ -124,13 +129,11 @@ class WishViewModel(
             wishRepository.updateWish(wish = wish)
             
             // Update or schedule reminder based on priority
-            if (reminderSystem != null) {
-                if (wish.priority == Priority.HIGH) {
-                    reminderSystem.scheduleSmartReminder(wish)
-                } else {
-                    // Cancel existing reminder if priority is no longer high
-                    reminderSystem.cancelReminder(wish.id)
-                }
+            if (wish.priority == Priority.HIGH) {
+                reminderSystem.scheduleSmartReminder(wish)
+            } else {
+                // Cancel existing reminder if priority is no longer high
+                reminderSystem.cancelReminder(wish.id)
             }
         }
     }
@@ -140,9 +143,7 @@ class WishViewModel(
             wishRepository.deleteWish(wish = wish)
             
             // Cancel any existing reminders for deleted wish
-            if (reminderSystem != null) {
-                reminderSystem.cancelReminder(wish.id)
-            }
+            reminderSystem.cancelReminder(wish.id)
         }
     }
     
