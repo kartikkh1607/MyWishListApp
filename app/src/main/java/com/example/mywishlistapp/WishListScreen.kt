@@ -31,7 +31,6 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import kotlinx.coroutines.delay
@@ -368,6 +367,7 @@ fun SearchResultsIndicator(resultsCount: Int, searchQuery: String, onClear: () -
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WishesContent(
     wishes: List<Wish>,
