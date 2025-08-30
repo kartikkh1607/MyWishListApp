@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -246,73 +247,129 @@ fun ModernTextField(
     onValueChanged: (String) -> Unit,
     placeholder: String = "",
     isDescription: Boolean = false,
+    isError: Boolean = false,
+    errorMessage: String = "",
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.9f)
+    var isFocused by remember { mutableStateOf(false) }
+    val animatedElevation by animateDpAsState(
+        targetValue = if (isFocused) 12.dp else 6.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 8.dp
-        )
-    ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChanged,
-            label = {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF667EEA),
-                    fontWeight = FontWeight.SemiBold
-                )
-            },
-            placeholder = {
-                Text(
-                    text = placeholder,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF9CA3AF).copy(alpha = 0.8f)
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth(),
+        label = "elevation_animation"
+    )
+    
+    Column(modifier = modifier.padding(vertical = 8.dp)) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
-                cursorColor = Color(0xFF667EEA),
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White.copy(alpha = 0.95f)
             ),
-            singleLine = !isDescription,
-            maxLines = if (isDescription) 4 else 1,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = if (isDescription) ImeAction.Default else ImeAction.Next
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = animatedElevation
+            ),
+            border = if (isError) BorderStroke(1.dp, Color(0xFFE74C3C)) else null
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChanged,
+                label = {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isError) Color(0xFFE74C3C) else Color(0xFF667EEA),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                placeholder = {
+                    Text(
+                        text = placeholder,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF9CA3AF).copy(alpha = 0.7f)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { isFocused = it.isFocused },
+                shape = RoundedCornerShape(18.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    errorBorderColor = Color.Transparent,
+                    cursorColor = Color(0xFF667EEA),
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent
+                ),
+                singleLine = !isDescription,
+                maxLines = if (isDescription) 5 else 1,
+                minLines = if (isDescription) 3 else 1,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = if (isDescription) ImeAction.Default else ImeAction.Next
+                ),
+                isError = isError
             )
-        )
+        }
+        
+        // Error message
+        AnimatedVisibility(
+            visible = isError && errorMessage.isNotEmpty(),
+            enter = slideInVertically() + fadeIn(),
+            exit = slideOutVertically() + fadeOut()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Error,
+                    contentDescription = null,
+                    tint = Color(0xFFE74C3C),
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFFE74C3C)
+                )
+            }
+        }
     }
 }
 
 @Composable
 fun CurrencyTextField(
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    var isFocused by remember { mutableStateOf(false) }
+    val animatedElevation by animateDpAsState(
+        targetValue = if (isFocused) 12.dp else 6.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "currency_elevation"
+    )
+    
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        shape = RoundedCornerShape(24.dp),
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.9f)
+            containerColor = Color.White.copy(alpha = 0.95f)
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 8.dp
+            defaultElevation = animatedElevation
         )
     ) {
         OutlinedTextField(
@@ -322,11 +379,32 @@ fun CurrencyTextField(
                     onValueChange(newValue)
                 }
             },
-            label = { Text("Price (Optional)") },
-            placeholder = { Text("e.g., 299.99") },
-            leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
+            label = {
+                Text(
+                    "Price (Optional)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF667EEA),
+                    fontWeight = FontWeight.SemiBold
+                )
+            },
+            placeholder = {
+                Text(
+                    "e.g., 299.99",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF9CA3AF).copy(alpha = 0.7f)
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.AttachMoney,
+                    contentDescription = null,
+                    tint = Color(0xFF667EEA)
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { isFocused = it.isFocused },
+            shape = RoundedCornerShape(18.dp),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Decimal,
                 imeAction = ImeAction.Next
@@ -346,32 +424,64 @@ fun CurrencyTextField(
 @Composable
 fun ImageUrlField(
     value: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column {
+    var isFocused by remember { mutableStateOf(false) }
+    val animatedElevation by animateDpAsState(
+        targetValue = if (isFocused) 12.dp else 6.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "image_elevation"
+    )
+    
+    Column(modifier = modifier) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp),
-            shape = RoundedCornerShape(24.dp),
+                .padding(vertical = 8.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White.copy(alpha = 0.9f)
+                containerColor = Color.White.copy(alpha = 0.95f)
             ),
             elevation = CardDefaults.cardElevation(
-                defaultElevation = 8.dp
+                defaultElevation = animatedElevation
             )
         ) {
             OutlinedTextField(
                 value = value,
                 onValueChange = onValueChange,
-                label = { Text("Image URL (Optional)") },
-                placeholder = { Text("https://example.com/image.jpg") },
-                leadingIcon = { Icon(Icons.Default.Image, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                label = {
+                    Text(
+                        "Image URL (Optional)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF667EEA),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
+                placeholder = {
+                    Text(
+                        "https://example.com/image.jpg",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF9CA3AF).copy(alpha = 0.7f)
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Image,
+                        contentDescription = null,
+                        tint = Color(0xFF667EEA)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { isFocused = it.isFocused },
+                shape = RoundedCornerShape(18.dp),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Uri,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Done
                 ),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
@@ -383,20 +493,43 @@ fun ImageUrlField(
                 )
             )
         }
-        if (value.isNotBlank()) {
+        
+        // Image preview with animation
+        AnimatedVisibility(
+            visible = value.isNotBlank(),
+            enter = slideInVertically() + fadeIn() + expandVertically(),
+            exit = slideOutVertically() + fadeOut() + shrinkVertically()
+        ) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .padding(top = 12.dp),
                 shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                AsyncImage(
-                    model = value,
-                    contentDescription = "Wish image preview",
-                    modifier = Modifier.fillMaxWidth().height(120.dp),
-                    contentScale = ContentScale.Crop
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
                 )
+            ) {
+                Column {
+                    AsyncImage(
+                        model = value,
+                        contentDescription = "Wish image preview",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                    Text(
+                        text = "Image Preview",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color(0xFF667EEA),
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
@@ -404,71 +537,72 @@ fun ImageUrlField(
 
 @Composable
 fun BasicInfoSection(viewModel: WishViewModel) {
-    Column {
-        Text(
-            text = "📝 Basic Information",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF667EEA),
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
-        )
-        ModernTextField(
-            label = "Enter wish title",
-            value = viewModel.wishTitleState,
-            onValueChanged = { viewModel.onWishTitleChanged(it) },
-            placeholder = "e.g., New Bike"
-        )
-        ModernTextField(
-            label = "Enter wish description",
-            value = viewModel.wishDescriptionState,
-            onValueChanged = { viewModel.onWishDescriptionChanged(it) },
-            placeholder = "e.g., A mountain bike for trails...",
-            isDescription = true
-        )
+    val titleError = viewModel.wishTitleState.isEmpty()
+    val descriptionError = viewModel.wishDescriptionState.isEmpty()
+    
+    EnhancedSectionCard(
+        title = "📝 Basic Information",
+        subtitle = "Tell us about your wish"
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            ModernTextField(
+                label = "Wish Title *",
+                value = viewModel.wishTitleState,
+                onValueChanged = { viewModel.onWishTitleChanged(it) },
+                placeholder = "e.g., New Mountain Bike",
+                isError = titleError && viewModel.wishTitleState.isEmpty(),
+                errorMessage = if (titleError && viewModel.wishTitleState.isEmpty()) "Title is required" else ""
+            )
+            ModernTextField(
+                label = "Description *",
+                value = viewModel.wishDescriptionState,
+                onValueChanged = { viewModel.onWishDescriptionChanged(it) },
+                placeholder = "e.g., A durable mountain bike for weekend trail adventures...",
+                isDescription = true,
+                isError = descriptionError && viewModel.wishDescriptionState.isEmpty(),
+                errorMessage = if (descriptionError && viewModel.wishDescriptionState.isEmpty()) "Description is required" else ""
+            )
+        }
     }
 }
 
 @Composable
 fun PriceAndImageSection(viewModel: WishViewModel) {
-    Column {
-        Text(
-            text = "💰 Price & Image",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF667EEA),
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
-        )
-        CurrencyTextField(
-            value = viewModel.wishPriceState,
-            onValueChange = { viewModel.onWishPriceChanged(it) }
-        )
-        ImageUrlField(
-            value = viewModel.wishImageUrlState,
-            onValueChange = { viewModel.onWishImageUrlChanged(it) }
-        )
+    EnhancedSectionCard(
+        title = "💰 Price & Image",
+        subtitle = "Add pricing and visual details"
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            CurrencyTextField(
+                value = viewModel.wishPriceState,
+                onValueChange = { viewModel.onWishPriceChanged(it) }
+            )
+            ImageUrlField(
+                value = viewModel.wishImageUrlState,
+                onValueChange = { viewModel.onWishImageUrlChanged(it) }
+            )
+        }
     }
 }
 
 @Composable
 fun CategoryAndTagsSection(viewModel: WishViewModel) {
-    Column {
-        Text(
-            text = "🏷️ Categories & Tags",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF667EEA),
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
-        )
-        CategoryDropdown(
-            selectedCategory = viewModel.wishCategoryState,
-            onCategorySelected = { viewModel.onWishCategoryChanged(it) }
-        )
-        ModernTextField(
-            label = "Enter tags (comma separated)",
-            value = viewModel.wishTagsState,
-            onValueChanged = { viewModel.onWishTagsChanged(it) },
-            placeholder = "e.g., smartphone, android, budget"
-        )
+    EnhancedSectionCard(
+        title = "🏷️ Categories & Tags",
+        subtitle = "Organize and classify your wish"
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            CategoryDropdown(
+                selectedCategory = viewModel.wishCategoryState,
+                onCategorySelected = { viewModel.onWishCategoryChanged(it) }
+            )
+            ModernTextField(
+                label = "Tags (Optional)",
+                value = viewModel.wishTagsState,
+                onValueChanged = { viewModel.onWishTagsChanged(it) },
+                placeholder = "e.g., outdoor, sports, recreation"
+            )
+        }
     }
 }
 
@@ -530,61 +664,79 @@ fun PrioritySelector(
     selectedPriority: Priority,
     onPrioritySelected: (Priority) -> Unit
 ) {
-    Column {
-        Text(
-            text = "⭐ Priority",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF667EEA),
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
-        )
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-        ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
-                Text(
-                    text = "Priority Level",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFF667EEA),
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Priority.values().forEach { priority ->
-                        val isSelected = selectedPriority == priority
-                        val (priorityColor, priorityLabel, priorityIcon) = when (priority) {
-                            Priority.HIGH -> Triple(Color(0xFFE74C3C), "High", "🔥")
-                            Priority.MEDIUM -> Triple(Color(0xFFF39C12), "Medium", "⚡")
-                            Priority.LOW -> Triple(Color(0xFF27AE60), "Low", "🌱")
-                        }
-                        Card(
-                            modifier = Modifier.weight(1f).clickable { onPrioritySelected(priority) },
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected) priorityColor.copy(alpha = 0.12f) else Color(0xFFF8FAFC)
-                            ),
-                            border = if (isSelected) BorderStroke(2.dp, priorityColor) else BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 6.dp else 2.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 12.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(text = priorityIcon, fontSize = 20.sp, modifier = Modifier.padding(bottom = 4.dp))
-                                Text(
-                                    text = priorityLabel,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = if (isSelected) priorityColor else Color(0xFF64748B),
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    fontSize = 13.sp
+    val hapticFeedback = LocalHapticFeedback.current
+    
+    EnhancedSectionCard(
+        title = "⭐ Priority",
+        subtitle = "Set the importance level"
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Priority.values().forEach { priority ->
+                    val isSelected = selectedPriority == priority
+                    val (priorityColor, priorityLabel, priorityIcon) = when (priority) {
+                        Priority.HIGH -> Triple(Color(0xFFE74C3C), "High", "🔥")
+                        Priority.MEDIUM -> Triple(Color(0xFFF39C12), "Medium", "⚡")
+                        Priority.LOW -> Triple(Color(0xFF27AE60), "Low", "🌱")
+                    }
+                    
+                    var isPressed by remember { mutableStateOf(false) }
+                    val scale by animateFloatAsState(
+                        targetValue = if (isPressed) 0.95f else 1f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessHigh
+                        ),
+                        label = "priority_scale"
+                    )
+                    
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .graphicsLayer(scaleX = scale, scaleY = scale)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onPress = {
+                                        isPressed = true
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        tryAwaitRelease()
+                                        isPressed = false
+                                    }
                                 )
                             }
+                            .clickable { 
+                                onPrioritySelected(priority)
+                            },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) priorityColor.copy(alpha = 0.15f) else Color(0xFFF8FAFC)
+                        ),
+                        border = if (isSelected) BorderStroke(2.dp, priorityColor) else BorderStroke(1.dp, Color(0xFFE2E8F0).copy(alpha = 0.5f)),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = if (isSelected) 8.dp else 4.dp
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp, horizontal = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = priorityIcon,
+                                fontSize = 24.sp,
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            )
+                            Text(
+                                text = priorityLabel,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (isSelected) priorityColor else Color(0xFF64748B),
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 14.sp
+                            )
                         }
                     }
                 }
@@ -698,20 +850,43 @@ fun EditModeContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(vertical = 12.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        contentPadding = PaddingValues(vertical = 16.dp)
     ) {
         item {
-            Text(
-                text = if (id != 0L) stringResource(R.string.update_your_wish) else stringResource(R.string.create_new_wish),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF2C3E50),
+            // Welcome Header with better styling
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 4.dp),
-                textAlign = TextAlign.Center
-            )
+                    .padding(bottom = 8.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF667EEA).copy(alpha = 0.08f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = if (id != 0L) "✨ Update Your Wish" else "🌟 Create New Wish",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF667EEA),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = if (id != 0L) "Make changes to perfect your wish" else "Turn your dreams into achievable goals",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF64748B),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
         }
 
         item {
@@ -1125,6 +1300,59 @@ fun AddFundsDialog(
             }
         }
     )
+}
+
+// Enhanced Section Card Component
+@Composable
+fun EnhancedSectionCard(
+    title: String,
+    subtitle: String? = null,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White.copy(alpha = 0.95f)
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            // Section Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF667EEA)
+                    )
+                    subtitle?.let { sub ->
+                        Text(
+                            text = sub,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF64748B),
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+                }
+            }
+            
+            content()
+        }
+    }
 }
 
 // Enhanced Action Button with spring animation

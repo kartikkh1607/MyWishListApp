@@ -37,6 +37,12 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ListAlt
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.SwipeToDismissBoxState
@@ -46,7 +52,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.Icon // Import from Material 3
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,43 +84,47 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
-
     val context = LocalContext.current
     val wishList = viewModel.getAllWishes.collectAsState(initial = emptyList())
     val unreadNotificationCount by viewModel.getUnreadNotificationCount().collectAsState()
 
+    // Calculate statistics
+    val totalWishes = wishList.value.size
+    val completedWishes = wishList.value.count { it.isCompleted }
+    val pendingWishes = totalWishes - completedWishes
+    val highPriorityWishes = wishList.value.count { it.priority == Priority.HIGH }
+    val recentWishes = wishList.value.take(3)
+    val totalSavingsTarget = wishList.value.sumOf { 
+        wish -> wish.price.toDoubleOrNull() ?: 0.0 
+    }
+    val totalSaved = wishList.value.sumOf { it.savedAmount }
+    
     // Loading and UI states
-    var isLoading by remember { mutableStateOf(true) }
     var showVoiceDialog by remember { mutableStateOf(false) }
-
-    // Simulate loading for demonstration
-    LaunchedEffect(wishList.value) {
-        isLoading = true
-        delay(800) // Simulated loading time
-        isLoading = false
+    
+    // Get current time for greeting
+    val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
+    val greeting = remember(currentHour) {
+        when (currentHour) {
+            in 0..5 -> "Good Night! 🌙"
+            in 6..11 -> "Good Morning! ☀️"
+            in 12..16 -> "Good Afternoon! 🌤️"
+            in 17..20 -> "Good Evening! 🌅"
+            else -> "Good Night! 🌙"
+        }
     }
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         topBar = {
-            AppBarView(
-                title = "WishList",
+            ModernAppBarView(
+                title = "Dashboard",
+                greeting = greeting,
                 onSearchClicked = {
                     navController.navigate(Screen.SearchScreen.route)
-                },
-                showActions = true
+                }
             )
-        },
-        floatingActionButton = {
-            EnhancedFAB(
-                onClick = {
-                    navController.navigate(Screen.AddScreen.route + "/0")
-                },
-                icon = Icons.Default.Add
-            )
-        },
-        floatingActionButtonPosition = FabPosition.End
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -119,15 +133,15 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFFF0F4FF), // Soft blue-white
-                            Color(0xFFE8F0FE), // Light blue gradient
-                            Color(0xFFF8FAFF)  // Very light blue-white
+                            Color(0xFFF8FAFF),
+                            Color(0xFFF0F4FF),
+                            Color(0xFFE8F0FE)
                         )
                     )
                 )
         ) {
             if (wishList.value.isEmpty()) {
-                EmptyWishListState {
+                EnhancedEmptyWishListState {
                     navController.navigate(Screen.AddScreen.route + "/0")
                 }
             } else {
@@ -137,33 +151,76 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
                         start = 16.dp,
                         end = 16.dp,
                         top = 8.dp,
-                        bottom = 88.dp // Space for FAB
+                        bottom = 100.dp
                     ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(wishList.value, key = { it.id }) { wish ->
-                        val dismissState = rememberSwipeToDismissBoxState(
-                            confirmValueChange = { dismissValue ->
-                                if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                                    viewModel.deleteWish(wish)
-                                    true
-                                } else false
-                            },
-                            positionalThreshold = { it * 0.3f }
+                    item {
+                        DashboardStatsSection(
+                            totalWishes = totalWishes,
+                            completedWishes = completedWishes,
+                            pendingWishes = pendingWishes,
+                            highPriorityWishes = highPriorityWishes,
+                            totalSavingsTarget = totalSavingsTarget,
+                            totalSaved = totalSaved
                         )
-
-                        SwipeToDismissBox(
-                            state = dismissState,
-                            enableDismissFromStartToEnd = false,
-                            backgroundContent = {
-                                SwipeBackground(dismissState)
-                            },
-                        ) { EnhancedWishItem(wish = wish) {
-                            navController.navigate(Screen.AddScreen.route + "/${wish.id}")
+                    }
+                    
+                    item {
+                        QuickActionsSection(
+                            onAddWish = { navController.navigate(Screen.AddScreen.route + "/0") },
+                            onViewAllWishes = { navController.navigate(Screen.WishListScreen.route) },
+                            onSearch = { navController.navigate(Screen.SearchScreen.route) }
+                        )
+                    }
+                    
+                    item {
+                        CategoryQuickAccessSection(
+                            onCategoryClick = { category ->
+                                navController.navigate(Screen.AddScreen.route + "/0?category=$category")
+                            }
+                        )
+                    }
+                    
+                    if (recentWishes.isNotEmpty()) {
+                        item {
+                            HomeRecentWishesSection(
+                                recentWishes = recentWishes,
+                                onWishClick = { wish ->
+                                    navController.navigate(Screen.AddScreen.route + "/${wish.id}")
+                                },
+                                onViewAll = {
+                                    navController.navigate(Screen.WishListScreen.route)
+                                }
+                            )
                         }
+                    }
+                    
+                    if (highPriorityWishes > 0) {
+                        item {
+                            HighPriorityWishesSection(
+                                highPriorityWishes = wishList.value.filter { it.priority == Priority.HIGH },
+                                onWishClick = { wish ->
+                                    navController.navigate(Screen.AddScreen.route + "/${wish.id}")
+                                }
+                            )
                         }
                     }
                 }
+            }
+            
+            // Enhanced Floating Action Button
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(24.dp)
+            ) {
+                EnhancedFAB(
+                    onClick = {
+                        navController.navigate(Screen.AddScreen.route + "/0")
+                    },
+                    icon = Icons.Default.Add
+                )
             }
         }
     }
@@ -586,6 +643,736 @@ fun WishItem(wish: Wish, onClick: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = wish.title, fontWeight = FontWeight.ExtraBold)
             Text(text = wish.description)
+        }
+    }
+}
+
+// Enhanced Dashboard Components
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ModernAppBarView(
+    title: String,
+    greeting: String,
+    onSearchClicked: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF667EEA)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = greeting,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.9f),
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 24.sp
+                )
+            }
+            
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Search",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable { onSearchClicked() }
+            )
+        }
+    }
+}
+
+@Composable
+fun DashboardStatsSection(
+    totalWishes: Int,
+    completedWishes: Int,
+    pendingWishes: Int,
+    highPriorityWishes: Int,
+    totalSavingsTarget: Double,
+    totalSaved: Double
+) {
+    Column {
+        Text(
+            text = "📊 Your Statistics",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF2C3E50),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            StatCard(
+                modifier = Modifier.weight(1f),
+                title = "Total",
+                value = totalWishes.toString(),
+                icon = Icons.Default.ListAlt,
+                color = Color(0xFF667EEA),
+                backgroundColor = Color(0xFF667EEA).copy(alpha = 0.1f)
+            )
+            
+            StatCard(
+                modifier = Modifier.weight(1f),
+                title = "Completed",
+                value = completedWishes.toString(),
+                icon = Icons.Default.EmojiEvents,
+                color = Color(0xFF10B981),
+                backgroundColor = Color(0xFF10B981).copy(alpha = 0.1f)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            StatCard(
+                modifier = Modifier.weight(1f),
+                title = "Pending",
+                value = pendingWishes.toString(),
+                icon = Icons.Default.Analytics,
+                color = Color(0xFFF59E0B),
+                backgroundColor = Color(0xFFF59E0B).copy(alpha = 0.1f)
+            )
+            
+            StatCard(
+                modifier = Modifier.weight(1f),
+                title = "High Priority",
+                value = highPriorityWishes.toString(),
+                icon = Icons.Default.LocalFireDepartment,
+                color = Color(0xFFEF4444),
+                backgroundColor = Color(0xFFEF4444).copy(alpha = 0.1f)
+            )
+        }
+        
+        // Savings progress card if there are any savings targets
+        if (totalSavingsTarget > 0) {
+            Spacer(modifier = Modifier.height(12.dp))
+            SavingsOverviewCard(
+                totalTarget = totalSavingsTarget,
+                totalSaved = totalSaved
+            )
+        }
+    }
+}
+
+@Composable
+fun StatCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color,
+    backgroundColor: Color
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        backgroundColor,
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+            
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF64748B),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+fun SavingsOverviewCard(
+    totalTarget: Double,
+    totalSaved: Double
+) {
+    val progress = if (totalTarget > 0) (totalSaved / totalTarget).coerceIn(0.0, 1.0) else 0.0
+    val progressPercentage = (progress * 100).toInt()
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.TrendingUp,
+                    contentDescription = null,
+                    tint = Color(0xFF10B981),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Savings Progress",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF10B981)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = String.format("Saved: $%.0f", totalSaved),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF10B981),
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "$progressPercentage%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF667EEA),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            Text(
+                text = String.format("Target: $%.0f", totalTarget),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF64748B)
+            )
+        }
+    }
+}
+
+@Composable
+fun QuickActionsSection(
+    onAddWish: () -> Unit,
+    onViewAllWishes: () -> Unit,
+    onSearch: () -> Unit
+) {
+    Column {
+        Text(
+            text = "⚡ Quick Actions",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF2C3E50),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            QuickActionButton(
+                modifier = Modifier.weight(1f),
+                title = "Add Wish",
+                icon = Icons.Default.Add,
+                color = Color(0xFF667EEA),
+                onClick = onAddWish
+            )
+            
+            QuickActionButton(
+                modifier = Modifier.weight(1f),
+                title = "View All",
+                icon = Icons.Default.ListAlt,
+                color = Color(0xFF10B981),
+                onClick = onViewAllWishes
+            )
+            
+            QuickActionButton(
+                modifier = Modifier.weight(1f),
+                title = "Search",
+                icon = Icons.Default.Search,
+                color = Color(0xFFF59E0B),
+                onClick = onSearch
+            )
+        }
+    }
+}
+
+@Composable
+fun QuickActionButton(
+    modifier: Modifier = Modifier,
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color,
+    onClick: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "button_scale"
+    )
+    
+    Button(
+        onClick = {
+            isPressed = true
+            onClick()
+        },
+        modifier = modifier
+            .scale(scale)
+            .height(56.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = color.copy(alpha = 0.1f),
+            contentColor = color
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 0.dp
+        )
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+    
+    LaunchedEffect(isPressed) {
+        if (isPressed) {
+            delay(100)
+            isPressed = false
+        }
+    }
+}
+
+@Composable
+fun CategoryQuickAccessSection(
+    onCategoryClick: (String) -> Unit
+) {
+    val categories = listOf(
+        Triple("Electronics", Icons.Default.Computer, Color(0xFF667EEA)),
+        Triple("Travel", Icons.Default.FlightTakeoff, Color(0xFF10B981)),
+        Triple("Books", Icons.Default.Book, Color(0xFFF59E0B)),
+        Triple("Sports", Icons.Default.Sports, Color(0xFFEF4444)),
+        Triple("Home", Icons.Default.Home, Color(0xFF8B5CF6))
+    )
+    
+    Column {
+        Text(
+            text = "🏷️ Popular Categories",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF2C3E50),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+        )
+        
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp)
+        ) {
+            items(categories.size) { index ->
+                val (category, icon, color) = categories[index]
+                CategoryChip(
+                    category = category,
+                    icon = icon,
+                    color = color,
+                    onClick = { onCategoryClick(category) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryChip(
+    category: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color,
+    onClick: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "chip_scale"
+    )
+    
+    Card(
+        modifier = Modifier
+            .scale(scale)
+            .clickable {
+                isPressed = true
+                onClick()
+            },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = color.copy(alpha = 0.1f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = category,
+                style = MaterialTheme.typography.labelMedium,
+                color = color,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+    
+    LaunchedEffect(isPressed) {
+        if (isPressed) {
+            delay(100)
+            isPressed = false
+        }
+    }
+}
+
+@Composable
+fun HomeRecentWishesSection(
+    recentWishes: List<Wish>,
+    onWishClick: (Wish) -> Unit,
+    onViewAll: () -> Unit
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "🕒 Recent Wishes",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2C3E50),
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+            
+            Text(
+                text = "View All",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF667EEA),
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .clickable { onViewAll() }
+                    .padding(horizontal = 4.dp, vertical = 8.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        recentWishes.forEach { wish ->
+            CompactWishItem(
+                wish = wish,
+                onClick = { onWishClick(wish) }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+fun HighPriorityWishesSection(
+    highPriorityWishes: List<Wish>,
+    onWishClick: (Wish) -> Unit
+) {
+    Column {
+        Text(
+            text = "🔥 High Priority",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFEF4444),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+        )
+        
+        highPriorityWishes.take(2).forEach { wish ->
+            CompactWishItem(
+                wish = wish,
+                onClick = { onWishClick(wish) },
+                highlightColor = Color(0xFFEF4444)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+fun CompactWishItem(
+    wish: Wish,
+    onClick: () -> Unit,
+    highlightColor: Color? = null
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "compact_item_scale"
+    )
+    
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(scale)
+            .clickable {
+                isPressed = true
+                onClick()
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = if (highlightColor != null) BorderStroke(2.dp, highlightColor.copy(alpha = 0.3f)) else null
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val categoryIcon = when (wish.category.lowercase()) {
+                "electronics", "electronic", "tech" -> Icons.Default.Computer
+                "book", "books", "reading" -> Icons.Default.Book
+                "home", "house", "household" -> Icons.Default.Home
+                "games", "gaming", "game" -> Icons.Default.Games
+                "work", "office", "business" -> Icons.Default.Work
+                "travel", "trip", "vacation" -> Icons.Default.FlightTakeoff
+                "sports", "sport", "fitness" -> Icons.Default.Sports
+                else -> Icons.Default.Star
+            }
+            
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(
+                        (highlightColor ?: Color(0xFF667EEA)).copy(alpha = 0.1f),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = categoryIcon,
+                    contentDescription = null,
+                    tint = highlightColor ?: Color(0xFF667EEA),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = wish.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1D29),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = wish.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF64748B),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color(0xFF94A3B8),
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+    
+    LaunchedEffect(isPressed) {
+        if (isPressed) {
+            delay(100)
+            isPressed = false
+        }
+    }
+}
+
+@Composable
+fun EnhancedEmptyWishListState(
+    onAddWish: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Animated decorative icon
+        var animationPlayed by remember { mutableStateOf(false) }
+        val scale by animateFloatAsState(
+            targetValue = if (animationPlayed) 1f else 0.3f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            ),
+            label = "empty_state_scale"
+        )
+        
+        LaunchedEffect(Unit) {
+            delay(300)
+            animationPlayed = true
+        }
+        
+        Box(
+            modifier = Modifier
+                .size(140.dp)
+                .scale(scale)
+                .clip(RoundedCornerShape(70.dp))
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF667EEA).copy(alpha = 0.15f),
+                            Color(0xFF667EEA).copy(alpha = 0.05f)
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "🌟",
+                fontSize = 64.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "Start Your Wish Journey!",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF2C3E50),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Your wish list is empty, but your dreams aren't!\nStart by adding your first wish and watch\nyour goals come to life.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF64748B),
+            textAlign = TextAlign.Center,
+            lineHeight = 22.sp
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Button(
+            onClick = onAddWish,
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .height(52.dp),
+            shape = RoundedCornerShape(26.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF667EEA)
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 8.dp
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Add Your First Wish",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
