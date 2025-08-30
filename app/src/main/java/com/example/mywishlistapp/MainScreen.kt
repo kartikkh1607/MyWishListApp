@@ -19,11 +19,25 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.platform.LocalContext
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: WishViewModel = viewModel()) {
+fun MainScreen() {
+    LaunchedEffect(Unit) {
+        Log.d("MainScreen", "Creating MainScreen")
+    }
+    
+    val context = LocalContext.current
+    val viewModel: WishViewModel = viewModel(
+        factory = WishViewModelFactory(context.applicationContext as android.app.Application)
+    )
     val navController = rememberNavController()
+    
+    LaunchedEffect(viewModel, navController) {
+        Log.d("MainScreen", "ViewModel and NavController created successfully")
+    }
 
     Scaffold(
         bottomBar = {

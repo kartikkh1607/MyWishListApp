@@ -7,4 +7,152 @@
     <string name="wish_created">Wish has been created</string>
     <string name="wish_updated">Wish has been updated</string>
     <string name="fill_all_fields">Please fill in all fields</string>
+    
+    <!-- Navigation and Screen Titles -->
+    <string name="home_screen">Home</string>
+    <string name="wishes">Wishes</string>
+    <string name="wishlist">WISHLIST</string>
+    <string name="todos">To-Dos</string>
+    <string name="add">Add</string>
+    <string name="calendar">Calendar</string>
+    <string name="settings">Settings</string>
+    <string name="notifications">Notifications</string>
+    <string name="profile">Profile</string>
+    <string name="search">Search</string>
+    <string name="achievements">Achievements</string>
+    
+    <!-- Dashboard Greetings -->
+    <string name="good_morning">Good Morning</string>
+    <string name="good_afternoon">Good Afternoon</string>
+    <string name="good_evening">Good Evening</string>
+    <string name="good_night">Good Night</string>
+    
+    <!-- Quick Stats -->
+    <string name="total_wishes">Total Wishes</string>
+    <string name="completed">Completed</string>
+    <string name="pending">Pending</string>
+    
+    <!-- Categories -->
+    <string name="quick_categories">Quick Categories</string>
+    <string name="electronics">Electronics</string>
+    <string name="travel">Travel</string>
+    <string name="gaming">Gaming</string>
+    <string name="books">Books</string>
+    <string name="sports">Sports</string>
+    <string name="fashion">Fashion</string>
+    <string name="home">Home</string>
+    <string name="food">Food</string>
+    <string name="health">Health</string>
+    <string name="education">Education</string>
+    <string name="other">Other</string>
+    
+    <!-- Recent Wishes -->
+    <string name="recent_wishes">Recent Wishes</string>
+    <string name="view_all">View All</string>
+    <string name="no_wishes_yet">No wishes yet</string>
+    <string name="add_first_wish">Add your first wish to get started!</string>
+    
+    <!-- Empty States -->
+    <string name="all_caught_up">All caught up! 🎉</string>
+    <string name="no_pending_tasks">You have no pending tasks</string>
+    <string name="create_first_wish">Create your first wish to get started!</string>
+    
+    <!-- Form Labels -->
+    <string name="basic_information">📝 Basic Information</string>
+    <string name="enter_wish_title">Enter wish title</string>
+    <string name="enter_wish_description">Enter wish description</string>
+    <string name="price_and_image">💰 Price &amp; Image</string>
+    <string name="price_optional">Price (Optional)</string>
+    <string name="price_placeholder">e.g., 299.99</string>
+    <string name="image_url_optional">Image URL (Optional)</string>
+    <string name="image_url_placeholder">https://example.com/image.jpg</string>
+    <string name="categories_and_tags">🏷️ Categories &amp; Tags</string>
+    <string name="enter_tags">Enter tags (comma separated)</string>
+    <string name="tags_placeholder">e.g., smartphone, android, budget</string>
+    <string name="category">Category</string>
+    <string name="select_category">Select category</string>
+    <string name="priority">⭐ Priority</string>
+    <string name="priority_level">Priority Level</string>
+    <string name="high">High</string>
+    <string name="medium">Medium</string>
+    <string name="low">Low</string>
+    
+    <!-- Form Actions -->
+    <string name="update_your_wish">Update Your Wish</string>
+    <string name="create_new_wish">Create New Wish</string>
+    <string name="add_wish_button">✨ Add Wish</string>
+    <string name="update_wish_button">✨ Update Wish</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="edit">Edit</string>
+    <string name="share">Share</string>
+    <string name="delete">Delete</string>
+    <string name="clear">Clear</string>
+    <string name="filter">Filter</string>
+    
+    <!-- Search -->
+    <string name="search_wishes_title">Search the wishes title</string>
+    <string name="search_results_singular">1 result for \"%1$s\"</string>
+    <string name="search_results_plural">%1$d results for \"%2$s\"</string>
+    
+    <!-- Validation Messages -->
+    <string name="please_fill_title_description">Please fill in title and description</string>
+    
+    <!-- Achievements -->
+    <string name="achievement_unlocked">Achievement Unlocked!</string>
+    <string name="wish_completed">Wish Completed!</string>
+    <string name="congratulations_completed">🎉 Congratulations! You\'ve completed \'%1$s\'</string>
+    <string name="achievement_reward">🏆 %1$s: %2$s</string>
+    
+    <!-- User Profile -->
+    <string name="edit_your_name">Edit Your Name</string>
+    <string name="enter_your_name">Enter your name</string>
+    <string name="player">Player</string>
+    <string name="user">User</string>
+    
+    <!-- Saving Goals -->
+    <string name="savings_progress">Savings Progress</string>
+    <string name="add_funds">Add Funds</string>
+    <string name="add_funds_to_wish">Add Funds to Wish</string>
+    <string name="amount">Amount</string>
+    <string name="enter_amount">Enter amount</string>
+    <string name="saved_amount">Saved: $%1$.2f</string>
+    <string name="target_amount">Target: $%1$.2f</string>
+    <string name="progress_percentage">%1$.1f%% saved</string>
+    
+    <!-- Sharing -->
+    <string name="share_wish_text">Check out what I\'m wishing for: %1$s - %2$s</string>
+    
+    <!-- Notifications -->
+    <string name="reminder_channel_name">Wishlist Reminders</string>
+    <string name="reminder_channel_description">Reminders for your wishlist items</string>
+    <string name="action_completed">Action Completed</string>
+    <string name="wish_marked_done">Wish marked as done! 🎉</string>
+    <string name="snoozed_one_hour">Snoozed for 1 hour ⏰</string>
+    <string name="mark_as_done">Mark as Done</string>
+    <string name="snooze">Snooze</string>
+    <string name="dont_forget_wish">Don\'t forget about this wish!</string>
+    
+    <!-- Reminder Messages -->
+    <string name="high_priority_reminder1">🔥 High priority reminder!</string>
+    <string name="high_priority_reminder2">⏰ This is important - don\'t miss out!</string>
+    <string name="high_priority_reminder3">🎯 Time to take action on this wish!</string>
+    <string name="high_priority_reminder4">🚨 Your high-priority wish needs attention!</string>
+    
+    <string name="medium_priority_reminder1">⭐ Friendly reminder about your wish</string>
+    <string name="medium_priority_reminder2">💫 Still thinking about this?</string>
+    <string name="medium_priority_reminder3">🎪 Don\'t let this wish slip away!</string>
+    <string name="medium_priority_reminder4">🌟 Time to make progress on this wish!</string>
+    
+    <string name="low_priority_reminder1">💭 Just a gentle reminder...</string>
+    <string name="low_priority_reminder2">🌙 When you have time, consider this</string>
+    <string name="low_priority_reminder3">☁️ Still on your mind?</string>
+    <string name="low_priority_reminder4">🍃 No rush, but this is still here</string>
+    
+    <!-- Logging Messages -->
+    <string name="starting_mainactivity">Starting MainActivity creation</string>
+    <string name="mainactivity_created">MainActivity created successfully</string>
+    <string name="error_creating_mainactivity">Error creating MainActivity: %1$s</string>
+    <string name="creating_mainscreen">Creating MainScreen</string>
+    <string name="viewmodel_navcontroller_created">ViewModel and NavController created successfully</string>
 </resources>

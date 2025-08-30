@@ -21,10 +21,8 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.FabPosition
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.List
-import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Games
@@ -48,6 +46,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon // Import from Material 3
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,11 +78,11 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
     val context = LocalContext.current
     val wishList = viewModel.getAllWishes.collectAsState(initial = emptyList())
     val unreadNotificationCount by viewModel.getUnreadNotificationCount().collectAsState()
-    
+
     // Loading and UI states
     var isLoading by remember { mutableStateOf(true) }
     var showVoiceDialog by remember { mutableStateOf(false) }
-    
+
     // Simulate loading for demonstration
     LaunchedEffect(wishList.value) {
         isLoading = true
@@ -143,7 +142,7 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(wishList.value, key = { it.id }) { wish ->
-val dismissState = rememberSwipeToDismissBoxState(
+                        val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = { dismissValue ->
                                 if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
                                     viewModel.deleteWish(wish)
@@ -219,27 +218,27 @@ fun EmptyWishListState(onAddWish: () -> Unit) {
                 ),
             contentAlignment = Alignment.Center
         ) {
-            androidx.compose.material3.Icon(
+            Icon(
                 imageVector = Icons.AutoMirrored.Outlined.List,
                 contentDescription = null,
                 modifier = Modifier.size(60.dp),
                 tint = colorResource(R.color.app_bar_color).copy(alpha = 0.6f)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
-        androidx.compose.material3.Text(
+
+        Text(
             text = "Your Wish List is Empty",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF2C3E50),
             textAlign = TextAlign.Center
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
-        androidx.compose.material3.Text(
+
+        Text(
             text = "Add your first wish to get started!\nTap the + button to create one.",
             style = MaterialTheme.typography.bodyMedium,
             color = Color(0xFF64748B),
@@ -259,7 +258,7 @@ fun SwipeBackground(dismissState: SwipeToDismissBoxState) {
         },
         label = "swipe_color"
     )
-    
+
     val scale by animateFloatAsState(
         when (dismissState.dismissDirection) {
             SwipeToDismissBoxValue.EndToStart -> 1.3f
@@ -267,7 +266,7 @@ fun SwipeBackground(dismissState: SwipeToDismissBoxState) {
         },
         label = "icon_scale"
     )
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -278,7 +277,7 @@ fun SwipeBackground(dismissState: SwipeToDismissBoxState) {
             .padding(horizontal = 20.dp),
         contentAlignment = Alignment.CenterEnd
     ) {
-        androidx.compose.material3.Icon(
+        Icon(
             imageVector = Icons.Default.Delete,
             contentDescription = "Delete",
             tint = Color.White,
@@ -299,7 +298,7 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
         ),
         label = "card_scale"
     )
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -338,7 +337,7 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                     .padding(24.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-// Dynamic Category Icon with more comprehensive mapping
+                // Dynamic Category Icon with more comprehensive mapping
                 val categoryIcon = when (wish.category.lowercase()) {
                     "electronics", "electronic", "tech", "technology" -> Icons.Default.Computer
                     "book", "books", "reading", "education" -> Icons.Default.Book
@@ -369,16 +368,16 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    androidx.compose.material3.Icon(
+                    Icon(
                         imageVector = categoryIcon,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(28.dp)
                     )
-                } 
-                
+                }
+
                 Spacer(modifier = Modifier.width(20.dp))
-                
+
                 // Enhanced content with better typography
                 Column(
                     modifier = Modifier.weight(1f),
@@ -389,7 +388,7 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        androidx.compose.material3.Text(
+                        Text(
                             text = wish.title,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
@@ -399,10 +398,10 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                             fontSize = 18.sp,
                             modifier = Modifier.weight(1f)
                         )
-                        
+
                         // Category Badge
                         if (wish.category.isNotEmpty()) {
-                            androidx.compose.material3.Text(
+                            Text(
                                 text = wish.category,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color(0xFF667EEA),
@@ -417,7 +416,7 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                             )
                         }
                     }
-                    
+
                     // Priority Row
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -430,7 +429,7 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                                 "🌱"
                             )
                             Priority.MEDIUM -> Triple(
-                                Color(0xFFF59E0B), // Amber-500 
+                                Color(0xFFF59E0B), // Amber-500
                                 Color(0xFFF59E0B).copy(alpha = 0.1f),
                                 "⚡"
                             )
@@ -440,9 +439,9 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                                 "🔥"
                             )
                         }
-                        
+
                         // Priority badge with icon and text
-                        androidx.compose.material3.Text(
+                        Text(
                             text = "$priorityIcon ${wish.priority.name}",
                             style = MaterialTheme.typography.labelSmall,
                             color = priorityColor,
@@ -456,8 +455,8 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                             fontSize = 11.sp
                         )
                     }
-                    
-                    androidx.compose.material3.Text(
+
+                    Text(
                         text = wish.description,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF64748B).copy(alpha = 0.8f),
@@ -466,7 +465,7 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                         lineHeight = 20.sp,
                         fontSize = 13.sp
                     )
-                    
+
                     // Tags Row
                     if (wish.tags.isNotEmpty()) {
                         FlowRow(
@@ -475,7 +474,7 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             wish.tags.take(3).forEach { tag ->
-                                androidx.compose.material3.Text(
+                                Text(
                                     text = "#$tag",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color(0xFF8B9DC3),
@@ -490,7 +489,7 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                                 )
                             }
                             if (wish.tags.size > 3) {
-                                androidx.compose.material3.Text(
+                                Text(
                                     text = "+${wish.tags.size - 3}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color(0xFF8B9DC3),
@@ -501,7 +500,7 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                         }
                     }
                 }
-                
+
                 // Subtle arrow indicator
                 Box(
                     modifier = Modifier
@@ -510,7 +509,7 @@ fun EnhancedWishItem(wish: Wish, onClick: () -> Unit) {
                         .background(Color(0xFF667EEA).copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    androidx.compose.material3.Icon(
+                    Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
                         tint = Color(0xFF667EEA),
@@ -535,8 +534,8 @@ fun NavigationFAB(
         ),
         label = "fab_scale"
     )
-    
-FloatingActionButton(
+
+    FloatingActionButton(
         onClick = {
             isPressed = true
             onClick()
@@ -562,7 +561,7 @@ FloatingActionButton(
             pressedElevation = 20.dp
         )
     ) {
-        androidx.compose.material3.Icon(
+        Icon(
             imageVector = Icons.Default.Add,
             contentDescription = "Add Wish",
             modifier = Modifier.size(28.dp),

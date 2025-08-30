@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,7 +27,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import androidx.compose.material3.ripple
 
 
 @Composable
@@ -390,10 +388,7 @@ fun QuickSuggestionChip(
             .scale(scale)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(
-                    color = Color(0xFF667EEA),
-                    radius = 20.dp
-                )
+                indication = null
             ) {
                 isPressed = true
                 onClick()

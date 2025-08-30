@@ -74,7 +74,10 @@ data class Wish(
     @ColumnInfo(name = "wish-scheduled-date")
     val scheduledDate: String? = null, // Format: yyyy-MM-dd
     @ColumnInfo(name = "wish-reminder-set")
-    val reminderSet: Boolean = false
+    val reminderSet: Boolean = false,
+    // Savings feature
+    @ColumnInfo(name = "wish-saved-amount")
+    val savedAmount: Double = 0.0
 )
 
 object DummyWish {

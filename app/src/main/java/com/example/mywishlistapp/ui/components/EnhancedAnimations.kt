@@ -1,11 +1,5 @@
 package com.example.mywishlistapp.ui.components
 
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
-
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -14,26 +8,27 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 
 // Enhanced bouncing animation with customizable parameters
 @Composable
@@ -139,7 +134,7 @@ fun EnhancedFAB(
 ) {
     var isPressed by remember { mutableStateOf(false) }
     var isVisible by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(Unit) {
         delay(300) // Entrance delay
         isVisible = true
@@ -201,7 +196,7 @@ fun EnhancedFAB(
     }
 }
 
-// Ripple click effect for cards and buttons
+
 @Composable
 fun RippleClickable(
     onClick: () -> Unit,
@@ -211,12 +206,16 @@ fun RippleClickable(
     content: @Composable () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    
+
     Box(
         modifier = modifier
             .clickable(
                 interactionSource = interactionSource,
-                indication = ripple(color = rippleColor),
+                indication = ripple(
+                    color = rippleColor, // or Color.Unspecified to use theme
+                    bounded = true       // set false for unbounded “borderless” ripple
+                    // radius = Dp.Unspecified // (optional) fixed ripple radius
+                ),
                 enabled = enabled,
                 onClick = onClick
             )
@@ -232,7 +231,7 @@ fun SlideInListItem(
     content: @Composable () -> Unit
 ) {
     var isVisible by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(Unit) {
         delay((index * 50).toLong()) // Staggered animation
         isVisible = true
@@ -249,7 +248,7 @@ fun SlideInListItem(
         ) + fadeIn(
             animationSpec = tween(300, delayMillis = index * 50)
         ),
-        exit = slideOutHorizontally() + fadeOut()
+        exit = slideOutVertically() + fadeOut()
     ) {
         content()
     }
@@ -303,7 +302,7 @@ fun SuccessAnimation(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = androidx.compose.material.icons.Icons.Default.Check,
+                imageVector = Icons.Default.Check, // Using Material 3 Icons
                 contentDescription = "Success",
                 tint = Color.White,
                 modifier = Modifier.size(40.dp)

@@ -8,18 +8,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlin.math.min
 
 @Composable
 fun GoalProgressBar(
     title: String,
-    currentAmount: Double,
-    targetAmount: Double,
+    currentAmount: Float,
+    targetAmount: Float,
     currency: String = "$",
     modifier: Modifier = Modifier
 ) {
@@ -118,8 +115,8 @@ fun SavingsGoalSection(
         
         GoalProgressBar(
             title = "Total Savings Goal",
-            currentAmount = currentSavings,
-            targetAmount = savingsGoal,
+            currentAmount = currentSavings.toFloat(),
+            targetAmount = savingsGoal.toFloat(),
             currency = "$"
         )
     }

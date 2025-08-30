@@ -1,7 +1,6 @@
 package com.example.mywishlistapp
 
 import android.app.Application
-import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
@@ -38,27 +37,28 @@ class WishViewModel(
     private val wishRepository: WishRepository = Graph.wishRepository,
     private val userProfileRepository: UserProfileRepository = Graph.userProfileRepository
 ) : AndroidViewModel(application) {
-    
+
     private val reminderSystem = ReminderSystem(getApplication())
     private val achievementSystem = AchievementSystem
 
     // Notification state management
     private val _notifications = MutableStateFlow<List<NotificationItem>>(emptyList())
     val notifications: StateFlow<List<NotificationItem>> = _notifications.asStateFlow()
-    
+
     // User profile and achievements
     private val _userProfile = MutableStateFlow(UserProfile())
     val userProfile: StateFlow<UserProfile> = _userProfile.asStateFlow()
-    
+
     private val _achievements = MutableStateFlow<List<Achievement>>(emptyList())
     val achievements: StateFlow<List<Achievement>> = _achievements.asStateFlow()
-    
+
     // Consolidated wish state
     var wishState by mutableStateOf(Wish())
-    
+
     init {
         loadUserProfile()
         loadAchievements()
+        // The problematic lines that added default notifications have been removed.
     }
 
     // Legacy individual state properties for backward compatibility
@@ -71,33 +71,33 @@ class WishViewModel(
     var wishImageUrlState by mutableStateOf("")
 
     fun onWishTitleChanged(newString: String) {
-        wishState = wishState.copy(title = newString)
+        wishTitleState = newString
     }
 
     fun onWishDescriptionChanged(newString: String) {
-        wishState = wishState.copy(description = newString)
+        wishDescriptionState = newString
     }
 
     fun onWishCategoryChanged(newString: String) {
-        wishState = wishState.copy(category = newString)
+        wishCategoryState = newString
     }
 
     fun onWishTagsChanged(newString: String) {
-        wishState = wishState.copy(tags = newString.split(",").map { it.trim() }.filter { it.isNotEmpty() })
+        wishTagsState = newString
     }
 
     fun onWishPriorityChanged(newPriority: Priority) {
-        wishState = wishState.copy(priority = newPriority)
+        wishPriorityState = newPriority
     }
 
     fun onWishPriceChanged(newString: String) {
-        wishState = wishState.copy(price = newString)
+        wishPriceState = newString
     }
 
     fun onWishImageUrlChanged(newString: String) {
-        wishState = wishState.copy(imageUrl = newString)
+        wishImageUrlState = newString
     }
-    
+
     // Convert tags string to list
     fun getTagsList(): List<String> {
         return if (wishTagsState.isBlank()) {
@@ -112,7 +112,7 @@ class WishViewModel(
     fun addWish(wish: Wish){
         viewModelScope.launch(Dispatchers.IO) {
             wishRepository.addWish(wish = wish)
-            
+
             // Schedule reminder for high-priority wishes
             if (wish.priority == Priority.HIGH) {
                 reminderSystem.scheduleSmartReminder(wish)
@@ -121,13 +121,13 @@ class WishViewModel(
     }
 
     fun getWishbyId(id: Long) : Flow<Wish>{
-           return wishRepository.getWishById(id = id)
+        return wishRepository.getWishById(id = id)
     }
 
     fun updateWish(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
             wishRepository.updateWish(wish = wish)
-            
+
             // Update or schedule reminder based on priority
             if (wish.priority == Priority.HIGH) {
                 reminderSystem.scheduleSmartReminder(wish)
@@ -141,19 +141,19 @@ class WishViewModel(
     fun deleteWish(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
             wishRepository.deleteWish(wish = wish)
-            
+
             // Cancel any existing reminders for deleted wish
             reminderSystem.cancelReminder(wish.id)
         }
     }
-    
+
     // Calendar and scheduling related functions
     fun updateWishScheduledDate(wishId: Long, scheduledDate: String?) {
         viewModelScope.launch(Dispatchers.IO) {
             val currentWish = wishRepository.getWishById(wishId).first()
             val updatedWish = currentWish.copy(scheduledDate = scheduledDate)
             wishRepository.updateWish(updatedWish)
-            
+
             // Update reminder if needed
             if (reminderSystem != null && updatedWish.reminderSet) {
                 if (scheduledDate != null) {
@@ -164,13 +164,13 @@ class WishViewModel(
             }
         }
     }
-    
+
     fun toggleWishReminder(wishId: Long, reminderSet: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val currentWish = wishRepository.getWishById(wishId).first()
             val updatedWish = currentWish.copy(reminderSet = reminderSet)
             wishRepository.updateWish(updatedWish)
-            
+
             // Schedule or cancel reminder
             if (reminderSystem != null) {
                 if (reminderSet && updatedWish.scheduledDate != null) {
@@ -181,7 +181,7 @@ class WishViewModel(
             }
         }
     }
-    
+
     // Get wishes scheduled for a specific date
     @RequiresApi(Build.VERSION_CODES.O)
     fun getWishesForDate(date: LocalDate): Flow<List<Wish>> {
@@ -190,28 +190,28 @@ class WishViewModel(
             wishes.filter { it.scheduledDate == dateString }
         }
     }
-    
+
     // Get all wishes with scheduled dates
     fun getScheduledWishes(): Flow<List<Wish>> {
         return getAllWishes.map { wishes ->
             wishes.filter { it.scheduledDate != null }
         }
     }
-    
+
     // Get wishes with reminders enabled
     fun getWishesWithReminders(): Flow<List<Wish>> {
         return getAllWishes.map { wishes ->
             wishes.filter { it.reminderSet }
         }
     }
-    
+
     // Notification management functions
     fun removeNotification(notificationId: Int) {
         viewModelScope.launch {
             _notifications.value = _notifications.value.filter { it.id != notificationId }
         }
     }
-    
+
     fun markNotificationAsRead(notificationId: Int) {
         viewModelScope.launch {
             _notifications.value = _notifications.value.map { notification ->
@@ -223,7 +223,7 @@ class WishViewModel(
             }
         }
     }
-    
+
     fun addNotification(title: String, message: String, type: NotificationType) {
         viewModelScope.launch {
             val newNotification = NotificationItem(
@@ -237,13 +237,13 @@ class WishViewModel(
             _notifications.value = listOf(newNotification) + _notifications.value
         }
     }
-    
+
     fun clearAllNotifications() {
         viewModelScope.launch {
             _notifications.value = emptyList()
         }
     }
-    
+
     fun getUnreadNotificationCount(): StateFlow<Int> {
         return _notifications.map { notifications ->
             notifications.count { !it.isRead }
@@ -253,7 +253,7 @@ class WishViewModel(
             initialValue = 0
         )
     }
-    
+
     // Gamification methods
     private fun loadUserProfile() {
         viewModelScope.launch {
@@ -277,42 +277,46 @@ class WishViewModel(
             }
         }
     }
-    
+
     private fun loadAchievements() {
         viewModelScope.launch {
             _achievements.value = achievementSystem.getAllAchievements()
         }
     }
-    
+
     private suspend fun updateUserProfile(updater: (UserProfile) -> UserProfile) {
         val currentProfile = _userProfile.value
         val updatedProfile = updater(currentProfile)
         _userProfile.value = updatedProfile
         userProfileRepository.saveUserProfile(updatedProfile)
     }
-    
+
     private suspend fun checkAndUnlockAchievements(profile: UserProfile) {
         val unlockedAchievements = achievementSystem.checkAchievements(profile)
         val newAchievements = unlockedAchievements.filter { !it.isUnlocked }
-        
+
         if (newAchievements.isNotEmpty()) {
             // Mark achievements as unlocked
             achievementSystem.unlockAchievements(newAchievements.map { it.id })
-            
+
             // Update achievements list
             _achievements.value = achievementSystem.getAllAchievements()
-            
+
             // Notify user about new achievements
             newAchievements.forEach { achievement ->
                 addNotification(
-                    title = "Achievement Unlocked!",
-                    message = "🏆 ${achievement.name}: ${achievement.description}",
+                    title = getApplication<Application>().getString(R.string.achievement_unlocked),
+                    message = getApplication<Application>().getString(
+                        R.string.achievement_reward,
+                        achievement.name,
+                        achievement.description
+                    ),
                     type = NotificationType.ACHIEVEMENT
                 )
             }
         }
     }
-    
+
     private suspend fun onWishAdded() {
         updateUserProfile { profile ->
             profile.copy(
@@ -322,7 +326,7 @@ class WishViewModel(
         }
         checkAndUnlockAchievements(_userProfile.value)
     }
-    
+
     private suspend fun onWishCompleted() {
         updateUserProfile { profile ->
             profile.copy(
@@ -332,7 +336,7 @@ class WishViewModel(
         }
         checkAndUnlockAchievements(_userProfile.value)
     }
-    
+
     private suspend fun onWishDeleted() {
         updateUserProfile { profile ->
             profile.copy(
@@ -340,7 +344,7 @@ class WishViewModel(
             )
         }
     }
-    
+
     // Update username method
     fun updateUsername(newUsername: String) {
         viewModelScope.launch {
@@ -349,58 +353,61 @@ class WishViewModel(
             }
         }
     }
-    
+
     // Enhanced wish management with gamification
     fun addWishWithGamification(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
             wishRepository.addWish(wish = wish)
-            
+
             // Schedule reminder for high-priority wishes
             if (wish.priority == Priority.HIGH && reminderSystem != null) {
                 reminderSystem.scheduleSmartReminder(wish)
             }
-            
+
             // Update gamification stats
             onWishAdded()
         }
     }
-    
+
     fun completeWish(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
             val completedWish = wish.copy(isCompleted = true)
             wishRepository.updateWish(completedWish)
-            
+
             // Cancel reminders for completed wishes
             if (reminderSystem != null) {
                 reminderSystem.cancelReminder(wish.id)
             }
-            
+
             // Update gamification stats
             onWishCompleted()
-            
+
             // Add completion notification
             addNotification(
-                title = "Wish Completed!",
-                message = "🎉 Congratulations! You've completed '${wish.title}'",
+                title = getApplication<Application>().getString(R.string.wish_completed),
+                message = getApplication<Application>().getString(
+                    R.string.congratulations_completed,
+                    wish.title
+                ),
                 type = NotificationType.WISH_UPDATE
             )
         }
     }
-    
+
     fun deleteWishWithGamification(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
             wishRepository.deleteWish(wish = wish)
-            
+
             // Cancel any existing reminders for deleted wish
             if (reminderSystem != null) {
                 reminderSystem.cancelReminder(wish.id)
             }
-            
+
             // Update gamification stats
             onWishDeleted()
         }
     }
-    
+
     // Get user level based on experience points
     fun getUserLevel(): StateFlow<Int> {
         return _userProfile.map { profile ->
@@ -411,7 +418,7 @@ class WishViewModel(
             initialValue = 1
         )
     }
-    
+
     // Get progress to next level
     fun getLevelProgress(): StateFlow<Float> {
         return _userProfile.map { profile ->
@@ -424,17 +431,47 @@ class WishViewModel(
             initialValue = 0f
         )
     }
-    
+
     // Get recent achievements (last 5)
     fun getRecentAchievements(): StateFlow<List<Achievement>> {
         return _achievements.map { achievements ->
             achievements.filter { achievement -> achievement.isUnlocked }
-                       .sortedByDescending { achievement -> achievement.unlockedAt }
-                       .take(5)
+                .sortedByDescending { achievement -> achievement.unlockedAt }
+                .take(5)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+    }
+    
+    // Saving Goals Feature
+    fun addFundsToWish(wishId: Long, amount: Double) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val currentWish = wishRepository.getWishById(wishId).first()
+                val updatedWish = currentWish.copy(savedAmount = currentWish.savedAmount + amount)
+                wishRepository.updateWish(updatedWish)
+                
+                // Add notification for funds added
+                addNotification(
+                    title = "Funds Added! 💰",
+                    message = "Added $${String.format("%.2f", amount)} to '${currentWish.title}'",
+                    type = NotificationType.WISH_UPDATE
+                )
+                
+                // Check if goal is reached
+                val targetPrice = currentWish.price.toDoubleOrNull() ?: 0.0
+                if (targetPrice > 0 && updatedWish.savedAmount >= targetPrice) {
+                    addNotification(
+                        title = "Goal Reached! 🎯",
+                        message = "You've saved enough for '${currentWish.title}'!",
+                        type = NotificationType.ACHIEVEMENT
+                    )
+                }
+            } catch (e: Exception) {
+                // Handle error - could add error notification here
+            }
+        }
     }
 }

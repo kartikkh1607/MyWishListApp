@@ -2,6 +2,7 @@ package com.example.mywishlistapp
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,6 +39,8 @@ import kotlinx.coroutines.delay
 
 import com.example.mywishlistapp.Data.Wish
 import com.example.mywishlistapp.ui.theme.*
+import com.example.mywishlistapp.ui.components.EnhancedEmptyWishListState
+import com.example.mywishlistapp.ui.components.EmptySearchState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,14 +113,25 @@ fun WishListScreen(navController: NavHostController, viewModel: WishViewModel) {
         }
         
         // Content based on selected tab
-        WishesContent(
-            wishes = filteredWishes,
-            onWishClick = {
-                navController.navigate(Screen.AddScreen.route + "/${it.id}")
-            },
-            viewModel = viewModel,
-            modifier = Modifier.weight(1f)
-        )
+        when (selectedTab) {
+            0 -> WishesContent(
+                wishes = filteredWishes,
+                onWishClick = {
+                    navController.navigate(Screen.AddScreen.route + "/${it.id}")
+                },
+                viewModel = viewModel,
+                searchQuery = searchQuery,
+                onAddWish = {
+                    navController.navigate(Screen.AddScreen.route + "/0L")
+                },
+                modifier = Modifier.weight(1f)
+            )
+            1 -> TodosContent(
+                wishes = filteredWishes.filter { !it.isCompleted },
+                viewModel = viewModel,
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
 }
 
@@ -371,16 +388,21 @@ fun WishesContent(
     wishes: List<Wish>,
     onWishClick: (Wish) -> Unit,
     viewModel: WishViewModel,
+    searchQuery: String = "",
+    onAddWish: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     if (wishes.isEmpty()) {
-        LazyColumn(
-            modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            item {
-                EmptyWishesState(modifier = Modifier.fillParentMaxSize())
-            }
+        if (searchQuery.isNotEmpty()) {
+            EmptySearchState(
+                query = searchQuery,
+                modifier = modifier.fillMaxSize()
+            )
+        } else {
+            EnhancedEmptyWishListState(
+                onAddWish = onAddWish,
+                modifier = modifier.fillMaxSize()
+            )
         }
     } else {
         LazyColumn(
@@ -391,11 +413,18 @@ fun WishesContent(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(wishes, key = { it.id }) { wish ->
-                SwipeToDeleteWishCard(
+            items(
+                items = wishes,
+                key = { it.id }
+            ) { wish ->
+                val index = wishes.indexOf(wish)
+                StaggeredAnimatedWishCard(
                     wish = wish,
+                    index = index,
                     onWishClick = { onWishClick(wish) },
-                    onDelete = { viewModel.deleteWishWithGamification(wish) },
+                    onDelete = { 
+                        viewModel.deleteWishWithGamification(wish)
+                    },
                     viewModel = viewModel
                 )
             }
@@ -527,6 +556,7 @@ fun ModernWishCard(
 @Composable
 fun TodosContent(
     wishes: List<Wish>,
+    viewModel: WishViewModel,
     modifier: Modifier = Modifier
 ) {
     if (wishes.isEmpty()) {
@@ -541,7 +571,7 @@ fun TodosContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(wishes, key = { it.id }) { wish ->
-                TodoCard(wish = wish)
+                TodoCard(wish = wish, viewModel = viewModel)
             }
         }
     }
@@ -549,13 +579,37 @@ fun TodosContent(
 
 @Composable
 fun TodoCard(
-    wish: Wish
+    wish: Wish,
+    viewModel: WishViewModel
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
+    var isPressed by remember { mutableStateOf(false) }
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        ),
+        label = "todo_card_scale"
+    )
+    
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                    }
+                )
+            },
         shape = RoundedCornerShape(12.dp),
         color = SurfaceWhite,
-        shadowElevation = 1.dp
+        shadowElevation = if (isPressed) 4.dp else 1.dp
     ) {
         Row(
             modifier = Modifier
@@ -563,9 +617,35 @@ fun TodoCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            var checkboxPressed by remember { mutableStateOf(false) }
+            val checkboxScale by animateFloatAsState(
+                targetValue = if (checkboxPressed) 1.1f else 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessHigh
+                ),
+                label = "todo_checkbox_scale"
+            )
+            
             Checkbox(
-                checked = false,
-                onCheckedChange = { checked -> /* Handle completion */ },
+                checked = wish.isCompleted,
+                onCheckedChange = { checked ->
+                    if (checked && !wish.isCompleted) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.completeWish(wish)
+                    }
+                },
+                modifier = Modifier
+                    .graphicsLayer(scaleX = checkboxScale, scaleY = checkboxScale)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {
+                                checkboxPressed = true
+                                tryAwaitRelease()
+                                checkboxPressed = false
+                            }
+                        )
+                    },
                 colors = CheckboxDefaults.colors(
                     checkedColor = AccentGreen,
                     uncheckedColor = TextTertiary
@@ -590,6 +670,31 @@ fun TodoCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary,
                         modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+                
+                // Priority indicator for todos
+                Row(
+                    modifier = Modifier.padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when (wish.priority.name) {
+                                    "HIGH" -> AccentRed
+                                    "MEDIUM" -> AccentOrange
+                                    else -> AccentGreen
+                                }
+                            )
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${wish.priority.name.lowercase()} priority",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextTertiary
                     )
                 }
             }
@@ -655,6 +760,51 @@ fun EmptyTodosState(
     }
 }
 
+// Staggered Animated Wish Card for list items
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StaggeredAnimatedWishCard(
+    wish: Wish,
+    index: Int,
+    onWishClick: () -> Unit,
+    onDelete: () -> Unit,
+    viewModel: WishViewModel
+) {
+    var visible by remember { mutableStateOf(false) }
+    val hapticFeedback = LocalHapticFeedback.current
+    
+    // Staggered animation delay based on index
+    val animationDelay = remember { (index * 50).coerceAtMost(500) }
+    
+    LaunchedEffect(Unit) {
+        delay(animationDelay.toLong())
+        visible = true
+    }
+    
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        ) + slideInVertically(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            ),
+            initialOffsetY = { it / 3 }
+        )
+    ) {
+        SwipeToDeleteWishCard(
+            wish = wish,
+            onWishClick = onWishClick,
+            onDelete = onDelete,
+            viewModel = viewModel
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeToDeleteWishCard(
@@ -663,10 +813,13 @@ fun SwipeToDeleteWishCard(
     onDelete: () -> Unit,
     viewModel: WishViewModel
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
             when (dismissValue) {
                 SwipeToDismissBoxValue.EndToStart -> {
+                    // Trigger haptic feedback for successful swipe to delete
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDelete()
                     true
                 }
@@ -695,7 +848,7 @@ fun SwipeToDeleteWishCard(
                 if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = stringResource(R.string.delete),
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
@@ -704,10 +857,154 @@ fun SwipeToDeleteWishCard(
         },
         enableDismissFromStartToEnd = false
     ) {
-        AnimatedWishCard(
+        EnhancedModernWishCard(
             wish = wish,
             onClick = onWishClick,
             viewModel = viewModel
         )
+    }
+}
+
+@Composable
+fun EnhancedModernWishCard(
+    wish: Wish,
+    onClick: () -> Unit,
+    viewModel: WishViewModel
+) {
+    val hapticFeedback = LocalHapticFeedback.current
+    var isPressed by remember { mutableStateOf(false) }
+    
+    // Scale animation for interaction feedback
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        ),
+        label = "card_scale"
+    )
+    
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .clickable {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                onClick()
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                    }
+                )
+            },
+        shape = RoundedCornerShape(16.dp),
+        color = SurfaceWhite,
+        shadowElevation = if (isPressed) 6.dp else 2.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Priority Indicator (colored circle like mockup)
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(
+                        when (wish.priority.name) {
+                            "HIGH" -> AccentRed
+                            "MEDIUM" -> AccentOrange
+                            else -> AccentGreen
+                        }
+                    )
+            )
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            // Content
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = wish.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                if (wish.description.isNotEmpty()) {
+                    Text(
+                        text = wish.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+                
+                // Date
+                Text(
+                    text = "10 Apr 2024", // You can format wish.createdDate here
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextTertiary,
+                    modifier = Modifier.padding(top = 6.dp)
+                )
+            }
+            
+            // Action Icon
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                tint = if (wish.priority.name == "HIGH") AccentOrange else TextTertiary,
+                modifier = Modifier.size(20.dp)
+            )
+            
+            Spacer(modifier = Modifier.width(8.dp))
+            
+            // Enhanced Checkbox with haptic feedback
+            var checkboxPressed by remember { mutableStateOf(false) }
+            val checkboxScale by animateFloatAsState(
+                targetValue = if (checkboxPressed) 1.2f else 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessHigh
+                ),
+                label = "checkbox_scale"
+            )
+            
+            Checkbox(
+                checked = wish.isCompleted,
+                onCheckedChange = { checked ->
+                    if (checked && !wish.isCompleted) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.completeWish(wish)
+                    }
+                },
+                modifier = Modifier
+                    .graphicsLayer(scaleX = checkboxScale, scaleY = checkboxScale)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {
+                                checkboxPressed = true
+                                tryAwaitRelease()
+                                checkboxPressed = false
+                            }
+                        )
+                    },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = AccentGreen,
+                    uncheckedColor = TextTertiary
+                )
+            )
+        }
     }
 }

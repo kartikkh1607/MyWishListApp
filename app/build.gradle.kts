@@ -48,6 +48,7 @@ compileSdk = 35
 }
 
 dependencies {
+    implementation(libs.material3)
     val nav_version = "2.7.7"
     val room_version = "2.6.1"
 
@@ -72,9 +73,7 @@ dependencies {
     // Lifecycle & Compose Integration
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-
-    // Material (classic for SwipeToDismiss)
-    implementation("androidx.compose.material:material:1.6.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
     
     // Gson for TypeConverters
     implementation("com.google.code.gson:gson:2.11.0")

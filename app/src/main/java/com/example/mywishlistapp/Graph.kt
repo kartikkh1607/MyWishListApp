@@ -51,9 +51,18 @@ object Graph {
         }
     }
     
+    private val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add savedAmount column to Wish table
+            database.execSQL("""
+                ALTER TABLE `Wish-Table` ADD COLUMN `wish-saved-amount` REAL NOT NULL DEFAULT 0.0
+            """.trimIndent())
+        }
+    }
+    
     fun provide(context: Context){
         database = Room.databaseBuilder(context, WishDataBase::class.java, "wishlist.db")
-            .addMigrations(MIGRATION_4_5)
+            .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
             .build()
     }
 }
