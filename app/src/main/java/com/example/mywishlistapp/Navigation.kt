@@ -1,10 +1,16 @@
 package com.example.mywishlistapp
 
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -161,33 +167,134 @@ fun Navigation(
             SearchScreen(navController = navController, viewModel = viewModel)
         }
 
-        // Dashboard Screen
-        composable(route = Screen.DashboardScreen.route) {
+        // Dashboard Screen with enhanced transitions
+        composable(
+            route = Screen.DashboardScreen.route,
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { -it / 3 },
+                    animationSpec = tween(400)
+                ) + fadeIn(animationSpec = tween(400))
+            },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { -it / 3 },
+                    animationSpec = tween(300)
+                ) + fadeOut(animationSpec = tween(300))
+            }
+        ) {
             DashboardScreen(navController = navController, viewModel = viewModel)
         }
 
-        // WishList Screen (modern design)
-        composable(route = Screen.WishListScreen.route) {
+        // WishList Screen with modern transitions
+        composable(
+            route = Screen.WishListScreen.route,
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { it / 4 },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) + fadeIn(animationSpec = tween(350))
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { it / 4 },
+                    animationSpec = tween(300)
+                ) + fadeOut(animationSpec = tween(250))
+            }
+        ) {
             WishListScreen(navController = navController, viewModel = viewModel)
         }
 
-        // Calendar Screen (placeholder)
-        composable(route = Screen.CalendarScreen.route) {
+        // Calendar Screen with slide transition
+        composable(
+            route = Screen.CalendarScreen.route,
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) + fadeIn()
+            },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = tween(300)
+                ) + fadeOut()
+            }
+        ) {
             CalendarScreen(navController = navController, viewModel = viewModel)
         }
 
-        // Settings Screen (placeholder)
-        composable(route = Screen.SettingsScreen.route) {
+        // Settings Screen with fade transition
+        composable(
+            route = Screen.SettingsScreen.route,
+            enterTransition = {
+                fadeIn(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) + scaleIn(
+                    initialScale = 0.95f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                )
+            },
+            exitTransition = {
+                fadeOut() + scaleOut(targetScale = 0.95f)
+            }
+        ) {
             SettingsScreen(navController = navController, viewModel = viewModel)
         }
         
-        // Notifications Screen
-        composable(route = Screen.NotificationsScreen.route) {
+        // Notifications Screen with slide from top
+        composable(
+            route = Screen.NotificationsScreen.route,
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { -it / 2 },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) + fadeIn()
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { -it / 2 },
+                    animationSpec = tween(300)
+                ) + fadeOut()
+            }
+        ) {
             NotificationsScreen(navController = navController, viewModel = viewModel)
         }
 
-        // Profile Screen
-        composable(route = Screen.ProfileScreen.route) {
+        // Profile Screen with scale transition
+        composable(
+            route = Screen.ProfileScreen.route,
+            enterTransition = {
+                scaleIn(
+                    initialScale = 0.9f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) + fadeIn(animationSpec = tween(350))
+            },
+            exitTransition = {
+                scaleOut(
+                    targetScale = 0.9f,
+                    animationSpec = tween(300)
+                ) + fadeOut()
+            }
+        ) {
             val userProfile by viewModel.userProfile.collectAsState()
             val achievements by viewModel.achievements.collectAsState()
             ProfileScreen(

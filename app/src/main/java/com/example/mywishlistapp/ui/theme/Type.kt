@@ -6,7 +6,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Modern Typography - Google Sans Style
+// Enhanced Typography System - Modern Design
+// Using system fonts with improved weights and spacing for better readability
 val Typography = Typography(
     // Display Styles - Large Headings
     displayLarge = TextStyle(

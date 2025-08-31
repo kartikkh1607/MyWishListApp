@@ -2,26 +2,38 @@ package com.example.mywishlistapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary Colors - Soft and Modern
-val PrimaryPink = Color(0xFFE8A5C4) // Main pink from mockup
-val PrimaryPinkDark = Color(0xFFD48FB3)
-val PrimaryPinkLight = Color(0xFFF2C2D7)
+// Enhanced Primary Colors - Vibrant yet Accessible
+val PrimaryPink = Color(0xFFE91E63) // Vibrant pink for primary actions
+val PrimaryPinkDark = Color(0xFFC2185B) // Darker variant for dark theme
+val PrimaryPinkLight = Color(0xFFF8BBD9) // Light variant for containers
 
-// Background Colors - Clean and Airy
+// Modern Purple Gradient System
+val PrimaryPurple = Color(0xFF667EEA) // Main brand purple
+val SecondaryPurple = Color(0xFF764BA2) // Gradient complement
+val DeepPurple = Color(0xFF5B4E99) // Darker purple variant
+val LightPurple = Color(0xFF9C88FF) // Light purple accent
+
+// Enhanced Background Colors - Modern Gradients
 val BackgroundLight = Color(0xFFFAFBFC) // Very light background
 val BackgroundSecondary = Color(0xFFF5F7FA) // Secondary background
+val BackgroundGradientStart = Color(0xFFF8FAFF) // Gradient start
+val BackgroundGradientMid = Color(0xFFF0F4FF) // Gradient middle
+val BackgroundGradientEnd = Color(0xFFE8F0FE) // Gradient end
 val SurfaceWhite = Color(0xFFFFFFFF) // Pure white for cards
 
-// Text Colors - Clear Hierarchy
+// Enhanced Text Colors - Better Contrast
 val TextPrimary = Color(0xFF1A1D29) // Dark text for readability
-val TextSecondary = Color(0xFF6B7280) // Gray text for secondary info
-val TextTertiary = Color(0xFF9CA3AF) // Light gray for hints
+val TextSecondary = Color(0xFF64748B) // Improved contrast gray
+val TextTertiary = Color(0xFF94A3B8) // Light gray for hints
+val TextOnDark = Color(0xFFFFFFFF) // White text on dark backgrounds
 
-// Accent Colors - Functional
+// Vibrant Accent Colors - High Impact
 val AccentGreen = Color(0xFF10B981) // Success/completed
 val AccentBlue = Color(0xFF3B82F6) // Information
 val AccentOrange = Color(0xFFF59E0B) // Warning
 val AccentRed = Color(0xFFEF4444) // Error/delete
+val AccentTeal = Color(0xFF06B6D4) // Additional accent
+val AccentIndigo = Color(0xFF6366F1) // Modern indigo
 
 // Category Colors - Soft and Pleasant
 val CategoryWork = Color(0xFF059669)
@@ -38,9 +50,7 @@ val Purple40 = PrimaryPinkDark
 val PurpleGrey40 = TextSecondary
 val Pink40 = PrimaryPinkDark
 
-// Primary Brand Colors (Modern Gradient System)
-val PrimaryPurple = Color(0xFF667EEA)
-val SecondaryPurple = Color(0xFF764BA2)
+// Additional Colors
 val SoftBlue = Color(0xFF818CF8)
 
 // Surface & Background (Additional)

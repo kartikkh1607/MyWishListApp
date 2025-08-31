@@ -302,11 +302,163 @@ fun SuccessAnimation(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Check, // Using Material 3 Icons
+                imageVector = Icons.Default.Check,
                 contentDescription = "Success",
                 tint = Color.White,
                 modifier = Modifier.size(40.dp)
             )
+        }
+    }
+}
+
+// Enhanced card hover animation
+@Composable
+fun HoverableCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    hoverElevation: Dp = 12.dp,
+    normalElevation: Dp = 4.dp,
+    content: @Composable () -> Unit
+) {
+    var isHovered by remember { mutableStateOf(false) }
+    val elevation by animateDpAsState(
+        targetValue = if (isHovered) hoverElevation else normalElevation,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "card_elevation"
+    )
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isHovered) 1.02f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "card_scale"
+    )
+    
+    Card(
+        modifier = modifier
+            .scale(scale)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isHovered = true
+                        tryAwaitRelease()
+                        isHovered = false
+                        onClick()
+                    }
+                )
+            },
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation)
+    ) {
+        content()
+    }
+}
+
+// Staggered list animation
+@Composable
+fun StaggeredListAnimation(
+    items: List<Any>,
+    content: @Composable (index: Int, item: Any) -> Unit
+) {
+    items.forEachIndexed { index, item ->
+        var isVisible by remember { mutableStateOf(false) }
+        
+        LaunchedEffect(Unit) {
+            delay((index * 100).toLong())
+            isVisible = true
+        }
+        
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it / 2 },
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            ) + fadeIn(
+                animationSpec = tween(400, delayMillis = index * 50)
+            )
+        ) {
+            content(index, item)
+        }
+    }
+}
+
+// Loading dots animation
+@Composable
+fun LoadingDotsAnimation(
+    modifier: Modifier = Modifier,
+    dotColor: Color = Color(0xFF667EEA),
+    dotSize: Dp = 8.dp
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "loading_dots")
+    
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        repeat(3) { index ->
+            val alpha by infiniteTransition.animateFloat(
+                initialValue = 0.3f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(600, delayMillis = index * 200),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "dot_alpha_$index"
+            )
+            
+            Box(
+                modifier = Modifier
+                    .size(dotSize)
+                    .background(
+                        dotColor.copy(alpha = alpha),
+                        CircleShape
+                    )
+            )
+        }
+    }
+}
+
+// Enhanced button with ripple and scale animation
+@Composable
+fun AnimatedButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    content: @Composable RowScope.() -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        ),
+        label = "button_scale"
+    )
+    
+    Button(
+        onClick = {
+            isPressed = true
+            onClick()
+        },
+        modifier = modifier.scale(scale),
+        enabled = enabled,
+        colors = colors,
+        content = content
+    )
+    
+    LaunchedEffect(isPressed) {
+        if (isPressed) {
+            delay(150)
+            isPressed = false
         }
     }
 }

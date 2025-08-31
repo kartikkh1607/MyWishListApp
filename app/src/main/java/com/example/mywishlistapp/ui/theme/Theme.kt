@@ -16,61 +16,61 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Enhanced Dark Color Scheme
+// Enhanced Dark Color Scheme - Modern Dark Mode
 private val DarkColorScheme = darkColorScheme(
     primary = PrimaryPurple,
-    onPrimary = Color.White,
-    primaryContainer = SecondaryPurple,
-    onPrimaryContainer = Color.White,
+    onPrimary = TextOnDark,
+    primaryContainer = DeepPurple,
+    onPrimaryContainer = TextOnDark,
     
-    secondary = SoftBlue,
-    onSecondary = Color.White,
+    secondary = AccentTeal,
+    onSecondary = TextOnDark,
     secondaryContainer = AccentBlue,
-    onSecondaryContainer = Color.White,
+    onSecondaryContainer = TextOnDark,
     
     tertiary = AccentOrange,
-    onTertiary = Color.White,
-    tertiaryContainer = CategoryWork,
-    onTertiaryContainer = Color.White,
+    onTertiary = Color.Black,
+    tertiaryContainer = AccentGreen,
+    onTertiaryContainer = TextOnDark,
     
-    background = BackgroundDark,
-    onBackground = Color.White,
-    surface = SurfaceDark,
-    onSurface = Color.White,
-    surfaceVariant = Color(0xFF1F1F3A),
-    onSurfaceVariant = Color(0xFFCAC4D0),
+    background = Color(0xFF0F0F23),
+    onBackground = TextOnDark,
+    surface = Color(0xFF1A1A2E),
+    onSurface = TextOnDark,
+    surfaceVariant = Color(0xFF2A2A3E),
+    onSurfaceVariant = Color(0xFFE0E0E6),
     
-    error = ErrorRed,
-    onError = Color.White,
+    error = AccentRed,
+    onError = TextOnDark,
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
     
-    outline = Color(0xFF938F99),
-    outlineVariant = Color(0xFF49454F),
+    outline = Color(0xFF6B7280),
+    outlineVariant = Color(0xFF374151),
     scrim = Color(0xFF000000),
-    inverseSurface = Color(0xFFE6E1E5),
-    inverseOnSurface = Color(0xFF313033),
-    inversePrimary = Color(0xFF6750A4)
+    inverseSurface = SurfaceWhite,
+    inverseOnSurface = TextPrimary,
+    inversePrimary = PrimaryPurple
 )
 
-// Enhanced Light Color Scheme - Clean Mockup Style
+// Enhanced Light Color Scheme - Modern Vibrant Style
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryPink,
-    onPrimary = Color.White,
-    primaryContainer = PrimaryPinkLight,
+    primary = PrimaryPurple,
+    onPrimary = TextOnDark,
+    primaryContainer = Color(0xFFE8F0FE),
     onPrimaryContainer = TextPrimary,
     
-    secondary = AccentBlue,
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE8F0FE),
+    secondary = AccentTeal,
+    onSecondary = TextOnDark,
+    secondaryContainer = Color(0xFFE0F7FA),
     onSecondaryContainer = TextPrimary,
     
     tertiary = AccentGreen,
-    onTertiary = Color.White,
+    onTertiary = TextOnDark,
     tertiaryContainer = Color(0xFFE8F5E8),
     onTertiaryContainer = TextPrimary,
     
-    background = BackgroundLight,
+    background = BackgroundGradientStart,
     onBackground = TextPrimary,
     surface = SurfaceWhite,
     onSurface = TextPrimary,
@@ -78,7 +78,7 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = TextSecondary,
     
     error = AccentRed,
-    onError = Color.White,
+    onError = TextOnDark,
     errorContainer = Color(0xFFFFEBEE),
     onErrorContainer = Color(0xFFB71C1C),
     
@@ -87,7 +87,7 @@ private val LightColorScheme = lightColorScheme(
     scrim = Color(0xFF000000),
     inverseSurface = TextPrimary,
     inverseOnSurface = SurfaceWhite,
-    inversePrimary = PrimaryPinkLight
+    inversePrimary = LightPurple
 )
 
 @Composable
