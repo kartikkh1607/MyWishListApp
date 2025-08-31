@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Wish
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -47,17 +48,42 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
     val dateFormat = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
     val hourOfDay = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
+    // Enhanced greeting with emojis
     val greeting = when (hourOfDay) {
-        in 5..11 -> "Good Morning"
-        in 12..16 -> "Good Afternoon"
-        in 17..20 -> "Good Evening"
-        else -> "Good Night"
+        in 5..11 -> "Good Morning ☀️"
+        in 12..16 -> "Good Afternoon 🌤️"
+        in 17..20 -> "Good Evening 🌅"
+        else -> "Good Night 🌙"
+    }
+
+    // Calculate progress metrics
+    val totalWishes = wishList.value.size
+    val completedWishes = wishList.value.count { it.isCompleted }
+    val completionRate = if (totalWishes > 0) (completedWishes.toFloat() / totalWishes.toFloat()) else 0f
+    val totalSavingsTarget = wishList.value.sumOf { it.price.toDoubleOrNull() ?: 0.0 }
+    val totalSaved = wishList.value.sumOf { it.savedAmount }
+    val savingsProgress = if (totalSavingsTarget > 0) (totalSaved / totalSavingsTarget).toFloat() else 0f
+
+    // Animation states
+    var contentVisible by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(Unit) {
+        delay(100)
+        contentVisible = true
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F9FA))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFF8FAFF),
+                        Color(0xFFF0F4FF),
+                        Color(0xFFE8F0FE)
+                    )
+                )
+            )
     ) {
         // Top Header with functional icons
         TopHeaderSection(
@@ -78,51 +104,86 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
             hasNotifications = unreadNotificationCount > 0
         )
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = 8.dp,
-                bottom = 12.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        AnimatedVisibility(
+            visible = contentVisible,
+            enter = fadeIn(animationSpec = tween(800)) + slideInVertically(
+                initialOffsetY = { it / 4 },
+                animationSpec = tween(800)
+            )
         ) {
-            // Enhanced User Greeting Section
-            item {
-                GreetingSection(
-                    greeting = greeting,
-                    currentTime = dateFormat.format(currentTime),
-                    userName = userProfile.username,
-                    navController = navController,
-                    onEditUserName = { newName ->
-                        viewModel.updateUsername(newName)
-                    }
-                )
-            }
-
-            // Quick Stats
-            item {
-                QuickStatsSection(wishList = wishList.value)
-            }
-
-            // Category Shortcuts
-            item {
-                CategoryShortcuts(navController = navController)
-            }
-
-            // Recent Wishes (only if there are wishes)
-            if (wishList.value.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 8.dp,
+                    bottom = 12.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Enhanced User Greeting Section
                 item {
-                    RecentWishesSection(
-                        wishes = wishList.value.take(2), // Reduced to 2 for less clutter
-                        onWishClick = { wish ->
-                            navController.navigate(Screen.AddScreen.route + "/${wish.id}")
-                        },
-                        onViewAllClick = {
-                            navController.navigate(Screen.WishListScreen.route)
+                    GreetingSection(
+                        greeting = greeting,
+                        currentTime = dateFormat.format(currentTime),
+                        userName = userProfile.username,
+                        navController = navController,
+                        onEditUserName = { newName ->
+                            viewModel.updateUsername(newName)
                         }
                     )
+                }
+
+                // Progress Overview Card
+                if (totalWishes > 0) {
+                    item {
+                        ProgressOverviewCard(
+                            completionRate = completionRate,
+                            totalWishes = totalWishes,
+                            completedWishes = completedWishes,
+                            savingsProgress = savingsProgress,
+                            totalSaved = totalSaved,
+                            totalSavingsTarget = totalSavingsTarget
+                        )
+                    }
+                }
+
+                // Motivational Message
+                item {
+                    MotivationalCard(
+                        completionRate = completionRate,
+                        totalWishes = totalWishes
+                    )
+                }
+
+                // Quick Stats
+                item {
+                    QuickStatsSection(wishList = wishList.value)
+                }
+
+                // Category Shortcuts
+                item {
+                    CategoryShortcuts(navController = navController)
+                }
+
+                // Recent Wishes (only if there are wishes)
+                if (wishList.value.isNotEmpty()) {
+                    item {
+                        RecentWishesSection(
+                            wishes = wishList.value.take(3), // Show 3 recent wishes
+                            onWishClick = { wish ->
+                                navController.navigate(Screen.AddScreen.route + "/${wish.id}")
+                            },
+                            onViewAllClick = {
+                                navController.navigate(Screen.WishListScreen.route)
+                            }
+                        )
+                    }
+                }
+
+                // Quick Action Buttons
+                item {
+                    QuickActionButtons(navController = navController)
                 }
             }
         }
@@ -812,3 +873,276 @@ fun ToDoItem(wish: Wish) {
             }
         }
     }
+
+@Composable
+fun ProgressOverviewCard(
+    completionRate: Float,
+    totalWishes: Int,
+    completedWishes: Int,
+    savingsProgress: Float,
+    totalSaved: Double,
+    totalSavingsTarget: Double
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = "Your Progress 📊",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1D29)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Wishes Progress
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Wishes Completed",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF64748B)
+                    )
+                    Text(
+                        text = "$completedWishes of $totalWishes",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF1A1D29)
+                    )
+                }
+                Text(
+                    text = "${(completionRate * 100).toInt()}%",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF10B981)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            LinearProgressIndicator(
+                progress = completionRate,
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFF10B981),
+                trackColor = Color(0xFF10B981).copy(alpha = 0.2f)
+            )
+            
+            if (totalSavingsTarget > 0) {
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Savings Progress
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Savings Goal",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF64748B)
+                        )
+                        Text(
+                            text = "$${totalSaved.toInt()} of $${totalSavingsTarget.toInt()}",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1A1D29)
+                        )
+                    }
+                    Text(
+                        text = "${(savingsProgress * 100).toInt()}%",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF667EEA)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                LinearProgressIndicator(
+                    progress = savingsProgress,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFF667EEA),
+                    trackColor = Color(0xFF667EEA).copy(alpha = 0.2f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MotivationalCard(
+    completionRate: Float,
+    totalWishes: Int
+) {
+    val motivationalMessage = when {
+        totalWishes == 0 -> "🌟 Start your wishlist journey!"
+        completionRate >= 0.8f -> "🎉 You're crushing your goals!"
+        completionRate >= 0.5f -> "💪 You're doing great, keep going!"
+        completionRate >= 0.2f -> "🚀 You're making progress!"
+        else -> "✨ Every journey starts with a single step!"
+    }
+    
+    val gradientColors = when {
+        completionRate >= 0.8f -> listOf(Color(0xFF10B981), Color(0xFF059669))
+        completionRate >= 0.5f -> listOf(Color(0xFF667EEA), Color(0xFF764BA2))
+        else -> listOf(Color(0xFFE91E63), Color(0xFFAD1457))
+    }
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.horizontalGradient(gradientColors),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = motivationalMessage,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+fun QuickActionButtons(navController: NavHostController) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Quick Actions ⚡",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1D29),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Add Wish Button
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { navController.navigate(Screen.AddScreen.route + "/0") },
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFE91E63).copy(alpha = 0.1f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Wish",
+                            tint = Color(0xFFE91E63),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Add Wish",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color(0xFFE91E63),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+                
+                // View All Button
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { navController.navigate(Screen.WishListScreen.route) },
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF667EEA).copy(alpha = 0.1f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.List,
+                            contentDescription = "View All",
+                            tint = Color(0xFF667EEA),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "View All",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color(0xFF667EEA),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+                
+                // Search Button
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { navController.navigate(Screen.SearchScreen.route) },
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF10B981).copy(alpha = 0.1f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = Color(0xFF10B981),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Search",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color(0xFF10B981),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
