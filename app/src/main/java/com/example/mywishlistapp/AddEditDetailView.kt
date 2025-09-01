@@ -13,6 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.focus.onFocusChanged
@@ -46,6 +48,7 @@ import com.example.mywishlistapp.ui.components.TargetDatePicker
 import com.example.mywishlistapp.ui.components.ProgressTracker
 import com.example.mywishlistapp.ui.components.MilestoneManager
 import com.example.mywishlistapp.Data.Milestone
+import com.example.mywishlistapp.GoalProgressBar
 import com.example.mywishlistapp.ui.theme.MyWishListAppTheme
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -346,7 +349,7 @@ fun ModernTextField(
             ) {
                 Icon(
                     imageVector = Icons.Default.Error,
-                    contentDescription = null,
+                    contentDescription = "Form validation error",
                     tint = Color(0xFFE74C3C),
                     modifier = Modifier.size(14.dp)
                 )
@@ -411,13 +414,13 @@ fun CurrencyTextField(
                     color = Color(0xFF9CA3AF).copy(alpha = 0.7f)
                 )
             },
-            leadingIcon = {
-                Icon(
-                    Icons.Default.AttachMoney,
-                    contentDescription = null,
-                    tint = Color(0xFF667EEA)
-                )
-            },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.AttachMoney,
+                        contentDescription = "Price input field",
+                        tint = Color(0xFF667EEA)
+                    )
+                },
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { isFocused = it.isFocused },
@@ -488,7 +491,7 @@ fun ImageUrlField(
                 leadingIcon = {
                     Icon(
                         Icons.Default.Image,
-                        contentDescription = null,
+                        contentDescription = "Image URL input field",
                         tint = Color(0xFF667EEA)
                     )
                 },
@@ -553,31 +556,30 @@ fun ImageUrlField(
 }
 
 @Composable
-fun BasicInfoSection(viewModel: WishViewModel) {
-    val titleError = viewModel.wishTitleState.isEmpty()
-    val descriptionError = viewModel.wishDescriptionState.isEmpty()
+fun BasicInfoSection(viewModel: WishViewModel, titleTouched: Boolean = false) {
+    val titleError = viewModel.wishTitleState.isEmpty() && titleTouched
     
     EnhancedSectionCard(
         title = "📝 Basic Information",
         subtitle = "Tell us about your wish"
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             ModernTextField(
                 label = "Wish Title *",
                 value = viewModel.wishTitleState,
                 onValueChanged = { viewModel.onWishTitleChanged(it) },
                 placeholder = "e.g., New Mountain Bike",
-                isError = titleError && viewModel.wishTitleState.isEmpty(),
-                errorMessage = if (titleError && viewModel.wishTitleState.isEmpty()) "Title is required" else ""
+                isError = titleError,
+                errorMessage = if (titleError) "Title is required" else ""
             )
             ModernTextField(
-                label = "Description *",
+                label = "Description (Optional)",
                 value = viewModel.wishDescriptionState,
                 onValueChanged = { viewModel.onWishDescriptionChanged(it) },
-                placeholder = "e.g., A durable mountain bike for weekend trail adventures...",
+                placeholder = "Add any additional details about your wish...",
                 isDescription = true,
-                isError = descriptionError && viewModel.wishDescriptionState.isEmpty(),
-                errorMessage = if (descriptionError && viewModel.wishDescriptionState.isEmpty()) "Description is required" else ""
+                isError = false,
+                errorMessage = ""
             )
         }
     }
@@ -676,6 +678,7 @@ fun CategoryDropdown(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrioritySelector(
     selectedPriority: Priority,
@@ -690,74 +693,83 @@ fun PrioritySelector(
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Priority.values().forEach { priority ->
                     val isSelected = selectedPriority == priority
                     val (priorityColor, priorityLabel, priorityIcon) = when (priority) {
-                        Priority.HIGH -> Triple(Color(0xFFE74C3C), "High", "🔥")
-                        Priority.MEDIUM -> Triple(Color(0xFFF39C12), "Medium", "⚡")
-                        Priority.LOW -> Triple(Color(0xFF27AE60), "Low", "🌱")
+                        Priority.HIGH -> Triple(
+                            Color(0xFFE74C3C),
+                            "High",
+                            Icons.Default.KeyboardArrowUp
+                        )
+                        Priority.MEDIUM -> Triple(
+                            Color(0xFFF39C12),
+                            "Medium", 
+                            Icons.Default.Remove
+                        )
+                        Priority.LOW -> Triple(
+                            Color(0xFF27AE60),
+                            "Low",
+                            Icons.Default.KeyboardArrowDown
+                        )
                     }
                     
-                    var isPressed by remember { mutableStateOf(false) }
-                    val scale by animateFloatAsState(
-                        targetValue = if (isPressed) 0.95f else 1f,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessHigh
-                        ),
-                        label = "priority_scale"
-                    )
-                    
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .graphicsLayer(scaleX = scale, scaleY = scale)
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onPress = {
-                                        isPressed = true
-                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        tryAwaitRelease()
-                                        isPressed = false
-                                    }
-                                )
-                            }
-                            .clickable { 
-                                onPrioritySelected(priority)
-                            },
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isSelected) priorityColor.copy(alpha = 0.15f) else Color(0xFFF8FAFC)
-                        ),
-                        border = if (isSelected) BorderStroke(2.dp, priorityColor) else BorderStroke(1.dp, Color(0xFFE2E8F0).copy(alpha = 0.5f)),
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = if (isSelected) 8.dp else 4.dp
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp, horizontal = 12.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = priorityIcon,
-                                fontSize = 24.sp,
-                                modifier = Modifier.padding(bottom = 6.dp)
-                            )
+                    FilterChip(
+                        onClick = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onPrioritySelected(priority)
+                        },
+                        label = {
                             Text(
                                 text = priorityLabel,
                                 style = MaterialTheme.typography.labelMedium,
-                                color = if (isSelected) priorityColor else Color(0xFF64748B),
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 14.sp
+                                fontWeight = FontWeight.SemiBold
                             )
-                        }
-                    }
+                        },
+                        selected = isSelected,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = priorityIcon,
+                                contentDescription = "$priorityLabel priority icon",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = Color.Transparent,
+                            labelColor = if (isSelected) priorityColor else Color(0xFF64748B),
+                            iconColor = if (isSelected) priorityColor else Color(0xFF64748B),
+                            selectedContainerColor = priorityColor.copy(alpha = 0.15f),
+                            selectedLabelColor = priorityColor,
+                            selectedLeadingIconColor = priorityColor
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = isSelected,
+                            borderColor = if (isSelected) priorityColor else Color(0xFFE2E8F0),
+                            selectedBorderColor = priorityColor,
+                            borderWidth = if (isSelected) 2.dp else 1.dp,
+                            selectedBorderWidth = 2.dp
+                        )
+                    )
                 }
             }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Priority explanation text
+            Text(
+                text = when (selectedPriority) {
+                    Priority.HIGH -> "🔥 High priority items need immediate attention"
+                    Priority.MEDIUM -> "⚡ Medium priority items are important but can wait"
+                    Priority.LOW -> "🌱 Low priority items are nice to have"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF64748B),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -987,23 +999,30 @@ fun DisplayModeContent(
             
             // Milestones Display (only for goals)
             item {
+                val milestones by viewModel.getMilestonesForGoal(wish.id).collectAsState(initial = emptyList())
+                
                 MilestoneManager(
                     goal = wish,
-                    milestones = emptyList(), // TODO: Load from ViewModel
+                    milestones = milestones,
                     onMilestoneCompleted = { milestoneId ->
-                        // TODO: Implement milestone completion
+                        viewModel.completeMilestone(milestoneId)
                     },
                     onMilestoneUncompleted = { milestoneId ->
-                        // TODO: Implement milestone un-completion
+                        viewModel.uncompleteMilestone(milestoneId)
                     },
-                    onAddMilestone = {
-                        // TODO: Implement add milestone
+                    onAddMilestone = { title, description, dueDate ->
+                        viewModel.addMilestone(
+                            wishId = wish.id,
+                            title = title,
+                            description = description,
+                            dueDate = dueDate
+                        )
                     },
                     onEditMilestone = { milestone ->
-                        // TODO: Implement edit milestone
+                        viewModel.updateMilestone(milestone)
                     },
                     onDeleteMilestone = { milestone ->
-                        // TODO: Implement delete milestone
+                        viewModel.deleteMilestone(milestone)
                     }
                 )
             }
@@ -1067,11 +1086,8 @@ fun EditModeContent(
         }
 
         item {
-            BasicInfoSection(viewModel)
-        }
-
-        item {
-            PriceAndImageSection(viewModel)
+            var titleTouchedState by remember { mutableStateOf(false) }
+            BasicInfoSection(viewModel, titleTouchedState)
         }
 
         item {
@@ -1116,7 +1132,7 @@ fun EditModeContent(
         item {
             EnhancedActionButtonWithValidation(
                 text = if (id != 0L) stringResource(R.string.update_wish_button) else stringResource(R.string.add_wish_button),
-                isFormValid = viewModel.wishTitleState.isNotBlank() && viewModel.wishDescriptionState.isNotBlank(),
+                isFormValid = viewModel.wishTitleState.isNotBlank(),
                 onClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     
@@ -1129,8 +1145,8 @@ fun EditModeContent(
                                 category = viewModel.wishCategoryState,
                                 tags = viewModel.getTagsList(),
                                 priority = viewModel.wishPriorityState,
-                                price = viewModel.wishPriceState.trim(),
-                                imageUrl = viewModel.wishImageUrlState.takeIf { it.isNotBlank() } ?: "",
+                            price = "",
+                            imageUrl = "",
                                 isGoal = viewModel.wishIsGoalState,
                                 targetDate = viewModel.wishTargetDateState,
                                 progress = viewModel.wishProgressState
@@ -1145,8 +1161,8 @@ fun EditModeContent(
                                 category = viewModel.wishCategoryState,
                                 tags = viewModel.getTagsList(),
                                 priority = viewModel.wishPriorityState,
-                                price = viewModel.wishPriceState.trim(),
-                                imageUrl = viewModel.wishImageUrlState.takeIf { it.isNotBlank() } ?: "",
+                            price = "",
+                            imageUrl = "",
                                 isGoal = viewModel.wishIsGoalState,
                                 targetDate = viewModel.wishTargetDateState,
                                 progress = viewModel.wishProgressState
@@ -1158,7 +1174,7 @@ fun EditModeContent(
                 onInvalidForm = {
                     scope.launch {
                         snackbarHostState.showSnackbar(
-                            message = "Please fill in both title and description",
+                            message = "Please enter a title for your wish",
                             duration = SnackbarDuration.Short
                         )
                     }
@@ -1191,7 +1207,10 @@ fun EnhancedAppBarView(
             )
         },
         navigationIcon = {
-            IconButton(onClick = onBackNavClicked) {
+            IconButton(
+                onClick = onBackNavClicked,
+                modifier = Modifier.semantics { contentDescription = "Navigate back to previous screen" }
+            ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
@@ -1201,7 +1220,10 @@ fun EnhancedAppBarView(
         },
         actions = {
             if (showShareIcon) {
-                IconButton(onClick = onShareClicked) {
+                IconButton(
+                    onClick = onShareClicked,
+                    modifier = Modifier.semantics { contentDescription = "Share this wish with others" }
+                ) {
                     Icon(
                         imageVector = Icons.Default.Share,
                         contentDescription = stringResource(R.string.share),
@@ -1210,7 +1232,10 @@ fun EnhancedAppBarView(
                 }
             }
             if (showEditIcon) {
-                IconButton(onClick = onEditClicked) {
+                IconButton(
+                    onClick = onEditClicked,
+                    modifier = Modifier.semantics { contentDescription = "Edit this wish" }
+                ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = stringResource(R.string.edit),
@@ -1249,7 +1274,7 @@ fun DisplayCard(
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = "$title section icon",
                     tint = Color(0xFF667EEA),
                     modifier = Modifier.size(24.dp)
                 )
@@ -1382,7 +1407,7 @@ fun SavingsProgressCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Savings,
-                    contentDescription = null,
+                    contentDescription = "Savings progress section",
                     tint = Color(0xFF10B981),
                     modifier = Modifier.size(24.dp)
                 )
@@ -1439,7 +1464,7 @@ fun SavingsProgressCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = null,
+                        contentDescription = "Add funds to savings",
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))

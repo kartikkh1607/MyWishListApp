@@ -31,8 +31,15 @@ enum class ThemeOption(val displayName: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
-    // State variables for settings
-    var selectedTheme by remember { mutableStateOf(ThemeOption.SYSTEM) }
+    // Theme state from ViewModel
+    val currentThemeString by viewModel.currentTheme.collectAsState()
+    val selectedTheme = when (currentThemeString) {
+        "Light" -> ThemeOption.LIGHT
+        "Dark" -> ThemeOption.DARK
+        else -> ThemeOption.SYSTEM
+    }
+    
+    // State variables for other settings
     var notificationsEnabled by remember { mutableStateOf(true) }
     var reminderSounds by remember { mutableStateOf(true) }
     var autoBackup by remember { mutableStateOf(false) }
@@ -224,8 +231,7 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
             confirmButton = {
                 Button(
                     onClick = {
-                        // TODO: Implement clear all data functionality
-                        // viewModel.clearAllData()
+                        viewModel.clearAllData()
                         showClearDataDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
@@ -265,7 +271,7 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
         ThemeSelectionDialog(
             currentTheme = selectedTheme,
             onThemeSelected = { theme ->
-                selectedTheme = theme
+                viewModel.setTheme(theme.name)
                 showThemeDialog = false
             },
             onDismiss = { showThemeDialog = false }

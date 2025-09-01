@@ -5,10 +5,14 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mywishlistapp.ui.theme.MyWishListAppTheme
 import com.example.mywishlistapp.utils.CrashReporter
 
@@ -50,7 +54,17 @@ class MainActivity : ComponentActivity() {
             CrashReporter.setCustomKey("activity_lifecycle", "setContent")
             setContent {
                 CrashReporter.logDebug("MainActivity", "Setting content with MyWishListAppTheme")
-                MyWishListAppTheme {
+                val wishViewModel: WishViewModel = viewModel()
+                val currentTheme by wishViewModel.currentTheme.collectAsState()
+                val isSystemInDarkTheme = isSystemInDarkTheme()
+                
+                val darkTheme = when (currentTheme) {
+                    "Dark" -> true
+                    "Light" -> false
+                    else -> isSystemInDarkTheme // "System" or any other value uses system default
+                }
+                
+                MyWishListAppTheme(darkTheme = darkTheme) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background

@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -36,6 +37,7 @@ import com.example.mywishlistapp.ui.components.UpcomingDeadlinesCard
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 // Data class for category items
 data class CategoryItem(
@@ -61,6 +63,10 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
     val motivationalInsights by viewModel.getMotivationalInsights().collectAsState(initial = emptyList())
     val wishesVsGoals by viewModel.getCompletionStats().collectAsState(initial = Pair(0, 0))
     val streakData by viewModel.getStreakData().collectAsState(initial = 0)
+    
+    // Upcoming and In Progress Items
+    val upcomingItems by viewModel.upcomingItems.collectAsState()
+    val inProgressItems by viewModel.inProgressItems.collectAsState()
 
     // Enhanced greeting with emojis
     val greeting = when (hourOfDay) {
@@ -233,6 +239,30 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
                         CategoryShortcuts(navController = navController)
                     }
 
+                    // Upcoming Items Section
+                    if (upcomingItems.isNotEmpty()) {
+                        item {
+                            UpcomingItemsSection(
+                                upcomingItems = upcomingItems,
+                                onItemClick = { item ->
+                                    navController.navigate(Screen.AddScreen.route + "/${item.id}")
+                                }
+                            )
+                        }
+                    }
+                    
+                    // In Progress Section
+                    if (inProgressItems.isNotEmpty()) {
+                        item {
+                            InProgressItemsSection(
+                                inProgressItems = inProgressItems,
+                                onItemClick = { item ->
+                                    navController.navigate(Screen.AddScreen.route + "/${item.id}")
+                                }
+                            )
+                        }
+                    }
+                    
                     // Recent Wishes (only if there are wishes)
                     wishList.value?.let { wishes ->
                         if (wishes.isNotEmpty()) {
@@ -943,7 +973,7 @@ fun ToDoItem(wish: Wish) {
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF64748B),
                         maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -1219,6 +1249,192 @@ fun QuickActionButtons(navController: NavHostController) {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun UpcomingItemsSection(
+    upcomingItems: List<Wish>,
+    onItemClick: (Wish) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "⏰ Upcoming",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1D29),
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp)
+            ) {
+                items(upcomingItems, key = { it.id }) { item ->
+                    UpcomingItemCard(
+                        item = item,
+                        onClick = { onItemClick(item) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun UpcomingItemCard(
+    item: Wish,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFFFF7ED)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1A1D29),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Due date
+            item.targetDate?.let { targetDate ->
+                val daysUntil = kotlin.math.max(0, TimeUnit.MILLISECONDS.toDays(targetDate - System.currentTimeMillis()))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = null,
+                        tint = Color(0xFFF59E0B),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = when {
+                            daysUntil == 0L -> "Today"
+                            daysUntil == 1L -> "Tomorrow"
+                            daysUntil < 7 -> "${daysUntil}d"
+                            else -> "${daysUntil / 7}w"
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFFF59E0B),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun InProgressItemsSection(
+    inProgressItems: List<Wish>,
+    onItemClick: (Wish) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "🚧 In Progress",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1D29),
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp)
+            ) {
+                items(inProgressItems, key = { it.id }) { item ->
+                    InProgressItemCard(
+                        item = item,
+                        onClick = { onItemClick(item) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun InProgressItemCard(
+    item: Wish,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFECFDF5)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1A1D29),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Progress indicator
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${item.progress}%",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF10B981),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            
+            LinearProgressIndicator(
+                progress = item.progress / 100f,
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFF10B981),
+                trackColor = Color(0xFF10B981).copy(alpha = 0.2f)
+            )
         }
     }
 }

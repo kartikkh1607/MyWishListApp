@@ -31,7 +31,8 @@ data class UserProfile(
     @ColumnInfo(name = "login_streak") val loginStreak: Int = 0,
     @ColumnInfo(name = "total_categories_explored") val totalCategoriesExplored: Int = 0,
     @ColumnInfo(name = "wishes_shared") val wishesShared: Int = 0,
-    @ColumnInfo(name = "personal_best_score") val personalBestScore: Int = 0
+    @ColumnInfo(name = "personal_best_score") val personalBestScore: Int = 0,
+    @ColumnInfo(name = "theme") val theme: String = "System"
 )
 
 data class Achievement(

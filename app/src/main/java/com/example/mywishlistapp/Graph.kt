@@ -7,6 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.mywishlistapp.Data.WishDataBase
 import com.example.mywishlistapp.Data.WishRepository
 import com.example.mywishlistapp.Data.UserProfileRepository
+import com.example.mywishlistapp.Data.MilestoneRepository
 
 object Graph {
     
@@ -25,6 +26,13 @@ object Graph {
             throw IllegalStateException("Graph.provide() must be called before accessing repositories")
         }
         UserProfileRepository(userProfileDao = database.userProfileDao())
+    }
+    
+    val milestoneRepository by lazy {
+        if (!::database.isInitialized) {
+            throw IllegalStateException("Graph.provide() must be called before accessing repositories")
+        }
+        MilestoneRepository(milestoneDao = database.milestoneDao())
     }
     
     private val MIGRATION_4_5 = object : Migration(4, 5) {

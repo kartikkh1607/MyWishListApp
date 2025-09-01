@@ -35,7 +35,19 @@ fun Navigation(
     
     NavHost(
         navController = navController,
-        startDestination = if (shouldShowOnboarding) Screen.OnboardingScreen.route else Screen.DashboardScreen.route
+        startDestination = if (shouldShowOnboarding) Screen.OnboardingScreen.route else Screen.DashboardScreen.route,
+        enterTransition = {
+            slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+        },
+        exitTransition = {
+            slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(400)) + fadeOut(animationSpec = tween(400))
+        },
+        popEnterTransition = {
+            slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+        },
+        popExitTransition = {
+            slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(400)) + fadeOut(animationSpec = tween(400))
+        }
     ) {
         
         // Onboarding Screen

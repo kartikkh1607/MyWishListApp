@@ -7,7 +7,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [Wish::class, UserProfile::class, Milestone::class],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 

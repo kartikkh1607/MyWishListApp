@@ -105,6 +105,9 @@ dependencies {
     
     // Date picker
     implementation("io.github.vanpra.compose-material-dialogs:datetime:0.9.0")
+    
+    // Baseline Profile
+    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
 
     // Testing
     testImplementation(libs.junit)
@@ -115,6 +118,10 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    
+    // Baseline Profile
+    androidTestImplementation("androidx.benchmark:benchmark-macro-junit4:1.2.2")
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.2.0")
 
     // Debugging
     debugImplementation(libs.androidx.ui.tooling)

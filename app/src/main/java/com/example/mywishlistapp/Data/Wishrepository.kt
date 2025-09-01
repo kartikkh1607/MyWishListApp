@@ -113,4 +113,21 @@ class WishRepository(private val wishDao: WishDao) {
                 !it.isCompleted
             }
         }
+    
+    // New methods for Dashboard redesign
+    fun getUpcomingItems(): Flow<List<Wish>> = 
+        wishDao.getUpcomingItems(System.currentTimeMillis())
+    
+    fun getInProgressItems(): Flow<List<Wish>> = 
+        wishDao.getInProgressItems()
+    
+    // New method for Calendar/Journey View
+    fun getItemsByDate(startDate: Long, endDate: Long): Flow<List<Wish>> = 
+        wishDao.getItemsByDate(startDate, endDate)
+    
+    // Clear all data for settings
+    suspend fun deleteAllWishes() {
+        wishDao.deleteAll()
+        invalidateStatsCache()
+    }
 }

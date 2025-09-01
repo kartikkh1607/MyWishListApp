@@ -56,12 +56,27 @@ abstract class WishDao {
     // Get recent wishes (last 5) for dashboard
     @Query("SELECT * FROM `Wish-Table` ORDER BY id DESC LIMIT 5")
     abstract fun getRecentWishes(): Flow<List<Wish>>
+    
+    // New queries for Dashboard redesign
+    @Query("SELECT * FROM `Wish-Table` WHERE `wish-target-date` > :currentDate AND `wish-is-completed` = 0 ORDER BY `wish-target-date` ASC LIMIT 5")
+    abstract fun getUpcomingItems(currentDate: Long): Flow<List<Wish>>
+    
+    @Query("SELECT * FROM `Wish-Table` WHERE `wish-progress` > 0 AND `wish-progress` < 100 AND `wish-is-completed` = 0 ORDER BY `wish-progress` DESC")
+    abstract fun getInProgressItems(): Flow<List<Wish>>
+    
+    // New query for Calendar/Journey View
+    @Query("SELECT * FROM `Wish-Table` WHERE (`wish-created-date` BETWEEN :startDate AND :endDate) OR (`wish-target-date` BETWEEN :startDate AND :endDate) ORDER BY `wish-created-date` DESC")
+    abstract fun getItemsByDate(startDate: Long, endDate: Long): Flow<List<Wish>>
 
     @Update
     abstract suspend fun updateAWish(wishEntity: Wish)
 
     @Delete
     abstract suspend fun deleteAWish(wishEntity: Wish)
+    
+    // Clear all data function for settings
+    @Query("DELETE FROM `Wish-Table`")
+    abstract suspend fun deleteAll()
 
     @Query("SELECT * FROM `Wish-Table` Where id = :id")
     abstract fun getAWishById(id: Long): Flow<Wish>

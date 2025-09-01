@@ -31,7 +31,7 @@ fun MilestoneManager(
     milestones: List<Milestone>,
     onMilestoneCompleted: (Long) -> Unit,
     onMilestoneUncompleted: (Long) -> Unit,
-    onAddMilestone: () -> Unit,
+    onAddMilestone: (String, String, Long?) -> Unit,
     onEditMilestone: (Milestone) -> Unit,
     onDeleteMilestone: (Milestone) -> Unit,
     modifier: Modifier = Modifier
@@ -127,8 +127,8 @@ fun MilestoneManager(
         AddMilestoneDialog(
             goalId = goal.id,
             onDismiss = { showAddMilestoneDialog = false },
-            onConfirm = { milestone ->
-                // This would call the ViewModel to add the milestone
+            onConfirm = { title, description, targetDate ->
+                onAddMilestone(title, description, targetDate)
                 showAddMilestoneDialog = false
             }
         )
@@ -292,7 +292,7 @@ fun EmptyMilestonesState(
 fun AddMilestoneDialog(
     goalId: Long,
     onDismiss: () -> Unit,
-    onConfirm: (Milestone) -> Unit,
+    onConfirm: (String, String, Long?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var title by remember { mutableStateOf("") }
@@ -366,13 +366,11 @@ fun AddMilestoneDialog(
             Button(
                 onClick = {
                     if (title.isNotBlank()) {
-                        val milestone = Milestone(
-                            wishId = goalId,
-                            title = title.trim(),
-                            description = description.trim(),
-                            targetDate = if (hasTargetDate) targetDate else null
+                        onConfirm(
+                            title.trim(),
+                            description.trim(),
+                            if (hasTargetDate) targetDate else null
                         )
-                        onConfirm(milestone)
                     }
                 },
                 enabled = title.isNotBlank()
