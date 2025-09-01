@@ -253,7 +253,7 @@ fun AddEditDetailView(
 }
 
 @Composable
-fun ModernTextField(
+fun StandardTextField(
     label: String,
     value: String,
     onValueChanged: (String) -> Unit,
@@ -261,7 +261,7 @@ fun ModernTextField(
     isDescription: Boolean = false,
     isError: Boolean = false,
     errorMessage: String = "",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.fillMaxWidth()
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val animatedElevation by animateDpAsState(
@@ -283,7 +283,7 @@ fun ModernTextField(
             elevation = CardDefaults.cardElevation(
                 defaultElevation = animatedElevation
             ),
-            border = if (isError) BorderStroke(1.dp, Color(0xFFE74C3C)) else null
+            border = if (isError) BorderStroke(2.dp, MaterialTheme.colorScheme.error) else null
         ) {
             OutlinedTextField(
                 value = value,
@@ -308,13 +308,15 @@ fun ModernTextField(
                     .onFocusChanged { isFocused = it.isFocused },
                 shape = RoundedCornerShape(18.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    errorBorderColor = Color.Transparent,
+                    focusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.0f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.0f),
+                    errorBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.0f),
                     cursorColor = MaterialTheme.colorScheme.primary,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    errorContainerColor = Color.Transparent
+                    focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.0f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.0f),
+                    errorContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.0f),
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 ),
                 singleLine = !isDescription,
                 maxLines = if (isDescription) 5 else 1,
@@ -423,11 +425,11 @@ fun CurrencyTextField(
             ),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.0f),
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.0f),
                 cursorColor = MaterialTheme.colorScheme.primary,
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent
+                focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.0f),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.0f)
             )
         )
     }
@@ -497,11 +499,11 @@ fun ImageUrlField(
                 ),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.0f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.0f),
                     cursorColor = MaterialTheme.colorScheme.primary,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
+                    focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.0f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.0f)
                 )
             )
         }
@@ -556,7 +558,7 @@ fun BasicInfoSection(viewModel: WishViewModel, titleTouched: Boolean = false) {
         subtitle = "Tell us about your wish"
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            ModernTextField(
+            StandardTextField(
                 label = "Wish Title *",
                 value = viewModel.wishTitleState,
                 onValueChanged = { viewModel.onWishTitleChanged(it) },
@@ -564,7 +566,7 @@ fun BasicInfoSection(viewModel: WishViewModel, titleTouched: Boolean = false) {
                 isError = titleError,
                 errorMessage = if (titleError) "Title is required" else ""
             )
-            ModernTextField(
+            StandardTextField(
                 label = "Description (Optional)",
                 value = viewModel.wishDescriptionState,
                 onValueChanged = { viewModel.onWishDescriptionChanged(it) },
@@ -607,11 +609,13 @@ fun CategoryAndTagsSection(viewModel: WishViewModel) {
                 selectedCategory = viewModel.wishCategoryState,
                 onCategorySelected = { viewModel.onWishCategoryChanged(it) }
             )
-            ModernTextField(
+            StandardTextField(
                 label = "Tags (Optional)",
                 value = viewModel.wishTagsState,
                 onValueChanged = { viewModel.onWishTagsChanged(it) },
-                placeholder = "e.g., outdoor, sports, recreation"
+                placeholder = "e.g., outdoor, sports, recreation",
+                isError = false,
+                errorMessage = ""
             )
         }
     }
@@ -640,29 +644,57 @@ fun CategoryDropdown(
                 value = selectedCategory.ifEmpty { "Select category" },
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Category") },
+                label = { 
+                    Text(
+                        "Category",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryEditable),
                 shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
+                    focusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.0f),
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.0f),
+                    focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.0f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.0f),
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                modifier = Modifier.background(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(16.dp)
+                ),
+                containerColor = MaterialTheme.colorScheme.surface
             ) {
                 categories.forEach { category ->
                     DropdownMenuItem(
-                        text = { Text(text = category) },
+                        text = { 
+                            Text(
+                                text = category,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            ) 
+                        },
                         onClick = {
                             onCategorySelected(category)
                             expanded = false
-                        }
+                        },
+                        colors = MenuDefaults.itemColors(
+                            textColor = MaterialTheme.colorScheme.onSurface,
+                            leadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier.background(
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.0f)
+                        )
                     )
                 }
             }
@@ -689,66 +721,68 @@ fun PrioritySelector(
             ) {
                 Priority.values().forEach { priority ->
                     val isSelected = selectedPriority == priority
-                    val (priorityColor, priorityLabel, priorityIcon) = when (priority) {
-                        Priority.HIGH -> Triple(
-                            Color(0xFFE74C3C),
-                            "High",
-                            Icons.Default.KeyboardArrowUp
-                        )
-                        Priority.MEDIUM -> Triple(
-                            Color(0xFFF39C12),
-                            "Medium", 
-                            Icons.Default.Remove
-                        )
-                        Priority.LOW -> Triple(
-                            Color(0xFF27AE60),
+                    val (containerColor, contentColor, priorityLabel, priorityIcon) = when (priority) {
+                        Priority.LOW -> Tuple4(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            MaterialTheme.colorScheme.onPrimaryContainer,
                             "Low",
                             Icons.Default.KeyboardArrowDown
                         )
+                        Priority.MEDIUM -> Tuple4(
+                            MaterialTheme.colorScheme.secondaryContainer,
+                            MaterialTheme.colorScheme.onSecondaryContainer,
+                            "Medium", 
+                            Icons.Default.Remove
+                        )
+                        Priority.HIGH -> Tuple4(
+                            MaterialTheme.colorScheme.errorContainer,
+                            MaterialTheme.colorScheme.onErrorContainer,
+                            "High",
+                            Icons.Default.KeyboardArrowUp
+                        )
                     }
                     
-                    FilterChip(
+                    Card(
                         onClick = {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             onPrioritySelected(priority)
                         },
-                        label = {
-                            Text(
-                                text = priorityLabel,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        },
-                        selected = isSelected,
-                        leadingIcon = {
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = containerColor.copy(alpha = if (isSelected) 1.0f else 0.4f)
+                        ),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = if (isSelected) 8.dp else 1.dp
+                        ),
+                        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Icon(
                                 imageVector = priorityIcon,
                                 contentDescription = "$priorityLabel priority icon",
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(24.dp),
+                                tint = contentColor
                             )
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = Color.Transparent,
-                            labelColor = if (isSelected) priorityColor else Color(0xFF64748B),
-                            iconColor = if (isSelected) priorityColor else Color(0xFF64748B),
-                            selectedContainerColor = priorityColor.copy(alpha = 0.15f),
-                            selectedLabelColor = priorityColor,
-                            selectedLeadingIconColor = priorityColor
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = isSelected,
-                            borderColor = if (isSelected) priorityColor else Color(0xFFE2E8F0),
-                            selectedBorderColor = priorityColor,
-                            borderWidth = if (isSelected) 2.dp else 1.dp,
-                            selectedBorderWidth = 2.dp
-                        )
-                    )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = priorityLabel,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = contentColor,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             }
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
             // Priority explanation text
             Text(
@@ -758,13 +792,15 @@ fun PrioritySelector(
                     Priority.LOW -> "🌱 Low priority items are nice to have"
                 },
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF64748B),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
         }
     }
 }
+
+// Data class for priority selector is defined in HomeView.kt
 
 // Display Mode Content
 @Composable
@@ -871,7 +907,7 @@ fun DisplayModeContent(
                         text = if (wish.isGoal) "Goal" else "Wish",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (wish.isGoal) Color(0xFF10B981) else Color(0xFF667EEA)
+                        color = if (wish.isGoal) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -894,14 +930,14 @@ fun DisplayModeContent(
                                 text = "${wish.progress}% Complete",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF667EEA)
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Surface(
                                 shape = RoundedCornerShape(20.dp),
                                 color = when {
-                                    wish.progress >= 80 -> Color(0xFF10B981).copy(alpha = 0.2f)
-                                    wish.progress >= 50 -> Color(0xFFF59E0B).copy(alpha = 0.2f)
-                                    else -> Color(0xFF667EEA).copy(alpha = 0.2f)
+                                    wish.progress >= 80 -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
+                                    wish.progress >= 50 -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f)
+                                    else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                                 }
                             ) {
                                 Text(
@@ -925,11 +961,11 @@ fun DisplayModeContent(
                                 .height(8.dp)
                                 .clip(RoundedCornerShape(4.dp)),
                             color = when {
-                                wish.progress >= 80 -> Color(0xFF10B981)
-                                wish.progress >= 50 -> Color(0xFFF59E0B)
-                                else -> Color(0xFF667EEA)
+                                wish.progress >= 80 -> MaterialTheme.colorScheme.tertiary
+                                wish.progress >= 50 -> MaterialTheme.colorScheme.secondary
+                                else -> MaterialTheme.colorScheme.primary
                             },
-                            trackColor = Color(0xFF667EEA).copy(alpha = 0.2f)
+                            trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                         )
                     }
                 }
@@ -952,7 +988,7 @@ fun DisplayModeContent(
                                 text = formattedDate,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1A1D29)
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             
                             Row(
@@ -960,10 +996,10 @@ fun DisplayModeContent(
                                 modifier = Modifier.padding(top = 4.dp)
                             ) {
                                 val (statusText, statusColor) = when {
-                                    daysUntil < 0 -> Pair("${kotlin.math.abs(daysUntil)} days overdue", Color(0xFFE74C3C))
-                                    daysUntil == 0L -> Pair("Due today!", Color(0xFFF39C12))
-                                    daysUntil <= 7 -> Pair("$daysUntil days remaining", Color(0xFFF59E0B))
-                                    else -> Pair("$daysUntil days remaining", Color(0xFF10B981))
+                                    daysUntil < 0 -> Pair("${kotlin.math.abs(daysUntil)} days overdue", MaterialTheme.colorScheme.error)
+                                    daysUntil == 0L -> Pair("Due today!", MaterialTheme.colorScheme.secondary)
+                                    daysUntil <= 7 -> Pair("$daysUntil days remaining", MaterialTheme.colorScheme.secondary)
+                                    else -> Pair("$daysUntil days remaining", MaterialTheme.colorScheme.tertiary)
                                 }
                                 
                                 Icon(
@@ -1049,7 +1085,7 @@ fun EditModeContent(
                     .padding(bottom = 8.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF667EEA).copy(alpha = 0.08f)
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
@@ -1063,13 +1099,13 @@ fun EditModeContent(
                         text = if (id != 0L) "✨ Update Your Wish" else "🌟 Create New Wish",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF667EEA),
+                        color = MaterialTheme.colorScheme.primary,
                         textAlign = TextAlign.Center
                     )
                     Text(
                         text = if (id != 0L) "Make changes to perfect your wish" else "Turn your dreams into achievable goals",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF64748B),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 4.dp)
                     )
@@ -1191,7 +1227,7 @@ fun EnhancedAppBarView(
         title = {
             Text(
                 text = title,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -1206,7 +1242,7 @@ fun EnhancedAppBarView(
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
         },
@@ -1219,7 +1255,7 @@ fun EnhancedAppBarView(
                     Icon(
                         imageVector = Icons.Default.Share,
                         contentDescription = stringResource(R.string.share),
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -1231,13 +1267,13 @@ fun EnhancedAppBarView(
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = stringResource(R.string.edit),
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color(0xFF667EEA)
+            containerColor = MaterialTheme.colorScheme.primary
         )
     )
 }
@@ -1267,7 +1303,7 @@ fun DisplayCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = "$title section icon",
-                    tint = Color(0xFF667EEA),
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
@@ -1275,7 +1311,7 @@ fun DisplayCard(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF667EEA)
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
             content()
@@ -1293,14 +1329,14 @@ fun DisplayField(
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = Color(0xFF64748B),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = value.ifEmpty { "Not specified" },
             style = MaterialTheme.typography.bodyLarge,
-            color = if (value.isEmpty()) Color(0xFF94A3B8) else Color(0xFF1A1D29),
+            color = if (value.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Normal
         )
     }
@@ -1316,7 +1352,7 @@ fun DisplayTagsField(
         Text(
             text = "Tags",
             style = MaterialTheme.typography.labelMedium,
-            color = Color(0xFF64748B),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -1329,8 +1365,8 @@ fun DisplayTagsField(
                     onClick = { },
                     label = { Text(tag) },
                     colors = AssistChipDefaults.assistChipColors(
-                        containerColor = Color(0xFF667EEA).copy(alpha = 0.1f),
-                        labelColor = Color(0xFF667EEA)
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                        labelColor = MaterialTheme.colorScheme.primary
                     )
                 )
             }
@@ -1342,9 +1378,9 @@ fun DisplayTagsField(
 @Composable
 fun PriorityDisplayChip(priority: Priority) {
     val (priorityColor, priorityLabel, priorityIcon) = when (priority) {
-        Priority.HIGH -> Triple(Color(0xFFE74C3C), stringResource(R.string.high), "🔥")
-        Priority.MEDIUM -> Triple(Color(0xFFF39C12), stringResource(R.string.medium), "⚡")
-        Priority.LOW -> Triple(Color(0xFF27AE60), stringResource(R.string.low), "🌱")
+        Priority.HIGH -> Triple(MaterialTheme.colorScheme.error, stringResource(R.string.high), "🔥")
+        Priority.MEDIUM -> Triple(MaterialTheme.colorScheme.secondary, stringResource(R.string.medium), "⚡")
+        Priority.LOW -> Triple(MaterialTheme.colorScheme.tertiary, stringResource(R.string.low), "🌱")
     }
     
     Card(
@@ -1385,7 +1421,7 @@ fun SavingsProgressCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -1400,7 +1436,7 @@ fun SavingsProgressCard(
                 Icon(
                     imageVector = Icons.Default.Savings,
                     contentDescription = "Savings progress section",
-                    tint = Color(0xFF10B981),
+                    tint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
@@ -1408,7 +1444,7 @@ fun SavingsProgressCard(
                     text = stringResource(R.string.savings_progress),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF10B981)
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
             
@@ -1430,18 +1466,18 @@ fun SavingsProgressCard(
                     Text(
                         text = String.format("Saved: $%.2f", savedAmount),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF10B981),
+                        color = MaterialTheme.colorScheme.tertiary,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
                         text = String.format("Target: $%.2f", targetPrice),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF64748B)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = String.format("%.1f%% saved", progressPercentage),
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF667EEA),
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -1449,7 +1485,7 @@ fun SavingsProgressCard(
                 Button(
                     onClick = onAddFunds,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF10B981)
+                        containerColor = MaterialTheme.colorScheme.tertiary
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.height(40.dp)
@@ -1559,13 +1595,13 @@ fun EnhancedSectionCard(
                         text = title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF667EEA)
+                        color = MaterialTheme.colorScheme.primary
                     )
                     subtitle?.let { sub ->
                         Text(
                             text = sub,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF64748B),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 2.dp)
                         )
                     }
@@ -1599,8 +1635,11 @@ fun EnhancedActionButtonWithValidation(
     )
     
     val buttonColor by animateColorAsState(
-        targetValue = if (isFormValid) Color(0xFF667EEA) else Color(0xFF94A3B8),
-        animationSpec = tween(300),
+        targetValue = if (isFormValid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
         label = "button_color"
     )
     
@@ -1637,7 +1676,7 @@ fun EnhancedActionButtonWithValidation(
         shape = RoundedCornerShape(28.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = buttonColor,
-            disabledContainerColor = Color(0xFF94A3B8)
+            disabledContainerColor = MaterialTheme.colorScheme.onSurfaceVariant
         ),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = if (isFormValid) 8.dp else 4.dp,
@@ -1647,7 +1686,13 @@ fun EnhancedActionButtonWithValidation(
         AnimatedContent(
             targetState = isLoading,
             transitionSpec = {
-                fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(150))
+                fadeIn(animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )) togetherWith fadeOut(animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                ))
             },
             label = "button_content"
         ) { loading ->
@@ -1658,13 +1703,13 @@ fun EnhancedActionButtonWithValidation(
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Saving...",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -1682,7 +1727,7 @@ fun EnhancedActionButtonWithValidation(
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier
                                 .size(18.dp)
                                 .padding(end = 4.dp)
@@ -1697,7 +1742,7 @@ fun EnhancedActionButtonWithValidation(
                         Icon(
                             imageVector = Icons.Default.Error,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier
                                 .size(18.dp)
                                 .padding(end = 4.dp)
@@ -1706,7 +1751,7 @@ fun EnhancedActionButtonWithValidation(
                     
                     Text(
                         text = if (isFormValid) text else "Form Incomplete",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -1750,7 +1795,7 @@ fun EnhancedActionButton(
             },
         shape = RoundedCornerShape(28.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF667EEA)
+            containerColor = MaterialTheme.colorScheme.primary
         ),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = 8.dp,
@@ -1759,7 +1804,7 @@ fun EnhancedActionButton(
     ) {
         Text(
             text = text,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onPrimary,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )

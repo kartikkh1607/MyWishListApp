@@ -201,21 +201,26 @@ class WishViewModel(
     private val _wishStats = MutableStateFlow<WishRepository.WishStats?>(null)
     val wishStats: StateFlow<WishRepository.WishStats?> = _wishStats.asStateFlow()
     
-    // New flows for Dashboard redesign
-    val upcomingItems: StateFlow<List<Wish>> by lazy {
-        actualWishRepository.getUpcomingItems().stateIn(
+    // Dashboard StateFlows for upcoming and in-progress goals
+    val upcomingGoals: StateFlow<List<Wish>> by lazy {
+        actualWishRepository.getUpcomingGoals(System.currentTimeMillis()).stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
     }
     
-    val inProgressItems: StateFlow<List<Wish>> by lazy {
-        actualWishRepository.getInProgressItems().stateIn(
+    val inProgressGoals: StateFlow<List<Wish>> by lazy {
+        actualWishRepository.getInProgressGoals().stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+    }
+    
+    // Calendar/Journey View StateFlow for monthly items
+    fun getItemsForMonth(startDate: Long, endDate: Long): Flow<List<Wish>> {
+        return actualWishRepository.getItemsForMonth(startDate, endDate)
     }
 
     fun addWish(wish: Wish){

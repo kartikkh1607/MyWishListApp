@@ -57,16 +57,17 @@ abstract class WishDao {
     @Query("SELECT * FROM `Wish-Table` ORDER BY id DESC LIMIT 5")
     abstract fun getRecentWishes(): Flow<List<Wish>>
     
-    // New queries for Dashboard redesign
-    @Query("SELECT * FROM `Wish-Table` WHERE `wish-target-date` > :currentDate AND `wish-is-completed` = 0 ORDER BY `wish-target-date` ASC LIMIT 5")
-    abstract fun getUpcomingItems(currentDate: Long): Flow<List<Wish>>
+    // Dashboard queries - Goals with upcoming target dates
+    @Query("SELECT * FROM `Wish-Table` WHERE `wish-is-goal` = 1 AND `wish-target-date` IS NOT NULL AND `wish-target-date` > :currentDate AND `wish-is-completed` = 0 ORDER BY `wish-target-date` ASC LIMIT 10")
+    abstract fun getUpcomingGoals(currentDate: Long): Flow<List<Wish>>
     
-    @Query("SELECT * FROM `Wish-Table` WHERE `wish-progress` > 0 AND `wish-progress` < 100 AND `wish-is-completed` = 0 ORDER BY `wish-progress` DESC")
-    abstract fun getInProgressItems(): Flow<List<Wish>>
+    // Dashboard queries - Goals currently in progress
+    @Query("SELECT * FROM `Wish-Table` WHERE `wish-is-goal` = 1 AND `wish-progress` > 0 AND `wish-progress` < 100 AND `wish-is-completed` = 0 ORDER BY `wish-progress` DESC")
+    abstract fun getInProgressGoals(): Flow<List<Wish>>
     
-    // New query for Calendar/Journey View
-    @Query("SELECT * FROM `Wish-Table` WHERE (`wish-created-date` BETWEEN :startDate AND :endDate) OR (`wish-target-date` BETWEEN :startDate AND :endDate) ORDER BY `wish-created-date` DESC")
-    abstract fun getItemsByDate(startDate: Long, endDate: Long): Flow<List<Wish>>
+    // Calendar/Journey View - Items for specific month
+    @Query("SELECT * FROM `Wish-Table` WHERE (`wish-created-date` BETWEEN :startDate AND :endDate) OR (`wish-target-date` BETWEEN :startDate AND :endDate) OR (`wish-completed-date` BETWEEN :startDate AND :endDate) ORDER BY COALESCE(`wish-target-date`, `wish-created-date`) DESC")
+    abstract fun getItemsForMonth(startDate: Long, endDate: Long): Flow<List<Wish>>
 
     @Update
     abstract suspend fun updateAWish(wishEntity: Wish)

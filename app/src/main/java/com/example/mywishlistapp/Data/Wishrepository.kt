@@ -114,16 +114,16 @@ class WishRepository(private val wishDao: WishDao) {
             }
         }
     
-    // New methods for Dashboard redesign
-    fun getUpcomingItems(): Flow<List<Wish>> = 
-        wishDao.getUpcomingItems(System.currentTimeMillis())
+    // Dashboard methods for goals specifically
+    fun getUpcomingGoals(currentDate: Long): Flow<List<Wish>> = 
+        wishDao.getUpcomingGoals(currentDate)
     
-    fun getInProgressItems(): Flow<List<Wish>> = 
-        wishDao.getInProgressItems()
+    fun getInProgressGoals(): Flow<List<Wish>> = 
+        wishDao.getInProgressGoals()
     
-    // New method for Calendar/Journey View
-    fun getItemsByDate(startDate: Long, endDate: Long): Flow<List<Wish>> = 
-        wishDao.getItemsByDate(startDate, endDate)
+    // Calendar/Journey View method
+    fun getItemsForMonth(startDate: Long, endDate: Long): Flow<List<Wish>> = 
+        wishDao.getItemsForMonth(startDate, endDate)
     
     // Clear all data for settings
     suspend fun deleteAllWishes() {
