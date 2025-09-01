@@ -110,6 +110,32 @@
     <string name="player">Player</string>
     <string name="user">User</string>
     
+    <!-- Onboarding & Personalization -->
+    <string name="welcome_to_companion">Welcome to Your Personal Growth Companion</string>
+    <string name="onboarding_subtitle">Let\'s make this journey personal and meaningful</string>
+    <string name="what_should_we_call_you">What should we call you?</string>
+    <string name="name_hint">Enter your name</string>
+    <string name="continue_button">Continue</string>
+    <string name="getting_started">Let\'s get started!</string>
+    <string name="welcome_back_user">Welcome back, %1$s</string>
+    <string name="your_growth_journey">Your growth journey continues...</string>
+    <string name="name_too_short">Please enter at least 3 characters</string>
+    
+    <!-- Personal Growth Companion Features -->
+    <string name="item_type">Item Type</string>
+    <string name="wish">Wish</string>
+    <string name="goal">Goal</string>
+    <string name="wish_description_help">Something you want or desire</string>
+    <string name="goal_description_help">Something you want to achieve or accomplish</string>
+    <string name="set_target_date">Set Target Date</string>
+    <string name="target_date">Target Date</string>
+    <string name="track_progress">Track Progress</string>
+    <string name="progress_percentage">Progress: %1$d%%</string>
+    <string name="category_picker">Category</string>
+    <string name="select_date">Select Date</string>
+    <string name="no_date_set">No date set</string>
+    <string name="clear_date">Clear Date</string>
+    
     <!-- Saving Goals -->
     <string name="savings_progress">Savings Progress</string>
     <string name="add_funds">Add Funds</string>
@@ -118,7 +144,7 @@
     <string name="enter_amount">Enter amount</string>
     <string name="saved_amount">Saved: $%1$.2f</string>
     <string name="target_amount">Target: $%1$.2f</string>
-    <string name="progress_percentage">%1$.1f%% saved</string>
+    <string name="savings_percentage">%1$.1f%% saved</string>
     
     <!-- Sharing -->
     <string name="share_wish_text">Check out what I\'m wishing for: %1$s - %2$s</string>

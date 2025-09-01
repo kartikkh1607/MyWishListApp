@@ -77,7 +77,14 @@ data class Wish(
     val reminderSet: Boolean = false,
     // Savings feature
     @ColumnInfo(name = "wish-saved-amount")
-    val savedAmount: Double = 0.0
+    val savedAmount: Double = 0.0,
+    // Personal Growth Companion features
+    @ColumnInfo(name = "wish-is-goal")
+    val isGoal: Boolean = false,
+    @ColumnInfo(name = "wish-target-date")
+    val targetDate: Long? = null,
+    @ColumnInfo(name = "wish-progress")
+    val progress: Int = 0 // Range: 0-100
 )
 
 object DummyWish {
@@ -123,6 +130,47 @@ object DummyWish {
             category = "Electronics",
             tags = listOf("audio", "noise-cancelling", "music"),
             priority = Priority.MEDIUM
+        ),
+        // Personal Growth Goals for demonstration
+        Wish(
+            title = "Learn Kotlin Multiplatform",
+            description = "Master KMP development to build cross-platform apps for Android and iOS.",
+            category = "Education",
+            tags = listOf("learning", "development", "kotlin", "mobile"),
+            priority = Priority.HIGH,
+            isGoal = true,
+            targetDate = System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000), // 30 days from now
+            progress = 35
+        ),
+        Wish(
+            title = "Complete Marathon Training",
+            description = "Train consistently for 6 months to complete my first full marathon.",
+            category = "Health",
+            tags = listOf("fitness", "running", "endurance", "health"),
+            priority = Priority.HIGH,
+            isGoal = true,
+            targetDate = System.currentTimeMillis() + (180L * 24 * 60 * 60 * 1000), // 6 months from now
+            progress = 65
+        ),
+        Wish(
+            title = "Read 24 Books This Year",
+            description = "Develop a consistent reading habit and expand knowledge across various topics.",
+            category = "Education",
+            tags = listOf("reading", "knowledge", "habit", "personal-growth"),
+            priority = Priority.MEDIUM,
+            isGoal = true,
+            targetDate = System.currentTimeMillis() + (120L * 24 * 60 * 60 * 1000), // 4 months from now  
+            progress = 75
+        ),
+        Wish(
+            title = "Save $5000 for Emergency Fund",
+            description = "Build a solid financial foundation with a proper emergency fund.",
+            category = "Financial",
+            tags = listOf("savings", "financial-security", "emergency-fund"),
+            priority = Priority.HIGH,
+            isGoal = true,
+            targetDate = System.currentTimeMillis() + (365L * 24 * 60 * 60 * 1000), // 1 year from now
+            progress = 45
         )
     )
 }

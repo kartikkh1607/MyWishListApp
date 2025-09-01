@@ -1,6 +1,9 @@
 package com.example.mywishlistapp
 
 sealed class Screen(val route : String) {
+    // Onboarding screen
+    object OnboardingScreen : Screen("onboarding_screen")
+    
     // Original screens
     object HomeScreen : Screen("home_screen")
     object AddScreen : Screen("Add_screen")

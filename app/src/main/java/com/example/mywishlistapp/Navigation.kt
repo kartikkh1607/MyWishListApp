@@ -29,10 +29,44 @@ fun Navigation(
     navController: NavHostController,
     viewModel: WishViewModel
 ) {
+    // Observe user profile to determine if onboarding is needed
+    val userProfile by viewModel.userProfile.collectAsState()
+    val shouldShowOnboarding = userProfile.name.isEmpty()
+    
     NavHost(
         navController = navController,
-        startDestination = Screen.DashboardScreen.route
+        startDestination = if (shouldShowOnboarding) Screen.OnboardingScreen.route else Screen.DashboardScreen.route
     ) {
+        
+        // Onboarding Screen
+        composable(
+            route = Screen.OnboardingScreen.route,
+            enterTransition = {
+                fadeIn(animationSpec = tween(600)) + scaleIn(
+                    initialScale = 0.95f,
+                    animationSpec = tween(600)
+                )
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(300)) + scaleOut(
+                    targetScale = 1.05f,
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
+            OnboardingScreen(
+                viewModel = viewModel,
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.DashboardScreen.route) {
+                        // Clear the entire back stack including onboarding
+                        popUpTo(Screen.OnboardingScreen.route) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
         // Home Screen with Material Shared-Axis Horizontal Transition
         composable(
             route = Screen.HomeScreen.route,

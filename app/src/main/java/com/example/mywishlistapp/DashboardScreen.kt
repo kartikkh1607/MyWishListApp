@@ -21,12 +21,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Wish
+import com.example.mywishlistapp.ui.components.DashboardSkeleton
+import com.example.mywishlistapp.ui.components.GoalProgressAnalyticsCard
+import com.example.mywishlistapp.ui.components.CompletionStatisticsCard
+import com.example.mywishlistapp.ui.components.MotivationalInsightsCard
+import com.example.mywishlistapp.ui.components.UpcomingDeadlinesCard
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -41,12 +47,20 @@ data class CategoryItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) {
-    val wishList = viewModel.getAllWishes.collectAsState(initial = emptyList())
+    val wishList = viewModel.getAllWishes.collectAsState(initial = null)
     val unreadNotificationCount by viewModel.getUnreadNotificationCount().collectAsState()
-    val userProfile by viewModel.userProfile.collectAsState()
+    val userProfile by viewModel.userProfile.collectAsState(initial = null)
     val currentTime = Calendar.getInstance().time
     val dateFormat = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
     val hourOfDay = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    
+    // Personal Growth Analytics Data
+    val goalAnalytics by viewModel.getGoalAnalytics().collectAsState(initial = WishViewModel.GoalAnalytics())
+    val activeGoals by viewModel.getActiveGoalsWithProgress().collectAsState(initial = emptyList())
+    val upcomingDeadlines by viewModel.getUpcomingDeadlines().collectAsState(initial = emptyList())
+    val motivationalInsights by viewModel.getMotivationalInsights().collectAsState(initial = emptyList())
+    val wishesVsGoals by viewModel.getCompletionStats().collectAsState(initial = Pair(0, 0))
+    val streakData by viewModel.getStreakData().collectAsState(initial = 0)
 
     // Enhanced greeting with emojis
     val greeting = when (hourOfDay) {
@@ -56,12 +70,15 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
         else -> "Good Night 🌙"
     }
 
-    // Calculate progress metrics
-    val totalWishes = wishList.value.size
-    val completedWishes = wishList.value.count { it.isCompleted }
+    // Check if data is loading
+    val isLoading = wishList.value == null || userProfile == null
+    
+    // Calculate progress metrics (only when data is available)
+    val totalWishes = wishList.value?.size ?: 0
+    val completedWishes = wishList.value?.count { it.isCompleted } ?: 0
     val completionRate = if (totalWishes > 0) (completedWishes.toFloat() / totalWishes.toFloat()) else 0f
-    val totalSavingsTarget = wishList.value.sumOf { it.price.toDoubleOrNull() ?: 0.0 }
-    val totalSaved = wishList.value.sumOf { it.savedAmount }
+    val totalSavingsTarget = wishList.value?.sumOf { it.price.toDoubleOrNull() ?: 0.0 } ?: 0.0
+    val totalSaved = wishList.value?.sumOf { it.savedAmount } ?: 0.0
     val savingsProgress = if (totalSavingsTarget > 0) (totalSaved / totalSavingsTarget).toFloat() else 0f
 
     // Animation states
@@ -104,86 +121,139 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
             hasNotifications = unreadNotificationCount > 0
         )
 
-        AnimatedVisibility(
-            visible = contentVisible,
-            enter = fadeIn(animationSpec = tween(800)) + slideInVertically(
-                initialOffsetY = { it / 4 },
-                animationSpec = tween(800)
-            )
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 8.dp,
-                    bottom = 12.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+        // Show skeleton loading or actual content
+        if (isLoading) {
+            DashboardSkeleton()
+        } else {
+            AnimatedVisibility(
+                visible = contentVisible,
+                enter = fadeIn(animationSpec = tween(800)) + slideInVertically(
+                    initialOffsetY = { it / 4 },
+                    animationSpec = tween(800)
+                )
             ) {
-                // Enhanced User Greeting Section
-                item {
-                    GreetingSection(
-                        greeting = greeting,
-                        currentTime = dateFormat.format(currentTime),
-                        userName = userProfile.username,
-                        navController = navController,
-                        onEditUserName = { newName ->
-                            viewModel.updateUsername(newName)
-                        }
-                    )
-                }
-
-                // Progress Overview Card
-                if (totalWishes > 0) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 8.dp,
+                        bottom = 12.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Enhanced User Greeting Section with improved typography
                     item {
-                        ProgressOverviewCard(
-                            completionRate = completionRate,
-                            totalWishes = totalWishes,
-                            completedWishes = completedWishes,
-                            savingsProgress = savingsProgress,
-                            totalSaved = totalSaved,
-                            totalSavingsTarget = totalSavingsTarget
-                        )
-                    }
-                }
-
-                // Motivational Message
-                item {
-                    MotivationalCard(
-                        completionRate = completionRate,
-                        totalWishes = totalWishes
-                    )
-                }
-
-                // Quick Stats
-                item {
-                    QuickStatsSection(wishList = wishList.value)
-                }
-
-                // Category Shortcuts
-                item {
-                    CategoryShortcuts(navController = navController)
-                }
-
-                // Recent Wishes (only if there are wishes)
-                if (wishList.value.isNotEmpty()) {
-                    item {
-                        RecentWishesSection(
-                            wishes = wishList.value.take(3), // Show 3 recent wishes
-                            onWishClick = { wish ->
-                                navController.navigate(Screen.AddScreen.route + "/${wish.id}")
-                            },
-                            onViewAllClick = {
-                                navController.navigate(Screen.WishListScreen.route)
+                        GreetingSection(
+                            greeting = greeting,
+                            currentTime = dateFormat.format(currentTime),
+                            userName = userProfile?.name?.takeIf { it.isNotEmpty() } ?: userProfile?.username ?: "User",
+                            navController = navController,
+                            onEditUserName = { newName ->
+                                viewModel.saveUserName(newName)
                             }
                         )
                     }
-                }
 
-                // Quick Action Buttons
-                item {
-                    QuickActionButtons(navController = navController)
+                    // Progress Overview Card
+                    if (totalWishes > 0) {
+                        item {
+                            ProgressOverviewCard(
+                                completionRate = completionRate,
+                                totalWishes = totalWishes,
+                                completedWishes = completedWishes,
+                                savingsProgress = savingsProgress,
+                                totalSaved = totalSaved,
+                                totalSavingsTarget = totalSavingsTarget
+                            )
+                        }
+                    }
+
+                    // Personal Growth Analytics - Goal Progress
+                    if (activeGoals.isNotEmpty()) {
+                        item {
+                            GoalProgressAnalyticsCard(
+                                activeGoals = activeGoals,
+                                onGoalClick = { goal ->
+                                    navController.navigate(Screen.AddScreen.route + "/${goal.id}")
+                                }
+                            )
+                        }
+                    }
+                    
+                    // Personal Growth Analytics - Statistics
+                    if (goalAnalytics.totalGoals > 0) {
+                        item {
+                            CompletionStatisticsCard(
+                                goalAnalytics = goalAnalytics,
+                                wishesVsGoals = wishesVsGoals,
+                                streakData = streakData
+                            )
+                        }
+                    }
+                    
+                    // Motivational Insights
+                    if (motivationalInsights.isNotEmpty()) {
+                        item {
+                            MotivationalInsightsCard(
+                                insights = motivationalInsights
+                            )
+                        }
+                    }
+                    
+                    // Upcoming Deadlines
+                    if (upcomingDeadlines.isNotEmpty()) {
+                        item {
+                            UpcomingDeadlinesCard(
+                                upcomingDeadlines = upcomingDeadlines,
+                                onGoalClick = { goal ->
+                                    navController.navigate(Screen.AddScreen.route + "/${goal.id}")
+                                }
+                            )
+                        }
+                    }
+                    
+                    // Motivational Message (fallback for users without goals)
+                    if (goalAnalytics.totalGoals == 0) {
+                        item {
+                            MotivationalCard(
+                                completionRate = completionRate,
+                                totalWishes = totalWishes
+                            )
+                        }
+                    }
+
+                    // Quick Stats
+                    item {
+                        QuickStatsSection(wishList = wishList.value ?: emptyList())
+                    }
+
+                    // Category Shortcuts
+                    item {
+                        CategoryShortcuts(navController = navController)
+                    }
+
+                    // Recent Wishes (only if there are wishes)
+                    wishList.value?.let { wishes ->
+                        if (wishes.isNotEmpty()) {
+                            item {
+                                RecentWishesSection(
+                                    wishes = wishes.take(3), // Show 3 recent wishes
+                                    onWishClick = { wish ->
+                                        navController.navigate(Screen.AddScreen.route + "/${wish.id}")
+                                    },
+                                    onViewAllClick = {
+                                        navController.navigate(Screen.WishListScreen.route)
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Quick Action Buttons
+                    item {
+                        QuickActionButtons(navController = navController)
+                    }
                 }
             }
         }
@@ -336,10 +406,16 @@ fun GreetingSection(
                             .clickable { showEditDialog = true }
                     ) {
                         Text(
-                            text = "$greeting, $userName! 👋",
-                            style = MaterialTheme.typography.titleMedium,
+                            text = androidx.compose.ui.res.stringResource(R.string.welcome_back_user, userName),
+                            style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1A1D29)
+                        )
+                        Text(
+                            text = androidx.compose.ui.res.stringResource(R.string.your_growth_journey),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF667EEA)
                         )
                         Text(
                             text = currentTime,

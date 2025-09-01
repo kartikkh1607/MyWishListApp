@@ -34,14 +34,23 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.mywishlistapp.Data.Wish
 import com.example.mywishlistapp.Data.Priority
+import com.example.mywishlistapp.ui.components.ItemTypeSelector
+import com.example.mywishlistapp.ui.components.TargetDatePicker
+import com.example.mywishlistapp.ui.components.ProgressTracker
+import com.example.mywishlistapp.ui.components.MilestoneManager
+import com.example.mywishlistapp.Data.Milestone
 import com.example.mywishlistapp.ui.theme.MyWishListAppTheme
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,6 +103,10 @@ fun AddEditDetailView(
             viewModel.wishPriorityState = Priority.MEDIUM
             viewModel.wishPriceState = ""
             viewModel.wishImageUrlState = ""
+            // Reset Personal Growth fields
+            viewModel.wishIsGoalState = false
+            viewModel.wishTargetDateState = null
+            viewModel.wishProgressState = 0
         }
     }
 
@@ -113,6 +126,10 @@ fun AddEditDetailView(
                 viewModel.wishPriorityState = wish.priority
                 viewModel.wishPriceState = wish.price
                 viewModel.wishImageUrlState = wish.imageUrl
+                // Load Personal Growth fields
+                viewModel.wishIsGoalState = wish.isGoal
+                viewModel.wishTargetDateState = wish.targetDate
+                viewModel.wishProgressState = wish.progress
             }
         }
     }
@@ -831,6 +848,166 @@ fun DisplayModeContent(
                 PriorityDisplayChip(priority = wish.priority)
             }
         }
+        
+        // Personal Growth Display - Item Type
+        item {
+            DisplayCard(
+                title = "Item Type",
+                icon = if (wish.isGoal) Icons.Default.Flag else Icons.Default.Star
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (wish.isGoal) "🎯" else "✨",
+                        fontSize = 20.sp,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = if (wish.isGoal) "Goal" else "Wish",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (wish.isGoal) Color(0xFF10B981) else Color(0xFF667EEA)
+                    )
+                }
+            }
+        }
+        
+        // Personal Growth Display - Goal Progress (only for goals)
+        if (wish.isGoal) {
+            item {
+                DisplayCard(
+                    title = "Goal Progress",
+                    icon = Icons.Default.TrendingUp
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${wish.progress}% Complete",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF667EEA)
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = when {
+                                    wish.progress >= 80 -> Color(0xFF10B981).copy(alpha = 0.2f)
+                                    wish.progress >= 50 -> Color(0xFFF59E0B).copy(alpha = 0.2f)
+                                    else -> Color(0xFF667EEA).copy(alpha = 0.2f)
+                                }
+                            ) {
+                                Text(
+                                    text = when {
+                                        wish.progress >= 80 -> "🎯"
+                                        wish.progress >= 50 -> "💪"
+                                        else -> "🌱"
+                                    },
+                                    modifier = Modifier.padding(8.dp),
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        LinearProgressIndicator(
+                            progress = { wish.progress / 100f },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            color = when {
+                                wish.progress >= 80 -> Color(0xFF10B981)
+                                wish.progress >= 50 -> Color(0xFFF59E0B)
+                                else -> Color(0xFF667EEA)
+                            },
+                            trackColor = Color(0xFF667EEA).copy(alpha = 0.2f)
+                        )
+                    }
+                }
+            }
+            
+            // Target Date Display (only for goals with target dates)
+            wish.targetDate?.let { targetDate ->
+                item {
+                    DisplayCard(
+                        title = "Target Date",
+                        icon = Icons.Default.CalendarToday
+                    ) {
+                        val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                        val formattedDate = dateFormat.format(Date(targetDate))
+                        val now = System.currentTimeMillis()
+                        val daysUntil = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(targetDate - now)
+                        
+                        Column {
+                            androidx.compose.material3.Text(
+                                text = formattedDate,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1A1D29)
+                            )
+                            
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
+                                val (statusText, statusColor) = when {
+                                    daysUntil < 0 -> Pair("${kotlin.math.abs(daysUntil)} days overdue", Color(0xFFE74C3C))
+                                    daysUntil == 0L -> Pair("Due today!", Color(0xFFF39C12))
+                                    daysUntil <= 7 -> Pair("$daysUntil days remaining", Color(0xFFF59E0B))
+                                    else -> Pair("$daysUntil days remaining", Color(0xFF10B981))
+                                }
+                                
+                                Icon(
+                                    imageVector = when {
+                                        daysUntil < 0 -> Icons.Default.Warning
+                                        daysUntil <= 7 -> Icons.Default.Schedule
+                                        else -> Icons.Default.CheckCircle
+                                    },
+                                    contentDescription = null,
+                                    tint = statusColor,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = statusText,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = statusColor,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Milestones Display (only for goals)
+            item {
+                MilestoneManager(
+                    goal = wish,
+                    milestones = emptyList(), // TODO: Load from ViewModel
+                    onMilestoneCompleted = { milestoneId ->
+                        // TODO: Implement milestone completion
+                    },
+                    onMilestoneUncompleted = { milestoneId ->
+                        // TODO: Implement milestone un-completion
+                    },
+                    onAddMilestone = {
+                        // TODO: Implement add milestone
+                    },
+                    onEditMilestone = { milestone ->
+                        // TODO: Implement edit milestone
+                    },
+                    onDeleteMilestone = { milestone ->
+                        // TODO: Implement delete milestone
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -908,54 +1085,82 @@ fun EditModeContent(
             )
         }
 
+        // Personal Growth Companion Components
+        item {
+            ItemTypeSelector(
+                isGoal = viewModel.wishIsGoalState,
+                onItemTypeChanged = { viewModel.onWishIsGoalChanged(it) }
+            )
+        }
+
+        item {
+            TargetDatePicker(
+                targetDate = viewModel.wishTargetDateState,
+                onTargetDateChanged = { viewModel.onWishTargetDateChanged(it) },
+                isVisible = viewModel.wishIsGoalState
+            )
+        }
+
+        item {
+            ProgressTracker(
+                progress = viewModel.wishProgressState,
+                onProgressChanged = { viewModel.onWishProgressChanged(it) },
+                isVisible = viewModel.wishIsGoalState
+            )
+        }
+
         item {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         item {
-            EnhancedActionButton(
+            EnhancedActionButtonWithValidation(
                 text = if (id != 0L) stringResource(R.string.update_wish_button) else stringResource(R.string.add_wish_button),
+                isFormValid = viewModel.wishTitleState.isNotBlank() && viewModel.wishDescriptionState.isNotBlank(),
                 onClick = {
-                    if (viewModel.wishTitleState.isNotEmpty() &&
-                        viewModel.wishDescriptionState.isNotEmpty()
-                    ) {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                        
-                        if (id != 0L) {
-                            viewModel.updateWish(
-                                Wish(
-                                    id = id,
-                                    title = viewModel.wishTitleState.trim(),
-                                    description = viewModel.wishDescriptionState.trim(),
-                                    category = viewModel.wishCategoryState,
-                                    tags = viewModel.getTagsList(),
-                                    priority = viewModel.wishPriorityState,
-                                    price = viewModel.wishPriceState.trim(),
-                                    imageUrl = viewModel.wishImageUrlState.takeIf { it.isNotBlank() } ?: ""
-                                )
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    
+                    if (id != 0L) {
+                        viewModel.updateWish(
+                            Wish(
+                                id = id,
+                                title = viewModel.wishTitleState.trim(),
+                                description = viewModel.wishDescriptionState.trim(),
+                                category = viewModel.wishCategoryState,
+                                tags = viewModel.getTagsList(),
+                                priority = viewModel.wishPriorityState,
+                                price = viewModel.wishPriceState.trim(),
+                                imageUrl = viewModel.wishImageUrlState.takeIf { it.isNotBlank() } ?: "",
+                                isGoal = viewModel.wishIsGoalState,
+                                targetDate = viewModel.wishTargetDateState,
+                                progress = viewModel.wishProgressState
                             )
-                            onModeChanged()
-                        } else {
-                            viewModel.addWish(
-                                Wish(
-                                    title = viewModel.wishTitleState.trim(),
-                                    description = viewModel.wishDescriptionState.trim(),
-                                    category = viewModel.wishCategoryState,
-                                    tags = viewModel.getTagsList(),
-                                    priority = viewModel.wishPriorityState,
-                                    price = viewModel.wishPriceState.trim(),
-                                    imageUrl = viewModel.wishImageUrlState.takeIf { it.isNotBlank() } ?: ""
-                                )
-                            )
-                            navController.navigateUp()
-                        }
+                        )
+                        onModeChanged()
                     } else {
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = "Please fill in both title and description",
-                                duration = SnackbarDuration.Short
+                        viewModel.addWish(
+                            Wish(
+                                title = viewModel.wishTitleState.trim(),
+                                description = viewModel.wishDescriptionState.trim(),
+                                category = viewModel.wishCategoryState,
+                                tags = viewModel.getTagsList(),
+                                priority = viewModel.wishPriorityState,
+                                price = viewModel.wishPriceState.trim(),
+                                imageUrl = viewModel.wishImageUrlState.takeIf { it.isNotBlank() } ?: "",
+                                isGoal = viewModel.wishIsGoalState,
+                                targetDate = viewModel.wishTargetDateState,
+                                progress = viewModel.wishProgressState
                             )
-                        }
+                        )
+                        navController.navigateUp()
+                    }
+                },
+                onInvalidForm = {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = "Please fill in both title and description",
+                            duration = SnackbarDuration.Short
+                        )
                     }
                 }
             )
@@ -1355,7 +1560,146 @@ fun EnhancedSectionCard(
     }
 }
 
-// Enhanced Action Button with spring animation
+// Enhanced Action Button with validation and loading states
+@Composable
+fun EnhancedActionButtonWithValidation(
+    text: String,
+    isFormValid: Boolean,
+    onClick: () -> Unit,
+    onInvalidForm: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "button_scale"
+    )
+    
+    val buttonColor by animateColorAsState(
+        targetValue = if (isFormValid) Color(0xFF667EEA) else Color(0xFF94A3B8),
+        animationSpec = tween(300),
+        label = "button_color"
+    )
+    
+    Button(
+        onClick = {
+            if (isFormValid) {
+                isLoading = true
+                onClick()
+                // Reset loading after a brief delay for user feedback
+                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                    kotlinx.coroutines.delay(800)
+                    isLoading = false
+                }
+            } else {
+                onInvalidForm()
+            }
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        if (isFormValid) {
+                            isPressed = true
+                            tryAwaitRelease()
+                            isPressed = false
+                        }
+                    }
+                )
+            },
+        enabled = !isLoading,
+        shape = RoundedCornerShape(28.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = buttonColor,
+            disabledContainerColor = Color(0xFF94A3B8)
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = if (isFormValid) 8.dp else 4.dp,
+            pressedElevation = 12.dp
+        )
+    ) {
+        AnimatedContent(
+            targetState = isLoading,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(150))
+            },
+            label = "button_content"
+        ) { loading ->
+            if (loading) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Saving...",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    AnimatedVisibility(
+                        visible = isFormValid,
+                        enter = scaleIn() + fadeIn(),
+                        exit = scaleOut() + fadeOut()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(18.dp)
+                                .padding(end = 4.dp)
+                        )
+                    }
+                    
+                    AnimatedVisibility(
+                        visible = !isFormValid,
+                        enter = scaleIn() + fadeIn(),
+                        exit = scaleOut() + fadeOut()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(18.dp)
+                                .padding(end = 4.dp)
+                        )
+                    }
+                    
+                    Text(
+                        text = if (isFormValid) text else "Form Incomplete",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+// Enhanced Action Button with spring animation (legacy)
 @Composable
 fun EnhancedActionButton(
     text: String,

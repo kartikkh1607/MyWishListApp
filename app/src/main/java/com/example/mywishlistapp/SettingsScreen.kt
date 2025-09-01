@@ -21,11 +21,18 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.ui.theme.*
 
+// Theme options enum
+enum class ThemeOption(val displayName: String) {
+    LIGHT("Light"),
+    DARK("Dark"),
+    SYSTEM("Follow System")
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
     // State variables for settings
-    var isDarkTheme by remember { mutableStateOf(false) }
+    var selectedTheme by remember { mutableStateOf(ThemeOption.SYSTEM) }
     var notificationsEnabled by remember { mutableStateOf(true) }
     var reminderSounds by remember { mutableStateOf(true) }
     var autoBackup by remember { mutableStateOf(false) }
@@ -35,12 +42,14 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
     var showExportDialog by remember { mutableStateOf(false) }
     var showClearDataDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
     
-    // Dynamic theme colors based on dark mode selection
-    val backgroundColor = if (isDarkTheme) BackgroundDark else BackgroundLight
-    val surfaceColor = if (isDarkTheme) SurfaceDark else SurfaceWhite
-    val textColor = if (isDarkTheme) Color.White else TextPrimary
-    val secondaryTextColor = if (isDarkTheme) Color.White.copy(alpha = 0.7f) else TextSecondary
+    // Derived state for theme colors based on selected theme
+    val isDarkTheme = when (selectedTheme) {
+        ThemeOption.LIGHT -> false
+        ThemeOption.DARK -> true
+        ThemeOption.SYSTEM -> false // You could implement system theme detection here
+    }
 
     Column(
         modifier = Modifier
@@ -75,12 +84,11 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
             // Appearance Section
             item {
                 SettingsSection(title = "Appearance") {
-                    SettingsSwitchItem(
-                        icon = Icons.Default.DarkMode,
-                        title = "Dark Theme",
-                        subtitle = "Enable dark mode for better viewing in low light",
-                        checked = isDarkTheme,
-                        onCheckedChange = { isDarkTheme = it }
+                    SettingsClickableItem(
+                        icon = Icons.Default.Palette,
+                        title = "App Theme",
+                        subtitle = "Currently using ${selectedTheme.displayName} theme",
+                        onClick = { showThemeDialog = true }
                     )
                 }
             }
@@ -251,6 +259,18 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
             }
         )
     }
+    
+    // Theme Selection Dialog
+    if (showThemeDialog) {
+        ThemeSelectionDialog(
+            currentTheme = selectedTheme,
+            onThemeSelected = { theme ->
+                selectedTheme = theme
+                showThemeDialog = false
+            },
+            onDismiss = { showThemeDialog = false }
+        )
+    }
 }
 
 @Composable
@@ -386,5 +406,124 @@ fun SettingsClickableItem(
             modifier = Modifier.size(20.dp),
             tint = Color(0xFF94A3B8)
         )
+    }
+}
+
+@Composable
+fun ThemeSelectionDialog(
+    currentTheme: ThemeOption,
+    onThemeSelected: (ThemeOption) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Palette,
+                    contentDescription = null,
+                    tint = Color(0xFF667EEA),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Choose Theme",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF667EEA)
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Select your preferred theme for the app",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF64748B),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                ThemeOption.values().forEach { theme ->
+                    ThemeOptionItem(
+                        theme = theme,
+                        isSelected = currentTheme == theme,
+                        onSelected = { onThemeSelected(theme) }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = "Done",
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        },
+        shape = RoundedCornerShape(20.dp),
+        containerColor = Color.White
+    )
+}
+
+@Composable
+fun ThemeOptionItem(
+    theme: ThemeOption,
+    isSelected: Boolean,
+    onSelected: () -> Unit
+) {
+    val (icon, description) = when (theme) {
+        ThemeOption.LIGHT -> Icons.Default.LightMode to "Light theme with bright colors"
+        ThemeOption.DARK -> Icons.Default.DarkMode to "Dark theme to reduce eye strain"
+        ThemeOption.SYSTEM -> Icons.Default.PhoneAndroid to "Follow your device's system theme"
+    }
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onSelected() }
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = isSelected,
+            onClick = onSelected,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = Color(0xFF667EEA),
+                unselectedColor = Color(0xFF94A3B8)
+            )
+        )
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (isSelected) Color(0xFF667EEA) else Color(0xFF94A3B8),
+            modifier = Modifier.size(24.dp)
+        )
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = theme.displayName,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+                color = if (isSelected) Color(0xFF1A1D29) else Color(0xFF64748B)
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isSelected) Color(0xFF64748B) else Color(0xFF94A3B8)
+            )
+        }
     }
 }

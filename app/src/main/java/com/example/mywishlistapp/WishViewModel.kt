@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class WishViewModel(
     application: Application,
@@ -83,6 +84,11 @@ class WishViewModel(
     var wishPriorityState by mutableStateOf(Priority.MEDIUM)
     var wishPriceState by mutableStateOf("")
     var wishImageUrlState by mutableStateOf("")
+    
+    // Personal Growth Companion state variables
+    var wishIsGoalState by mutableStateOf(false)
+    var wishTargetDateState by mutableStateOf<Long?>(null)
+    var wishProgressState by mutableStateOf(0)
 
     fun onWishTitleChanged(newString: String) {
         wishTitleState = newString
@@ -122,6 +128,22 @@ class WishViewModel(
     fun onWishImageUrlChanged(newString: String) {
         wishImageUrlState = newString
         wishState = wishState.copy(imageUrl = newString)
+    }
+    
+    // Personal Growth Companion handler functions
+    fun onWishIsGoalChanged(isGoal: Boolean) {
+        wishIsGoalState = isGoal
+        wishState = wishState.copy(isGoal = isGoal)
+    }
+    
+    fun onWishTargetDateChanged(targetDate: Long?) {
+        wishTargetDateState = targetDate
+        wishState = wishState.copy(targetDate = targetDate)
+    }
+    
+    fun onWishProgressChanged(progress: Int) {
+        wishProgressState = progress.coerceIn(0, 100)
+        wishState = wishState.copy(progress = wishProgressState)
     }
 
     // Convert tags string to list
@@ -441,6 +463,20 @@ class WishViewModel(
             }
         }
     }
+    
+    // Save user name for onboarding/personalization
+    fun saveUserName(name: String) {
+        viewModelScope.launch {
+            try {
+                updateUserProfile { profile ->
+                    profile.copy(name = name.trim())
+                }
+                android.util.Log.d("WishViewModel", "User name saved: $name")
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to save user name", e)
+            }
+        }
+    }
 
     // Enhanced wish management with gamification
     fun addWishWithGamification(wish: Wish) {
@@ -557,6 +593,219 @@ class WishViewModel(
             } catch (e: Exception) {
                 // Handle error - could add error notification here
             }
+        }
+    }
+    
+    // ===== PERSONAL GROWTH COMPANION ANALYTICS =====
+    
+    // Data classes for analytics
+    data class GoalAnalytics(
+        val totalGoals: Int = 0,
+        val completedGoals: Int = 0,
+        val activeGoals: Int = 0,
+        val averageProgress: Float = 0f,
+        val goalsWithDeadlines: Int = 0,
+        val overdue: Int = 0,
+        val completionRate: Float = 0f
+    )
+    
+    data class MotivationalInsight(
+        val message: String,
+        val type: InsightType,
+        val actionSuggestion: String? = null,
+        val emoji: String = "💪"
+    )
+    
+    enum class InsightType {
+        ENCOURAGEMENT, CELEBRATION, REMINDER, TIP, MILESTONE
+    }
+    
+    data class UpcomingDeadline(
+        val wish: Wish,
+        val daysUntilDeadline: Long,
+        val urgencyLevel: UrgencyLevel
+    )
+    
+    enum class UrgencyLevel {
+        OVERDUE, URGENT, SOON, NORMAL
+    }
+    
+    // Analytics Functions
+    
+    fun getGoalAnalytics(): Flow<GoalAnalytics> {
+        return getAllWishes.map { wishes ->
+            val goals = wishes.filter { it.isGoal }
+            val completed = goals.count { it.progress >= 100 }
+            val active = goals.count { it.progress < 100 }
+            val withDeadlines = goals.count { it.targetDate != null }
+            val overdue = getOverdueGoalsCount(goals)
+            val avgProgress = if (goals.isNotEmpty()) goals.map { it.progress }.average().toFloat() else 0f
+            val completionRate = if (goals.isNotEmpty()) completed.toFloat() / goals.size.toFloat() else 0f
+            
+            GoalAnalytics(
+                totalGoals = goals.size,
+                completedGoals = completed,
+                activeGoals = active,
+                averageProgress = avgProgress,
+                goalsWithDeadlines = withDeadlines,
+                overdue = overdue,
+                completionRate = completionRate
+            )
+        }
+    }
+    
+    fun getActiveGoalsWithProgress(): Flow<List<Wish>> {
+        return getAllWishes.map { wishes ->
+            wishes.filter { it.isGoal && it.progress < 100 && !it.isCompleted }
+                .sortedByDescending { it.progress }
+        }
+    }
+    
+    fun getUpcomingDeadlines(): Flow<List<UpcomingDeadline>> {
+        return getAllWishes.map { wishes ->
+            val now = System.currentTimeMillis()
+            wishes.filter { it.isGoal && it.targetDate != null && it.progress < 100 }
+                .mapNotNull { wish ->
+                    wish.targetDate?.let { targetDate ->
+                        val daysUntil = TimeUnit.MILLISECONDS.toDays(targetDate - now)
+                        val urgency = when {
+                            daysUntil < 0 -> UrgencyLevel.OVERDUE
+                            daysUntil <= 3 -> UrgencyLevel.URGENT
+                            daysUntil <= 7 -> UrgencyLevel.SOON
+                            else -> UrgencyLevel.NORMAL
+                        }
+                        UpcomingDeadline(wish, daysUntil, urgency)
+                    }
+                }
+                .sortedBy { it.daysUntilDeadline }
+        }
+    }
+    
+    fun getMotivationalInsights(): Flow<List<MotivationalInsight>> {
+        return getAllWishes.map { wishes ->
+            val insights = mutableListOf<MotivationalInsight>()
+            val goals = wishes.filter { it.isGoal }
+            val completed = goals.count { it.progress >= 100 }
+            val totalGoals = goals.size
+            
+            // Completion rate insights
+            when {
+                totalGoals == 0 -> {
+                    insights.add(
+                        MotivationalInsight(
+                            message = "Ready to start your growth journey?",
+                            type = InsightType.ENCOURAGEMENT,
+                            actionSuggestion = "Create your first goal to begin tracking your progress!",
+                            emoji = "🌱"
+                        )
+                    )
+                }
+                completed == 0 && totalGoals > 0 -> {
+                    insights.add(
+                        MotivationalInsight(
+                            message = "Every journey begins with a single step!",
+                            type = InsightType.ENCOURAGEMENT,
+                            actionSuggestion = "Update the progress on your goals to see how far you've come.",
+                            emoji = "🚀"
+                        )
+                    )
+                }
+                completed.toFloat() / totalGoals >= 0.8f -> {
+                    insights.add(
+                        MotivationalInsight(
+                            message = "Wow! You're absolutely crushing your goals!",
+                            type = InsightType.CELEBRATION,
+                            actionSuggestion = "Consider setting new challenging goals to keep growing.",
+                            emoji = "🏆"
+                        )
+                    )
+                }
+                completed > 0 -> {
+                    insights.add(
+                        MotivationalInsight(
+                            message = "Great progress! You've completed $completed ${if (completed == 1) "goal" else "goals"}.",
+                            type = InsightType.MILESTONE,
+                            emoji = "🎯"
+                        )
+                    )
+                }
+            }
+            
+            // Progress insights
+            val highProgressGoals = goals.filter { it.progress >= 80 && it.progress < 100 }
+            if (highProgressGoals.isNotEmpty()) {
+                insights.add(
+                    MotivationalInsight(
+                        message = "You're so close to achieving ${highProgressGoals.size} ${if (highProgressGoals.size == 1) "goal" else "goals"}!",
+                        type = InsightType.ENCOURAGEMENT,
+                        actionSuggestion = "Push through the final stretch - you've got this!",
+                        emoji = "💪"
+                    )
+                )
+            }
+            
+            // Deadline insights
+            val now = System.currentTimeMillis()
+            val urgentGoals = goals.filter { 
+                it.targetDate != null && 
+                TimeUnit.MILLISECONDS.toDays(it.targetDate!! - now) <= 7 &&
+                it.progress < 100
+            }
+            if (urgentGoals.isNotEmpty()) {
+                insights.add(
+                    MotivationalInsight(
+                        message = "${urgentGoals.size} ${if (urgentGoals.size == 1) "goal has" else "goals have"} upcoming deadlines!",
+                        type = InsightType.REMINDER,
+                        actionSuggestion = "Focus your energy on these time-sensitive goals.",
+                        emoji = "⏰"
+                    )
+                )
+            }
+            
+            // Stagnant goals insight
+            val stagnantGoals = goals.filter { it.progress == 0 && it.targetDate != null }
+            if (stagnantGoals.size >= 3) {
+                insights.add(
+                    MotivationalInsight(
+                        message = "Break down your goals into smaller, actionable steps.",
+                        type = InsightType.TIP,
+                        actionSuggestion = "Start with just 10-15 minutes of progress today!",
+                        emoji = "🧩"
+                    )
+                )
+            }
+            
+            insights.take(3) // Limit to 3 insights to avoid overwhelming the user
+        }
+    }
+    
+    fun getCompletionStats(): Flow<Pair<Int, Int>> {
+        return getAllWishes.map { wishes ->
+            val totalWishes = wishes.size
+            val totalGoals = wishes.count { it.isGoal }
+            Pair(totalWishes - totalGoals, totalGoals) // (wishes, goals)
+        }
+    }
+    
+    fun getAverageGoalProgress(): Flow<Float> {
+        return getAllWishes.map { wishes ->
+            val activeGoals = wishes.filter { it.isGoal && it.progress < 100 }
+            if (activeGoals.isNotEmpty()) {
+                activeGoals.map { it.progress }.average().toFloat()
+            } else 0f
+        }
+    }
+    
+    fun getStreakData(): Flow<Int> {
+        // For now, return current streak from user profile
+        // In a real implementation, you'd calculate streaks based on goal completion dates
+        return _userProfile.map { it.currentStreak }
+    }
+    
+    private fun getOverdueGoalsCount(goals: List<Wish>): Int {
+        val now = System.currentTimeMillis()
+        return goals.count { goal ->
+            goal.targetDate != null && goal.targetDate!! < now && goal.progress < 100
         }
     }
 }

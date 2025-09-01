@@ -6,8 +6,8 @@ import androidx.room.TypeConverters
 
 
 @Database(
-    entities = [Wish::class, UserProfile::class],
-    version = 6,
+    entities = [Wish::class, UserProfile::class, Milestone::class],
+    version = 9,
     exportSchema = false
 )
 
@@ -15,4 +15,5 @@ import androidx.room.TypeConverters
 abstract class WishDataBase : RoomDatabase() {
     abstract fun wishDao(): WishDao
     abstract fun userProfileDao(): UserProfileDao
+    abstract fun milestoneDao(): MilestoneDao
 }

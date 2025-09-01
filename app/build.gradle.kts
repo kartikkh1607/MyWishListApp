@@ -17,9 +17,22 @@ compileSdk = 35
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Add vector drawable support for lower API levels
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+        
+        // Enable multidex for better compatibility
+        multiDexEnabled = true
     }
 
     buildTypes {
+        debug {
+            isDebuggable = true
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(

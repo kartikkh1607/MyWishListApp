@@ -30,8 +30,58 @@ fun MainScreen() {
     }
     
     val context = LocalContext.current
+    
+    // Check if the application is properly initialized
+    val app = context.applicationContext as? android.app.Application
+    if (app == null) {
+        Log.e("MainScreen", "Application context is null")
+        // Show error state
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = androidx.compose.ui.Alignment.Center
+            ) {
+                Text(
+                    text = "Application initialization failed. Please restart the app.",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+        return
+    }
+    
+    // Check if WishListApp is initialized
+    if (!WishListApp.isInitialized) {
+        Log.e("MainScreen", "WishListApp not properly initialized")
+        // Show loading/error state
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = androidx.compose.ui.Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Initializing application...",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
+        return
+    }
+    
     val viewModel: WishViewModel = viewModel(
-        factory = WishViewModelFactory(context.applicationContext as android.app.Application)
+        factory = WishViewModelFactory(app)
     )
     val navController = rememberNavController()
     

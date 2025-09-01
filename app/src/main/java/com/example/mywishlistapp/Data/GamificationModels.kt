@@ -14,6 +14,7 @@ import java.util.*
 data class UserProfile(
     @PrimaryKey val id: Int = 1, // Single user profile
     @ColumnInfo(name = "username") val username: String = "User",
+    @ColumnInfo(name = "name") val name: String = "", // Personalized name for companion experience
     @ColumnInfo(name = "total_wishes") val totalWishes: Int = 0,
     @ColumnInfo(name = "completed_wishes") val completedWishes: Int = 0,
     @ColumnInfo(name = "high_priority_completed") val highPriorityCompleted: Int = 0,

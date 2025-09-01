@@ -818,10 +818,20 @@ fun SwipeToDeleteWishCard(
         confirmValueChange = { dismissValue ->
             when (dismissValue) {
                 SwipeToDismissBoxValue.EndToStart -> {
-                    // Trigger haptic feedback for successful swipe to delete
+                    // Swipe left to delete
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDelete()
                     true
+                }
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    // Swipe right to fulfill/complete
+                    if (!wish.isCompleted) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        viewModel.completeWish(wish)
+                        true
+                    } else {
+                        false
+                    }
                 }
                 else -> false
             }
@@ -831,37 +841,94 @@ fun SwipeToDeleteWishCard(
     SwipeToDismissBox(
         state = dismissState,
         backgroundContent = {
-            val color = when (dismissState.targetValue) {
-                SwipeToDismissBoxValue.EndToStart -> Color.Red.copy(alpha = 0.8f)
-                else -> Color.Transparent
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        color = color,
-                        shape = RoundedCornerShape(16.dp)
+            when (dismissState.targetValue) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    // Delete background (swipe left)
+                    SwipeActionBackground(
+                        color = Color(0xFFE74C3C).copy(alpha = 0.9f),
+                        icon = Icons.Default.Delete,
+                        alignment = Alignment.CenterEnd,
+                        label = "Delete"
                     )
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+                }
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    // Complete background (swipe right)
+                    if (!wish.isCompleted) {
+                        SwipeActionBackground(
+                            color = Color(0xFF10B981).copy(alpha = 0.9f),
+                            icon = Icons.Default.CheckCircle,
+                            alignment = Alignment.CenterStart,
+                            label = "Complete"
+                        )
+                    } else {
+                        // Already completed - show different background
+                        SwipeActionBackground(
+                            color = Color(0xFF64748B).copy(alpha = 0.3f),
+                            icon = Icons.Default.Done,
+                            alignment = Alignment.CenterStart,
+                            label = "Completed"
+                        )
+                    }
+                }
+                else -> {
+                    // Default transparent background
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Color.Transparent,
+                                shape = RoundedCornerShape(16.dp)
+                            )
                     )
                 }
             }
         },
-        enableDismissFromStartToEnd = false
+        enableDismissFromStartToEnd = true  // Enable swipe right to fulfill
     ) {
         EnhancedModernWishCard(
             wish = wish,
             onClick = onWishClick,
             viewModel = viewModel
         )
+    }
+}
+
+@Composable
+fun SwipeActionBackground(
+    color: Color,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    alignment: Alignment,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                color = color,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(horizontal = 20.dp),
+        contentAlignment = alignment
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = Color.White,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
@@ -927,15 +994,24 @@ fun EnhancedModernWishCard(
             
             Spacer(modifier = Modifier.width(16.dp))
             
-            // Content
+            // Content with fulfilled wish visual styling
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .graphicsLayer {
+                        alpha = if (wish.isCompleted) 0.6f else 1f
+                    }
             ) {
                 Text(
                     text = wish.title,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        textDecoration = if (wish.isCompleted) 
+                            androidx.compose.ui.text.style.TextDecoration.LineThrough 
+                        else 
+                            androidx.compose.ui.text.style.TextDecoration.None
+                    ),
                     fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary,
+                    color = if (wish.isCompleted) TextSecondary else TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -943,21 +1019,48 @@ fun EnhancedModernWishCard(
                 if (wish.description.isNotEmpty()) {
                     Text(
                         text = wish.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            textDecoration = if (wish.isCompleted) 
+                                androidx.compose.ui.text.style.TextDecoration.LineThrough 
+                            else 
+                                androidx.compose.ui.text.style.TextDecoration.None
+                        ),
+                        color = if (wish.isCompleted) TextTertiary else TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
                 
-                // Date
+                // Date with fulfilled styling
                 Text(
                     text = "10 Apr 2024", // You can format wish.createdDate here
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextTertiary,
+                    color = if (wish.isCompleted) TextTertiary.copy(alpha = 0.7f) else TextTertiary,
                     modifier = Modifier.padding(top = 6.dp)
                 )
+                
+                // Completion indicator
+                if (wish.isCompleted) {
+                    Row(
+                        modifier = Modifier.padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Completed",
+                            tint = Color(0xFF10B981),
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Completed",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF10B981),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
             }
             
             // Action Icon
