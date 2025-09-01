@@ -66,7 +66,7 @@ abstract class WishDao {
     abstract fun getInProgressGoals(): Flow<List<Wish>>
     
     // Calendar/Journey View - Items for specific month
-    @Query("SELECT * FROM `Wish-Table` WHERE (`wish-created-date` BETWEEN :startDate AND :endDate) OR (`wish-target-date` BETWEEN :startDate AND :endDate) OR (`wish-completed-date` BETWEEN :startDate AND :endDate) ORDER BY COALESCE(`wish-target-date`, `wish-created-date`) DESC")
+    @Query("SELECT * FROM `Wish-Table` WHERE (`wish-created-date` BETWEEN :startDate AND :endDate) OR (`wish-target-date` BETWEEN :startDate AND :endDate) ORDER BY COALESCE(`wish-target-date`, `wish-created-date`) DESC")
     abstract fun getItemsForMonth(startDate: Long, endDate: Long): Flow<List<Wish>>
 
     @Update

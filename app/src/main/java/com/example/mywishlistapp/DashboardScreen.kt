@@ -8,24 +8,31 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Wish
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 // Data class for category items
 data class CategoryItem(
@@ -44,17 +51,9 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
     val dateFormat = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
     val hourOfDay = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     
-    // Personal Growth Analytics Data
-    val goalAnalytics by viewModel.getGoalAnalytics().collectAsState(initial = WishViewModel.GoalAnalytics())
-    val activeGoals by viewModel.getActiveGoalsWithProgress().collectAsState(initial = emptyList())
-    val upcomingDeadlines by viewModel.getUpcomingDeadlines().collectAsState(initial = emptyList())
-    val motivationalInsights by viewModel.getMotivationalInsights().collectAsState(initial = emptyList())
-    val wishesVsGoals by viewModel.getCompletionStats().collectAsState(initial = Pair(0, 0))
-    val streakData by viewModel.getStreakData().collectAsState(initial = 0)
-    
-    // Upcoming and In Progress Items
-    val upcomingItems by viewModel.upcomingItems.collectAsState()
-    val inProgressItems by viewModel.inProgressItems.collectAsState()
+    // Upcoming and In Progress Items using existing StateFlows
+    val upcomingItems by viewModel.upcomingGoals.collectAsState()
+    val inProgressItems by viewModel.inProgressGoals.collectAsState()
 
     // Enhanced greeting with emojis
     val greeting = when (hourOfDay) {
@@ -107,10 +106,8 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
             hasNotifications = unreadNotificationCount > 0
         )
 
-        // Show skeleton loading or actual content
-        if (isLoading) {
-            DashboardSkeleton()
-        } else {
+        // Show actual content (skeleton removed for now)
+        if (!isLoading) {
             AnimatedVisibility(
                 visible = contentVisible,
                 enter = fadeIn(animationSpec = tween(800)) + slideInVertically(
@@ -155,58 +152,12 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
                         }
                     }
 
-                    // Personal Growth Analytics - Goal Progress
-                    if (activeGoals.isNotEmpty()) {
-                        item {
-                            GoalProgressAnalyticsCard(
-                                activeGoals = activeGoals,
-                                onGoalClick = { goal ->
-                                    navController.navigate(Screen.AddScreen.route + "/${goal.id}")
-                                }
-                            )
-                        }
-                    }
-                    
-                    // Personal Growth Analytics - Statistics
-                    if (goalAnalytics.totalGoals > 0) {
-                        item {
-                            CompletionStatisticsCard(
-                                goalAnalytics = goalAnalytics,
-                                wishesVsGoals = wishesVsGoals,
-                                streakData = streakData
-                            )
-                        }
-                    }
-                    
-                    // Motivational Insights
-                    if (motivationalInsights.isNotEmpty()) {
-                        item {
-                            MotivationalInsightsCard(
-                                insights = motivationalInsights
-                            )
-                        }
-                    }
-                    
-                    // Upcoming Deadlines
-                    if (upcomingDeadlines.isNotEmpty()) {
-                        item {
-                            UpcomingDeadlinesCard(
-                                upcomingDeadlines = upcomingDeadlines,
-                                onGoalClick = { goal ->
-                                    navController.navigate(Screen.AddScreen.route + "/${goal.id}")
-                                }
-                            )
-                        }
-                    }
-                    
-                    // Motivational Message (fallback for users without goals)
-                    if (goalAnalytics.totalGoals == 0) {
-                        item {
-                            MotivationalCard(
-                                completionRate = completionRate,
-                                totalWishes = totalWishes
-                            )
-                        }
+                    // Motivational Message
+                    item {
+                        MotivationalCard(
+                            completionRate = completionRate,
+                            totalWishes = totalWishes
+                        )
                     }
 
                     // Quick Stats
