@@ -61,21 +61,7 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = if (isDarkTheme) {
-                        listOf(
-                            BackgroundDark,
-                            SurfaceDark
-                        )
-                    } else {
-                        listOf(
-                            BackgroundLight,
-                            BackgroundSecondary
-                        )
-                    }
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Enhanced App Bar matching other screens
         AppBarView(
@@ -287,7 +273,7 @@ fun SettingsSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.95f)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp)
@@ -301,7 +287,7 @@ fun SettingsSection(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF667EEA),
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
             content()

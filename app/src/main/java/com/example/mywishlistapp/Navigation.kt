@@ -37,35 +37,21 @@ fun Navigation(
         navController = navController,
         startDestination = if (shouldShowOnboarding) Screen.OnboardingScreen.route else Screen.DashboardScreen.route,
         enterTransition = {
-            slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+            slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(600)) + fadeIn(animationSpec = tween(600))
         },
         exitTransition = {
-            slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(400)) + fadeOut(animationSpec = tween(400))
+            slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(600)) + fadeOut(animationSpec = tween(600))
         },
         popEnterTransition = {
-            slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(400)) + fadeIn(animationSpec = tween(400))
+            slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(600)) + fadeIn(animationSpec = tween(600))
         },
         popExitTransition = {
-            slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(400)) + fadeOut(animationSpec = tween(400))
+            slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(600)) + fadeOut(animationSpec = tween(600))
         }
     ) {
         
-        // Onboarding Screen
-        composable(
-            route = Screen.OnboardingScreen.route,
-            enterTransition = {
-                fadeIn(animationSpec = tween(600)) + scaleIn(
-                    initialScale = 0.95f,
-                    animationSpec = tween(600)
-                )
-            },
-            exitTransition = {
-                fadeOut(animationSpec = tween(300)) + scaleOut(
-                    targetScale = 1.05f,
-                    animationSpec = tween(300)
-                )
-            }
-        ) {
+        // Onboarding Screen - using global navigation transitions
+        composable(route = Screen.OnboardingScreen.route) {
             OnboardingScreen(
                 viewModel = viewModel,
                 onNavigateToDashboard = {
@@ -79,55 +65,13 @@ fun Navigation(
                 }
             )
         }
-        // Home Screen with Material Shared-Axis Horizontal Transition
-        composable(
-            route = Screen.HomeScreen.route,
-            enterTransition = {
-                // When returning from Add/Edit screen (pop enter)
-                when (initialState.destination.route) {
-                    Screen.AddScreen.route + "/{id}" -> {
-                        // Slide in from left + fade in
-                        slideInHorizontally(
-                            initialOffsetX = { fullWidth -> -fullWidth / 4 },
-                            animationSpec = tween(
-                                durationMillis = 300,
-                                delayMillis = 50 // Slight delay for better transition
-                            )
-                        ) + fadeIn(
-                            animationSpec = tween(
-                                durationMillis = 300,
-                                delayMillis = 50
-                            )
-                        )
-                    }
-                    else -> {
-                        // Default fade in
-                        fadeIn(animationSpec = tween(300))
-                    }
-                }
-            },
-            exitTransition = {
-                // When navigating to Add/Edit screen
-                when (targetState.destination.route) {
-                    Screen.AddScreen.route + "/{id}" -> {
-                        // Slide out to left + fade out
-                        slideOutHorizontally(
-                            targetOffsetX = { fullWidth -> -fullWidth / 4 },
-                            animationSpec = tween(durationMillis = 300)
-                        ) + fadeOut(
-                            animationSpec = tween(durationMillis = 250)
-                        )
-                    }
-                    else -> {
-                        fadeOut(animationSpec = tween(300))
-                    }
-                }
-            }
-        ) {
+        
+        // Home Screen - using global navigation transitions
+        composable(route = Screen.HomeScreen.route) {
             HomeView(navController, viewModel = viewModel)
         }
 
-        // Add/Edit Screen with Material Shared-Axis Horizontal Transition
+        // Add/Edit Screen - using global navigation transitions
         composable(
             route = Screen.AddScreen.route + "/{id}",
             arguments = listOf(
@@ -136,211 +80,44 @@ fun Navigation(
                     defaultValue = 0L
                     nullable = false
                 }
-            ),
-            enterTransition = {
-                // When navigating from Home screen
-                when (initialState.destination.route) {
-                    Screen.HomeScreen.route -> {
-                        // Slide in from right + fade in
-                        slideInHorizontally(
-                            initialOffsetX = { fullWidth -> fullWidth / 4 },
-                            animationSpec = tween(
-                                durationMillis = 300,
-                                delayMillis = 50 // Slight delay for smoother transition
-                            )
-                        ) + fadeIn(
-                            animationSpec = tween(
-                                durationMillis = 300,
-                                delayMillis = 50
-                            )
-                        )
-                    }
-                    else -> {
-                        fadeIn(animationSpec = tween(300))
-                    }
-                }
-            },
-            exitTransition = {
-                // When navigating back to Home screen (pop exit)
-                when (targetState.destination.route) {
-                    Screen.HomeScreen.route -> {
-                        // Slide out to right + fade out
-                        slideOutHorizontally(
-                            targetOffsetX = { fullWidth -> fullWidth / 4 },
-                            animationSpec = tween(durationMillis = 300)
-                        ) + fadeOut(
-                            animationSpec = tween(durationMillis = 250)
-                        )
-                    }
-                    else -> {
-                        fadeOut(animationSpec = tween(300))
-                    }
-                }
-            }
+            )
         ) { entry ->
             val id = entry.arguments?.getLong("id") ?: 0L
             AddEditDetailView(id = id, viewModel = viewModel, navController = navController)
         }
 
-        // Search Screen with Material Shared-Axis Horizontal Transition
-        composable(
-            route = Screen.SearchScreen.route,
-            enterTransition = {
-                // Slide in from right + fade in
-                slideInHorizontally(
-                    initialOffsetX = { fullWidth -> fullWidth / 4 },
-                    animationSpec = tween(
-                        durationMillis = 300,
-                        delayMillis = 50 // Slight delay for smoother transition
-                    )
-                ) + fadeIn(
-                    animationSpec = tween(
-                        durationMillis = 300,
-                        delayMillis = 50
-                    )
-                )
-            },
-            exitTransition = {
-                // Slide out to left + fade out
-                slideOutHorizontally(
-                    targetOffsetX = { fullWidth -> -fullWidth / 4 },
-                    animationSpec = tween(durationMillis = 300)
-                ) + fadeOut(
-                    animationSpec = tween(durationMillis = 250)
-                )
-            }
-        ) {
+        // Search Screen - using global navigation transitions
+        composable(route = Screen.SearchScreen.route) {
             SearchScreen(navController = navController, viewModel = viewModel)
         }
 
-        // Dashboard Screen with enhanced transitions
-        composable(
-            route = Screen.DashboardScreen.route,
-            enterTransition = {
-                slideInHorizontally(
-                    initialOffsetX = { -it / 3 },
-                    animationSpec = tween(400)
-                ) + fadeIn(animationSpec = tween(400))
-            },
-            exitTransition = {
-                slideOutHorizontally(
-                    targetOffsetX = { -it / 3 },
-                    animationSpec = tween(300)
-                ) + fadeOut(animationSpec = tween(300))
-            }
-        ) {
+        // Dashboard Screen - using global navigation transitions
+        composable(route = Screen.DashboardScreen.route) {
             DashboardScreen(navController = navController, viewModel = viewModel)
         }
 
-        // WishList Screen with modern transitions
-        composable(
-            route = Screen.WishListScreen.route,
-            enterTransition = {
-                slideInVertically(
-                    initialOffsetY = { it / 4 },
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
-                ) + fadeIn(animationSpec = tween(350))
-            },
-            exitTransition = {
-                slideOutVertically(
-                    targetOffsetY = { it / 4 },
-                    animationSpec = tween(300)
-                ) + fadeOut(animationSpec = tween(250))
-            }
-        ) {
+        // WishList Screen - using global navigation transitions
+        composable(route = Screen.WishListScreen.route) {
             WishListScreen(navController = navController, viewModel = viewModel)
         }
 
-        // Calendar Screen with slide transition
-        composable(
-            route = Screen.CalendarScreen.route,
-            enterTransition = {
-                slideInHorizontally(
-                    initialOffsetX = { it },
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
-                ) + fadeIn()
-            },
-            exitTransition = {
-                slideOutHorizontally(
-                    targetOffsetX = { it },
-                    animationSpec = tween(300)
-                ) + fadeOut()
-            }
-        ) {
+        // Calendar Screen - using global navigation transitions
+        composable(route = Screen.CalendarScreen.route) {
             CalendarScreen(navController = navController, viewModel = viewModel)
         }
 
-        // Settings Screen with fade transition
-        composable(
-            route = Screen.SettingsScreen.route,
-            enterTransition = {
-                fadeIn(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
-                ) + scaleIn(
-                    initialScale = 0.95f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
-                )
-            },
-            exitTransition = {
-                fadeOut() + scaleOut(targetScale = 0.95f)
-            }
-        ) {
+        // Settings Screen - using global navigation transitions
+        composable(route = Screen.SettingsScreen.route) {
             SettingsScreen(navController = navController, viewModel = viewModel)
         }
         
-        // Notifications Screen with slide from top
-        composable(
-            route = Screen.NotificationsScreen.route,
-            enterTransition = {
-                slideInVertically(
-                    initialOffsetY = { -it / 2 },
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
-                ) + fadeIn()
-            },
-            exitTransition = {
-                slideOutVertically(
-                    targetOffsetY = { -it / 2 },
-                    animationSpec = tween(300)
-                ) + fadeOut()
-            }
-        ) {
+        // Notifications Screen - using global navigation transitions
+        composable(route = Screen.NotificationsScreen.route) {
             NotificationsScreen(navController = navController, viewModel = viewModel)
         }
 
-        // Profile Screen with scale transition
-        composable(
-            route = Screen.ProfileScreen.route,
-            enterTransition = {
-                scaleIn(
-                    initialScale = 0.9f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
-                ) + fadeIn(animationSpec = tween(350))
-            },
-            exitTransition = {
-                scaleOut(
-                    targetScale = 0.9f,
-                    animationSpec = tween(300)
-                ) + fadeOut()
-            }
-        ) {
+        // Profile Screen - using global navigation transitions
+        composable(route = Screen.ProfileScreen.route) {
             val userProfile by viewModel.userProfile.collectAsState()
             val achievements by viewModel.achievements.collectAsState()
             ProfileScreen(

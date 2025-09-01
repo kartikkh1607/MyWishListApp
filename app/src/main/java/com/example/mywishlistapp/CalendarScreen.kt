@@ -28,12 +28,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Wish
+import com.kizitonwose.calendar.compose.HorizontalCalendar
+import com.kizitonwose.calendar.compose.rememberCalendarState
+import com.kizitonwose.calendar.core.CalendarDay
+import com.kizitonwose.calendar.core.DayPosition
+import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
-import kotlin.collections.emptyList
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,14 +59,7 @@ fun CalendarScreen(navController: NavHostController, viewModel: WishViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFF8FAFF),
-                        Color(0xFFE8F0FE)
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Journey View Header
         JourneyHeader(
@@ -77,12 +74,13 @@ fun CalendarScreen(navController: NavHostController, viewModel: WishViewModel) {
             }
         )
         
-        // Journey Calendar Grid with activity indicators
-        JourneyCalendarGrid(
+        // Journey Calendar Grid with CalendarCompose library
+        JourneyCalendarCompose(
             currentMonth = currentMonth,
             selectedDate = selectedDate,
             allWishes = allWishes,
-            onDateSelected = { selectedDate = it }
+            onDateSelected = { selectedDate = it },
+            onMonthChanged = { currentMonth = it }
         )
         
         // Journey Reflection Section
@@ -475,6 +473,116 @@ fun JourneyHeader(
                     )
                 }
             }
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun JourneyCalendarCompose(
+    currentMonth: YearMonth,
+    selectedDate: LocalDate,
+    allWishes: List<Wish>,
+    onDateSelected: (LocalDate) -> Unit,
+    onMonthChanged: (YearMonth) -> Unit
+) {
+    val calendarState = rememberCalendarState(
+        startMonth = currentMonth.minusMonths(50),
+        endMonth = currentMonth.plusMonths(50),
+        firstVisibleMonth = currentMonth,
+        firstDayOfWeek = firstDayOfWeekFromLocale()
+    )
+
+    LaunchedEffect(calendarState.firstVisibleMonth) {
+        onMonthChanged(calendarState.firstVisibleMonth.yearMonth)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        HorizontalCalendar(
+            state = calendarState,
+            dayContent = { day ->
+                CalendarDay(day, isSelected = selectedDate == day.date) { date ->
+                    onDateSelected(date)
+                }
+            },
+            monthHeader = { month ->
+                MonthHeader(month = month)
+            },
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun CalendarDay(
+    day: CalendarDay,
+    isSelected: Boolean,
+    onClick: (LocalDate) -> Unit
+) {
+    val date = day.date
+    val isToday = date == LocalDate.now()
+    
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clickable(enabled = day.position == DayPosition.MonthDate) {
+                onClick(date)
+            }
+            .background(
+                color = when {
+                    isSelected -> MaterialTheme.colorScheme.primary
+                    isToday -> MaterialTheme.colorScheme.primaryContainer
+                    day.position != DayPosition.MonthDate -> Color.Transparent
+                    else -> Color.Transparent
+                },
+                shape = CircleShape
+            )
+            .border(
+                width = if (isToday && !isSelected) 2.dp else 0.dp,
+                color = MaterialTheme.colorScheme.primary,
+                shape = CircleShape
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = day.date.dayOfMonth.toString(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = when {
+                isSelected -> MaterialTheme.colorScheme.onPrimary
+                isToday -> MaterialTheme.colorScheme.primary
+                day.position != DayPosition.MonthDate -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                else -> MaterialTheme.colorScheme.onSurface
+            },
+            fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal
+        )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun MonthHeader(month: com.kizitonwose.calendar.core.CalendarMonth) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        val daysOfWeek = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+        daysOfWeek.forEach { day ->
+            Text(
+                text = day,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.width(40.dp),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

@@ -177,15 +177,7 @@ fun AddEditDetailView(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF0F4FF),
-                            Color(0xFFE8F0FE),
-                            Color(0xFFF8FAFF)
-                        )
-                    )
-                )
+                .background(MaterialTheme.colorScheme.background)
         ) {
             AnimatedContent(
                 targetState = isEditMode,
@@ -286,7 +278,7 @@ fun ModernTextField(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White.copy(alpha = 0.95f)
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = animatedElevation
@@ -300,7 +292,7 @@ fun ModernTextField(
                     Text(
                         text = label,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (isError) Color(0xFFE74C3C) else Color(0xFF667EEA),
+                        color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold
                     )
                 },
@@ -308,7 +300,7 @@ fun ModernTextField(
                     Text(
                         text = placeholder,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF9CA3AF).copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 modifier = Modifier
@@ -319,7 +311,7 @@ fun ModernTextField(
                     focusedBorderColor = Color.Transparent,
                     unfocusedBorderColor = Color.Transparent,
                     errorBorderColor = Color.Transparent,
-                    cursorColor = Color(0xFF667EEA),
+                    cursorColor = MaterialTheme.colorScheme.primary,
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     errorContainerColor = Color.Transparent
@@ -350,14 +342,14 @@ fun ModernTextField(
                 Icon(
                     imageVector = Icons.Default.Error,
                     contentDescription = "Form validation error",
-                    tint = Color(0xFFE74C3C),
+                    tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(14.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = errorMessage,
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFFE74C3C)
+                    color = MaterialTheme.colorScheme.error
                 )
             }
         }
@@ -386,7 +378,7 @@ fun CurrencyTextField(
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.95f)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = animatedElevation
@@ -403,7 +395,7 @@ fun CurrencyTextField(
                 Text(
                     "Price (Optional)",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF667EEA),
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
                 )
             },
@@ -411,14 +403,14 @@ fun CurrencyTextField(
                 Text(
                     "e.g., 299.99",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF9CA3AF).copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
                 leadingIcon = {
                     Icon(
                         Icons.Default.AttachMoney,
                         contentDescription = "Price input field",
-                        tint = Color(0xFF667EEA)
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 },
             modifier = Modifier
@@ -433,7 +425,7 @@ fun CurrencyTextField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
                 unfocusedBorderColor = Color.Transparent,
-                cursorColor = Color(0xFF667EEA),
+                cursorColor = MaterialTheme.colorScheme.primary,
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent
             )
@@ -464,7 +456,7 @@ fun ImageUrlField(
                 .padding(vertical = 8.dp),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White.copy(alpha = 0.95f)
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = animatedElevation
@@ -477,7 +469,7 @@ fun ImageUrlField(
                     Text(
                         "Image URL (Optional)",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF667EEA),
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold
                     )
                 },
@@ -485,14 +477,14 @@ fun ImageUrlField(
                     Text(
                         "https://example.com/image.jpg",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF9CA3AF).copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Image,
                         contentDescription = "Image URL input field",
-                        tint = Color(0xFF667EEA)
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 },
                 modifier = Modifier
@@ -507,7 +499,7 @@ fun ImageUrlField(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Transparent,
                     unfocusedBorderColor = Color.Transparent,
-                    cursorColor = Color(0xFF667EEA),
+                    cursorColor = MaterialTheme.colorScheme.primary,
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent
                 )
@@ -527,7 +519,7 @@ fun ImageUrlField(
                 shape = RoundedCornerShape(16.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             ) {
                 Column {
@@ -542,7 +534,7 @@ fun ImageUrlField(
                     Text(
                         text = "Image Preview",
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFF667EEA),
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .padding(12.dp)
                             .fillMaxWidth(),
@@ -637,7 +629,7 @@ fun CategoryDropdown(
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         ExposedDropdownMenuBox(
@@ -662,7 +654,7 @@ fun CategoryDropdown(
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                modifier = Modifier.background(Color.White)
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
             ) {
                 categories.forEach { category ->
                     DropdownMenuItem(
@@ -1260,7 +1252,7 @@ fun DisplayCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -1546,7 +1538,7 @@ fun EnhancedSectionCard(
             .padding(vertical = 12.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.95f)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 8.dp

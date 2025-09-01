@@ -98,15 +98,7 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFF8FAFF),
-                        Color(0xFFF0F4FF),
-                        Color(0xFFE8F0FE)
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Top Header with functional icons
         TopHeaderSection(
@@ -314,7 +306,7 @@ fun TopHeaderSection(
                     Icon(
                         imageVector = Icons.Default.EmojiEvents, // Trophy/Gamify icon
                         contentDescription = "Achievements",
-                        tint = Color(0xFF1A1D29),
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -327,7 +319,7 @@ fun TopHeaderSection(
                         Icon(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = "Notifications",
-                            tint = Color(0xFF1A1D29),
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(24.dp)
                         )
                         // Notification badge (only show when there are notifications)
@@ -336,7 +328,7 @@ fun TopHeaderSection(
                                 modifier = Modifier
                                     .size(8.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFFE91E63))
+                                    .background(MaterialTheme.colorScheme.error)
                                     .align(Alignment.TopEnd)
                             )
                         }
@@ -348,7 +340,7 @@ fun TopHeaderSection(
                 text = "WISHLIST",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF667EEA),
+                color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.2.sp
             )
 
@@ -359,7 +351,7 @@ fun TopHeaderSection(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
-                    tint = Color(0xFF1A1D29),
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(24.dp)
                 )
             }

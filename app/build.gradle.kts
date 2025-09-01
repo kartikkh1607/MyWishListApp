@@ -106,6 +106,9 @@ dependencies {
     // Date picker
     implementation("io.github.vanpra.compose-material-dialogs:datetime:0.9.0")
     
+    // Calendar Compose for Journey View
+    implementation("io.github.kizitonwose.CalendarCompose:compose:2.4.1")
+    
     // Baseline Profile
     implementation("androidx.profileinstaller:profileinstaller:1.3.1")
 
