@@ -40,7 +40,18 @@ enum class Priority {
     LOW, MEDIUM, HIGH
 }
 
-@Entity(tableName = "Wish-Table")
+@Entity(
+    tableName = "Wish-Table",
+    indices = [
+        androidx.room.Index(value = ["wish-category"]),
+        androidx.room.Index(value = ["wish-priority"]),
+        androidx.room.Index(value = ["wish-is-completed"]),
+        androidx.room.Index(value = ["wish-is-goal"]),
+        androidx.room.Index(value = ["wish-created-date"]),
+        androidx.room.Index(value = ["wish-title"]),
+        androidx.room.Index(value = ["wish-target-date"])
+    ]
+)
 @TypeConverters(Converters::class)
 data class Wish(
     @PrimaryKey(autoGenerate = true)

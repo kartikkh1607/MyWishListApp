@@ -32,13 +32,22 @@ compileSdk = 35
             isDebuggable = true
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            isMinifyEnabled = false
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
+                "proguard-performance.pro"
             )
+            
+            // Performance optimizations
+            ndk {
+                debugSymbolLevel = "NONE"
+            }
         }
     }
 

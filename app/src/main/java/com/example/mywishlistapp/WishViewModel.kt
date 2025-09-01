@@ -69,6 +69,7 @@ class WishViewModel(
             android.util.Log.d("WishViewModel", "Initializing WishViewModel")
             loadUserProfile()
             loadAchievements()
+            loadWishStats()
             android.util.Log.d("WishViewModel", "WishViewModel initialized successfully")
         } catch (e: Exception) {
             android.util.Log.e("WishViewModel", "Error initializing WishViewModel", e)
@@ -158,7 +159,11 @@ class WishViewModel(
     val getAllWishes: Flow<List<Wish>> by lazy {
         try {
             android.util.Log.d("WishViewModel", "Accessing actualWishRepository.getWishes()")
-            val flow = actualWishRepository.getWishes()
+            val flow = actualWishRepository.getWishes().stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
             android.util.Log.d("WishViewModel", "Successfully got wishes flow")
             flow
         } catch (e: Exception) {
@@ -166,6 +171,27 @@ class WishViewModel(
             kotlinx.coroutines.flow.flowOf(emptyList())
         }
     }
+    
+    // Optimized flows for specific use cases
+    val recentWishes: StateFlow<List<Wish>> by lazy {
+        actualWishRepository.getRecentWishes().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+    }
+    
+    val goals: StateFlow<List<Wish>> by lazy {
+        actualWishRepository.getGoals().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+    }
+    
+    // Cached stats for dashboard
+    private val _wishStats = MutableStateFlow<WishRepository.WishStats?>(null)
+    val wishStats: StateFlow<WishRepository.WishStats?> = _wishStats.asStateFlow()
 
     fun addWish(wish: Wish){
         viewModelScope.launch(Dispatchers.IO) {
@@ -391,6 +417,22 @@ class WishViewModel(
         viewModelScope.launch {
             _achievements.value = achievementSystem.getAllAchievements()
         }
+    }
+    
+    private fun loadWishStats() {
+        viewModelScope.launch {
+            try {
+                _wishStats.value = actualWishRepository.getWishStats()
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to load wish stats", e)
+                // Use default stats if loading fails
+                _wishStats.value = WishRepository.WishStats(0, 0, 0, 0)
+            }
+        }
+    }
+    
+    fun refreshWishStats() {
+        loadWishStats()
     }
 
     private suspend fun updateUserProfile(updater: (UserProfile) -> UserProfile) {

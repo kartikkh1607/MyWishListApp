@@ -81,23 +81,44 @@ import com.example.mywishlistapp.ui.components.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
+// Helper data class for tuple handling
+data class Tuple4<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
     val context = LocalContext.current
-    val wishList = viewModel.getAllWishes.collectAsState(initial = emptyList())
+    
+    // Use optimized flows for better performance
+    val recentWishes by viewModel.recentWishes.collectAsState()
+    val wishStats by viewModel.wishStats.collectAsState()
     val unreadNotificationCount by viewModel.getUnreadNotificationCount().collectAsState()
 
-    // Calculate statistics
-    val totalWishes = wishList.value.size
-    val completedWishes = wishList.value.count { it.isCompleted }
-    val pendingWishes = totalWishes - completedWishes
-    val highPriorityWishes = wishList.value.count { it.priority == Priority.HIGH }
-    val recentWishes = wishList.value.take(3)
-    val totalSavingsTarget = wishList.value.sumOf { 
-        wish -> wish.price.toDoubleOrNull() ?: 0.0 
+    // Calculate statistics using cached data when available
+    val (totalWishes, completedWishes, highPriorityWishes, goalCount) = remember(wishStats) {
+        if (wishStats != null) {
+            Tuple4(
+                wishStats!!.totalWishes,
+                wishStats!!.completedWishes,
+                wishStats!!.highPriorityWishes,
+                wishStats!!.goalCount
+            )
+        } else {
+            // Fallback to empty stats
+            Tuple4(0, 0, 0, 0)
+        }
     }
-    val totalSaved = wishList.value.sumOf { it.savedAmount }
+    
+    val pendingWishes = remember(totalWishes, completedWishes) {
+        totalWishes - completedWishes
+    }
+    
+    // Optimized calculations with memoization
+    val (totalSavingsTarget, totalSaved) = remember(recentWishes) {
+        val target = recentWishes.sumOf { it.price.toDoubleOrNull() ?: 0.0 }
+        val saved = recentWishes.sumOf { it.savedAmount }
+        Pair(target, saved)
+    }
     
     // Loading and UI states
     var showVoiceDialog by remember { mutableStateOf(false) }
@@ -140,7 +161,7 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
                     )
                 )
         ) {
-            if (wishList.value.isEmpty()) {
+            if (totalWishes == 0) {
                 EnhancedEmptyWishListState {
                     navController.navigate(Screen.AddScreen.route + "/0")
                 }
@@ -199,7 +220,7 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
                     if (highPriorityWishes > 0) {
                         item {
                             HighPriorityWishesSection(
-                                highPriorityWishes = wishList.value.filter { it.priority == Priority.HIGH },
+                                highPriorityWishes = recentWishes.filter { it.priority == Priority.HIGH },
                                 onWishClick = { wish ->
                                     navController.navigate(Screen.AddScreen.route + "/${wish.id}")
                                 }
