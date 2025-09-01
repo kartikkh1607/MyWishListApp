@@ -11,18 +11,25 @@ import com.example.mywishlistapp.Data.UserProfileRepository
 object Graph {
     
     lateinit var database: WishDataBase
+        private set
     
     val wishRepository by lazy {
+        if (!::database.isInitialized) {
+            throw IllegalStateException("Graph.provide() must be called before accessing repositories")
+        }
         WishRepository(wishDao = database.wishDao())
     }
     
     val userProfileRepository by lazy {
+        if (!::database.isInitialized) {
+            throw IllegalStateException("Graph.provide() must be called before accessing repositories")
+        }
         UserProfileRepository(userProfileDao = database.userProfileDao())
     }
     
     private val MIGRATION_4_5 = object : Migration(4, 5) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            // Create user_profile table
+            // Create user_profile table with all required columns
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS user_profile (
                     id INTEGER PRIMARY KEY NOT NULL,
@@ -36,17 +43,27 @@ object Graph {
                     level INTEGER NOT NULL,
                     experience_points INTEGER NOT NULL,
                     earned_badges TEXT NOT NULL,
-                    profile_created_date INTEGER NOT NULL
+                    profile_created_date INTEGER NOT NULL,
+                    daily_challenges_completed INTEGER NOT NULL DEFAULT 0,
+                    weekly_challenges_completed INTEGER NOT NULL DEFAULT 0,
+                    last_login_date INTEGER NOT NULL DEFAULT ${System.currentTimeMillis()},
+                    login_streak INTEGER NOT NULL DEFAULT 0,
+                    total_categories_explored INTEGER NOT NULL DEFAULT 0,
+                    wishes_shared INTEGER NOT NULL DEFAULT 0,
+                    personal_best_score INTEGER NOT NULL DEFAULT 0
                 )
             """.trimIndent())
             
-            // Insert default profile
+            // Insert default profile with all columns
             database.execSQL("""
                 INSERT INTO user_profile 
                 (id, username, total_wishes, completed_wishes, high_priority_completed, 
                  current_streak, longest_streak, total_money_saved, level, experience_points, 
-                 earned_badges, profile_created_date) 
-                VALUES (1, 'User', 0, 0, 0, 0, 0, 0.0, 1, 0, '[]', ${System.currentTimeMillis()})
+                 earned_badges, profile_created_date, daily_challenges_completed, 
+                 weekly_challenges_completed, last_login_date, login_streak, 
+                 total_categories_explored, wishes_shared, personal_best_score) 
+                VALUES (1, 'User', 0, 0, 0, 0, 0, 0.0, 1, 0, '[]', ${System.currentTimeMillis()}, 
+                        0, 0, ${System.currentTimeMillis()}, 0, 0, 0, 0)
             """.trimIndent())
         }
     }
@@ -61,8 +78,14 @@ object Graph {
     }
     
     fun provide(context: Context){
-        database = Room.databaseBuilder(context, WishDataBase::class.java, "wishlist.db")
-            .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
-            .build()
+        try {
+            database = Room.databaseBuilder(context, WishDataBase::class.java, "wishlist.db")
+                .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
+                .fallbackToDestructiveMigration() // Add fallback for migration issues
+                .build()
+        } catch (e: Exception) {
+            android.util.Log.e("Graph", "Failed to initialize database", e)
+            throw e
+        }
     }
 }

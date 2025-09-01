@@ -12,7 +12,7 @@ compileSdk = 35
     defaultConfig {
         applicationId = "com.example.mywishlistapp"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -88,6 +88,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation("org.mockito:mockito-core:5.7.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.robolectric:robolectric:4.10.3")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

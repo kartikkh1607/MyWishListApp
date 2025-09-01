@@ -1,24 +1,26 @@
 package com.example.mywishlistapp
 
 import android.app.Application
+import android.content.Context
 import com.example.mywishlistapp.Data.Priority
 import com.example.mywishlistapp.Data.Wish
 import com.example.mywishlistapp.Data.WishRepository
 import com.example.mywishlistapp.Data.UserProfileRepository
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.Mockito.*
-import org.mockito.MockitoAnnotations
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.mockito.Mock
+import org.mockito.MockitoAnnotations
+import org.mockito.Mockito.*
 
+@RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class WishViewModelTest {
 
-    @Mock
-    private lateinit var mockApplication: Application
-    
     @Mock
     private lateinit var mockWishRepository: WishRepository
     
@@ -26,13 +28,18 @@ class WishViewModelTest {
     private lateinit var mockUserProfileRepository: UserProfileRepository
     
     private lateinit var wishViewModel: WishViewModel
+    private lateinit var application: Application
 
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
+        
+        // Use Robolectric application context
+        application = RuntimeEnvironment.getApplication()
+        
         // Initialize the viewmodel with mocked dependencies
         wishViewModel = WishViewModel(
-            application = mockApplication,
+            application = application,
             wishRepository = mockWishRepository,
             userProfileRepository = mockUserProfileRepository
         )

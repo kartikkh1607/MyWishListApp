@@ -34,11 +34,19 @@ import java.util.*
 
 class WishViewModel(
     application: Application,
-    private val wishRepository: WishRepository = Graph.wishRepository,
-    private val userProfileRepository: UserProfileRepository = Graph.userProfileRepository
+    private val wishRepository: WishRepository? = null,
+    private val userProfileRepository: UserProfileRepository? = null
 ) : AndroidViewModel(application) {
 
-    private val reminderSystem = ReminderSystem(getApplication())
+    private val actualWishRepository: WishRepository by lazy {
+        wishRepository ?: Graph.wishRepository
+    }
+    
+    private val actualUserProfileRepository: UserProfileRepository by lazy {
+        userProfileRepository ?: Graph.userProfileRepository
+    }
+
+    private val reminderSystem by lazy { ReminderSystem(getApplication()) }
     private val achievementSystem = AchievementSystem
 
     // Notification state management
@@ -56,9 +64,15 @@ class WishViewModel(
     var wishState by mutableStateOf(Wish())
 
     init {
-        loadUserProfile()
-        loadAchievements()
-        // The problematic lines that added default notifications have been removed.
+        try {
+            android.util.Log.d("WishViewModel", "Initializing WishViewModel")
+            loadUserProfile()
+            loadAchievements()
+            android.util.Log.d("WishViewModel", "WishViewModel initialized successfully")
+        } catch (e: Exception) {
+            android.util.Log.e("WishViewModel", "Error initializing WishViewModel", e)
+            // Don't rethrow - let the ViewModel be created with minimal state
+        }
     }
 
     // Legacy individual state properties for backward compatibility
@@ -72,30 +86,42 @@ class WishViewModel(
 
     fun onWishTitleChanged(newString: String) {
         wishTitleState = newString
+        wishState = wishState.copy(title = newString)
     }
 
     fun onWishDescriptionChanged(newString: String) {
         wishDescriptionState = newString
+        wishState = wishState.copy(description = newString)
     }
 
     fun onWishCategoryChanged(newString: String) {
         wishCategoryState = newString
+        wishState = wishState.copy(category = newString)
     }
 
     fun onWishTagsChanged(newString: String) {
         wishTagsState = newString
+        val tagsList = if (newString.isBlank()) {
+            emptyList()
+        } else {
+            newString.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        }
+        wishState = wishState.copy(tags = tagsList)
     }
 
     fun onWishPriorityChanged(newPriority: Priority) {
         wishPriorityState = newPriority
+        wishState = wishState.copy(priority = newPriority)
     }
 
     fun onWishPriceChanged(newString: String) {
         wishPriceState = newString
+        wishState = wishState.copy(price = newString)
     }
 
     fun onWishImageUrlChanged(newString: String) {
         wishImageUrlState = newString
+        wishState = wishState.copy(imageUrl = newString)
     }
 
     // Convert tags string to list
@@ -107,77 +133,132 @@ class WishViewModel(
         }
     }
 
-    val getAllWishes: Flow<List<Wish>> = wishRepository.getWishes()
+    val getAllWishes: Flow<List<Wish>> by lazy {
+        try {
+            android.util.Log.d("WishViewModel", "Accessing actualWishRepository.getWishes()")
+            val flow = actualWishRepository.getWishes()
+            android.util.Log.d("WishViewModel", "Successfully got wishes flow")
+            flow
+        } catch (e: Exception) {
+            android.util.Log.e("WishViewModel", "Error getting wishes flow", e)
+            kotlinx.coroutines.flow.flowOf(emptyList())
+        }
+    }
 
     fun addWish(wish: Wish){
         viewModelScope.launch(Dispatchers.IO) {
-            wishRepository.addWish(wish = wish)
+            try {
+                actualWishRepository.addWish(wish = wish)
 
-            // Schedule reminder for high-priority wishes
-            if (wish.priority == Priority.HIGH) {
-                reminderSystem.scheduleSmartReminder(wish)
+                // Schedule reminder for high-priority wishes
+                if (wish.priority == Priority.HIGH) {
+                    try {
+                        reminderSystem.scheduleSmartReminder(wish)
+                    } catch (e: Exception) {
+                        // Log error but don't crash - reminder failure shouldn't block wish creation
+                        android.util.Log.e("WishViewModel", "Failed to schedule reminder for wish: ${wish.id}", e)
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to add wish: ${wish.title}", e)
+                // Optionally show error to user via notification
+                addNotification("Error", "Failed to add wish", NotificationType.SYSTEM)
             }
         }
     }
 
     fun getWishbyId(id: Long) : Flow<Wish>{
-        return wishRepository.getWishById(id = id)
+        return actualWishRepository.getWishById(id = id)
     }
 
     fun updateWish(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
-            wishRepository.updateWish(wish = wish)
+            try {
+                actualWishRepository.updateWish(wish = wish)
 
-            // Update or schedule reminder based on priority
-            if (wish.priority == Priority.HIGH) {
-                reminderSystem.scheduleSmartReminder(wish)
-            } else {
-                // Cancel existing reminder if priority is no longer high
-                reminderSystem.cancelReminder(wish.id)
+                // Update or schedule reminder based on priority
+                try {
+                    if (wish.priority == Priority.HIGH) {
+                        reminderSystem.scheduleSmartReminder(wish)
+                    } else {
+                        // Cancel existing reminder if priority is no longer high
+                        reminderSystem.cancelReminder(wish.id)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("WishViewModel", "Failed to update reminder for wish: ${wish.id}", e)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to update wish: ${wish.title}", e)
+                addNotification("Error", "Failed to update wish", NotificationType.SYSTEM)
             }
         }
     }
 
     fun deleteWish(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
-            wishRepository.deleteWish(wish = wish)
+            try {
+                actualWishRepository.deleteWish(wish = wish)
 
-            // Cancel any existing reminders for deleted wish
-            reminderSystem.cancelReminder(wish.id)
+                // Cancel any existing reminders for deleted wish
+                try {
+                    reminderSystem.cancelReminder(wish.id)
+                } catch (e: Exception) {
+                    android.util.Log.e("WishViewModel", "Failed to cancel reminder for deleted wish: ${wish.id}", e)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to delete wish: ${wish.title}", e)
+                addNotification("Error", "Failed to delete wish", NotificationType.SYSTEM)
+            }
         }
     }
 
     // Calendar and scheduling related functions
     fun updateWishScheduledDate(wishId: Long, scheduledDate: String?) {
         viewModelScope.launch(Dispatchers.IO) {
-            val currentWish = wishRepository.getWishById(wishId).first()
-            val updatedWish = currentWish.copy(scheduledDate = scheduledDate)
-            wishRepository.updateWish(updatedWish)
+            try {
+                val currentWish = actualWishRepository.getWishById(wishId).first()
+                val updatedWish = currentWish.copy(scheduledDate = scheduledDate)
+                actualWishRepository.updateWish(updatedWish)
 
-            // Update reminder if needed
-            if (reminderSystem != null && updatedWish.reminderSet) {
-                if (scheduledDate != null) {
-                    reminderSystem.scheduleSmartReminder(updatedWish)
-                } else {
-                    reminderSystem.cancelReminder(wishId)
+                // Update reminder if needed
+                try {
+                    if (updatedWish.reminderSet) {
+                        if (scheduledDate != null) {
+                            reminderSystem.scheduleSmartReminder(updatedWish)
+                        } else {
+                            reminderSystem.cancelReminder(wishId)
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("WishViewModel", "Failed to update reminder for scheduled wish: $wishId", e)
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to update wish scheduled date: $wishId", e)
+                addNotification("Error", "Failed to update schedule", NotificationType.SYSTEM)
             }
         }
     }
 
     fun toggleWishReminder(wishId: Long, reminderSet: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val currentWish = wishRepository.getWishById(wishId).first()
-            val updatedWish = currentWish.copy(reminderSet = reminderSet)
-            wishRepository.updateWish(updatedWish)
+            try {
+                val currentWish = actualWishRepository.getWishById(wishId).first()
+                val updatedWish = currentWish.copy(reminderSet = reminderSet)
+                actualWishRepository.updateWish(updatedWish)
 
-            // Schedule or cancel reminder
-            if (reminderSystem != null) {
-                if (reminderSet && updatedWish.scheduledDate != null) {
-                    reminderSystem.scheduleSmartReminder(updatedWish)
-                } else {
-                    reminderSystem.cancelReminder(wishId)
+                // Schedule or cancel reminder
+                try {
+                    if (reminderSet && updatedWish.scheduledDate != null) {
+                        reminderSystem.scheduleSmartReminder(updatedWish)
+                    } else {
+                        reminderSystem.cancelReminder(wishId)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("WishViewModel", "Failed to toggle reminder for wish: $wishId", e)
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to toggle wish reminder: $wishId", e)
+                addNotification("Error", "Failed to update reminder", NotificationType.SYSTEM)
             }
         }
     }
@@ -257,23 +338,29 @@ class WishViewModel(
     // Gamification methods
     private fun loadUserProfile() {
         viewModelScope.launch {
-            val existingProfile = userProfileRepository.getUserProfile()
-            if (existingProfile != null) {
-                _userProfile.value = existingProfile
-            } else {
-                // Create default profile if none exists
-                val defaultProfile = UserProfile(
-                    id = 1,
-                    username = "Player",
-                    level = 1,
-                    experiencePoints = 0,
-                    totalWishes = 0,
-                    completedWishes = 0,
-                    currentStreak = 0,
-                    longestStreak = 0
-                )
-                userProfileRepository.saveUserProfile(defaultProfile)
-                _userProfile.value = defaultProfile
+            try {
+                val existingProfile = actualUserProfileRepository.getUserProfile()
+                if (existingProfile != null) {
+                    _userProfile.value = existingProfile
+                } else {
+                    // Create default profile if none exists
+                    val defaultProfile = UserProfile(
+                        id = 1,
+                        username = "Player",
+                        level = 1,
+                        experiencePoints = 0,
+                        totalWishes = 0,
+                        completedWishes = 0,
+                        currentStreak = 0,
+                        longestStreak = 0
+                    )
+                    actualUserProfileRepository.saveUserProfile(defaultProfile)
+                    _userProfile.value = defaultProfile
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to load user profile", e)
+                // Use default profile if loading fails
+                _userProfile.value = UserProfile()
             }
         }
     }
@@ -285,10 +372,15 @@ class WishViewModel(
     }
 
     private suspend fun updateUserProfile(updater: (UserProfile) -> UserProfile) {
-        val currentProfile = _userProfile.value
-        val updatedProfile = updater(currentProfile)
-        _userProfile.value = updatedProfile
-        userProfileRepository.saveUserProfile(updatedProfile)
+        try {
+            val currentProfile = _userProfile.value
+            val updatedProfile = updater(currentProfile)
+            _userProfile.value = updatedProfile
+            actualUserProfileRepository.saveUserProfile(updatedProfile)
+        } catch (e: Exception) {
+            android.util.Log.e("WishViewModel", "Failed to update user profile", e)
+            // Don't crash on profile update failure, just log the error
+        }
     }
 
     private suspend fun checkAndUnlockAchievements(profile: UserProfile) {
@@ -305,12 +397,8 @@ class WishViewModel(
             // Notify user about new achievements
             newAchievements.forEach { achievement ->
                 addNotification(
-                    title = getApplication<Application>().getString(R.string.achievement_unlocked),
-                    message = getApplication<Application>().getString(
-                        R.string.achievement_reward,
-                        achievement.name,
-                        achievement.description
-                    ),
+                    title = "Achievement Unlocked!",
+                    message = "🏆 ${achievement.name}: ${achievement.description}",
                     type = NotificationType.ACHIEVEMENT
                 )
             }
@@ -357,7 +445,7 @@ class WishViewModel(
     // Enhanced wish management with gamification
     fun addWishWithGamification(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
-            wishRepository.addWish(wish = wish)
+            actualWishRepository.addWish(wish = wish)
 
             // Schedule reminder for high-priority wishes
             if (wish.priority == Priority.HIGH && reminderSystem != null) {
@@ -372,7 +460,7 @@ class WishViewModel(
     fun completeWish(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
             val completedWish = wish.copy(isCompleted = true)
-            wishRepository.updateWish(completedWish)
+            actualWishRepository.updateWish(completedWish)
 
             // Cancel reminders for completed wishes
             if (reminderSystem != null) {
@@ -384,11 +472,8 @@ class WishViewModel(
 
             // Add completion notification
             addNotification(
-                title = getApplication<Application>().getString(R.string.wish_completed),
-                message = getApplication<Application>().getString(
-                    R.string.congratulations_completed,
-                    wish.title
-                ),
+                title = "Wish Completed!",
+                message = "🎉 Congratulations! You've completed '${wish.title}'",
                 type = NotificationType.WISH_UPDATE
             )
         }
@@ -396,7 +481,7 @@ class WishViewModel(
 
     fun deleteWishWithGamification(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
-            wishRepository.deleteWish(wish = wish)
+            actualWishRepository.deleteWish(wish = wish)
 
             // Cancel any existing reminders for deleted wish
             if (reminderSystem != null) {
@@ -449,9 +534,9 @@ class WishViewModel(
     fun addFundsToWish(wishId: Long, amount: Double) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val currentWish = wishRepository.getWishById(wishId).first()
+                val currentWish = actualWishRepository.getWishById(wishId).first()
                 val updatedWish = currentWish.copy(savedAmount = currentWish.savedAmount + amount)
-                wishRepository.updateWish(updatedWish)
+                actualWishRepository.updateWish(updatedWish)
                 
                 // Add notification for funds added
                 addNotification(

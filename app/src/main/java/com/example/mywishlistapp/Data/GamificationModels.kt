@@ -10,6 +10,7 @@ import com.google.gson.reflect.TypeToken
 import java.util.*
 
 @Entity(tableName = "user_profile")
+@TypeConverters(Converters::class)
 data class UserProfile(
     @PrimaryKey val id: Int = 1, // Single user profile
     @ColumnInfo(name = "username") val username: String = "User",
