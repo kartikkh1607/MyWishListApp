@@ -30,6 +30,8 @@ import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Wish
 import com.example.mywishlistapp.Screen
 import com.example.mywishlistapp.WishViewModel
+import com.example.mywishlistapp.ui.components.HeroStat
+import com.example.mywishlistapp.ui.components.KeyMetricCard
 import com.example.mywishlistapp.ui.theme.*
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -136,31 +138,50 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Enhanced User Greeting Section with improved typography
+                // At a Glance Layout - Hero Stat Section
                 item {
-                    val userName by viewModel.getUserName().collectAsState(initial = "User")
-                    GreetingSection(
-                        greeting = greeting,
-                        currentTime = dateFormat.format(currentTime),
-                        userName = userName,
-                        navController = navController,
-                        onEditUserName = { newName ->
-                            viewModel.updateUserName(newName)
-                        }
-                    )
-                }
-
-                // Progress Overview Card
-                if (totalWishes > 0) {
-                    item {
-                        ProgressOverviewCard(
-                            completionRate = completionRate,
-                            totalWishes = totalWishes,
-                            completedWishes = completedWishes,
-                            savingsProgress = savingsProgress,
-                            totalSaved = totalSaved,
-                            totalSavingsTarget = totalSavingsTarget
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Calculate user level based on completed wishes (level = completedWishes / 5 + 1)
+                        val userLevel = (completedWishes / 5) + 1
+                        val progressToNextLevel = (completedWishes % 5) / 5f
+                        
+                        HeroStat(
+                            level = userLevel,
+                            progress = progressToNextLevel,
+                            modifier = Modifier.padding(bottom = 24.dp)
                         )
+                        
+                        // Key Metrics Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            KeyMetricCard(
+                                icon = Icons.Filled.Add,
+                                label = "Wishes Added",
+                                value = totalWishes.toString(),
+                                modifier = Modifier.weight(1f)
+                            )
+                            
+                            KeyMetricCard(
+                                icon = Icons.Filled.CheckCircle,
+                                label = "Wishes Fulfilled",
+                                value = completedWishes.toString(),
+                                modifier = Modifier.weight(1f)
+                            )
+                            
+                            KeyMetricCard(
+                                icon = Icons.Filled.DateRange,
+                                label = "Upcoming Milestones",
+                                value = upcomingItems.size.toString(),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
 
