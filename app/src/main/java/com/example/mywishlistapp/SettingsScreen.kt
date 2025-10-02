@@ -61,7 +61,15 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        BackgroundLight,
+                        BackgroundSecondary,
+                        Color(0xFFF8FAFF)
+                    )
+                )
+            )
     ) {
         // Enhanced App Bar matching other screens
         AppBarView(
@@ -141,6 +149,23 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
                         title = "Export Data",
                         subtitle = "Export your wishes to a file",
                         onClick = { showExportDialog = true }
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    SettingsClickableItem(
+                        icon = Icons.Default.Person,
+                        title = "Reset User Name",
+                        subtitle = "Clear your name to restart onboarding",
+                        onClick = { 
+                            viewModel.resetUserName()
+                            // Navigate back to trigger onboarding
+                            navController.navigate(Screen.OnboardingScreen.route) {
+                                popUpTo(Screen.SettingsScreen.route) {
+                                    inclusive = true
+                                }
+                            }
+                        }
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
@@ -273,7 +298,7 @@ fun SettingsSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.White
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp)

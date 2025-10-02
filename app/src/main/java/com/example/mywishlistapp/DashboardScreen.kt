@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Wish
+import com.example.mywishlistapp.ui.theme.*
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -44,16 +44,13 @@ data class CategoryItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) {
-    val wishList = viewModel.getAllWishes.collectAsState(initial = null)
-    val unreadNotificationCount by viewModel.getUnreadNotificationCount().collectAsState()
-    val userProfile by viewModel.userProfile.collectAsState(initial = null)
     val currentTime = Calendar.getInstance().time
     val dateFormat = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
     val hourOfDay = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     
-    // Upcoming and In Progress Items using existing StateFlows
-    val upcomingItems by viewModel.upcomingGoals.collectAsState()
-    val inProgressItems by viewModel.inProgressGoals.collectAsState()
+    // Get real data from ViewModel
+    val wishList by viewModel.getAllWishes.collectAsState(initial = emptyList())
+    val actualWishes = wishList
 
     // Enhanced greeting with emojis
     val greeting = when (hourOfDay) {
@@ -63,15 +60,19 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
         else -> "Good Night 🌙"
     }
 
-    // Check if data is loading
-    val isLoading = wishList.value == null || userProfile == null
-    
-    // Calculate progress metrics (only when data is available)
-    val totalWishes = wishList.value?.size ?: 0
-    val completedWishes = wishList.value?.count { it.isCompleted } ?: 0
+    // Calculate progress metrics from real data
+    val currentTimeMs = System.currentTimeMillis()
+    val upcomingItems = actualWishes.filter { wish ->
+        !wish.isCompleted && wish.targetDate != null && wish.targetDate!! > currentTimeMs 
+    }.sortedBy { wish -> wish.targetDate }
+    val inProgressItems = actualWishes.filter { wish ->
+        !wish.isCompleted && wish.isGoal && wish.progress > 0 
+    }
+    val totalWishes = actualWishes.size
+    val completedWishes = actualWishes.count { wish -> wish.isCompleted }
     val completionRate = if (totalWishes > 0) (completedWishes.toFloat() / totalWishes.toFloat()) else 0f
-    val totalSavingsTarget = wishList.value?.sumOf { it.price.toDoubleOrNull() ?: 0.0 } ?: 0.0
-    val totalSaved = wishList.value?.sumOf { it.savedAmount } ?: 0.0
+    val totalSaved = 0.0 // This would come from your savings calculation
+    val totalSavingsTarget = 0.0 // This would come from your savings goals
     val savingsProgress = if (totalSavingsTarget > 0) (totalSaved / totalSavingsTarget).toFloat() else 0f
 
     // Animation states
@@ -85,7 +86,15 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        BackgroundLight,
+                        BackgroundSecondary,
+                        Color(0xFFF8FAFF)
+                    )
+                )
+            )
     ) {
         // Top Header with functional icons
         TopHeaderSection(
@@ -103,123 +112,121 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
             onProfileClick = {
                 navController.navigate(Screen.ProfileScreen.route)
             },
-            hasNotifications = unreadNotificationCount > 0
+            hasNotifications = false // Remove notification indicator
         )
 
-        // Show actual content (skeleton removed for now)
-        if (!isLoading) {
-            AnimatedVisibility(
-                visible = contentVisible,
-                enter = fadeIn(animationSpec = tween(800)) + slideInVertically(
-                    initialOffsetY = { it / 4 },
-                    animationSpec = tween(800)
-                )
+        // Show actual content (now using placeholder data)
+        AnimatedVisibility(
+            visible = contentVisible,
+            enter = fadeIn(animationSpec = tween(800)) + slideInVertically(
+                initialOffsetY = { it / 4 },
+                animationSpec = tween(800)
+            )
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 8.dp,
+                    bottom = 12.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 8.dp,
-                        bottom = 12.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Enhanced User Greeting Section with improved typography
-                    item {
-                        GreetingSection(
-                            greeting = greeting,
-                            currentTime = dateFormat.format(currentTime),
-                            userName = userProfile?.name?.takeIf { it.isNotEmpty() } ?: userProfile?.username ?: "User",
-                            navController = navController,
-                            onEditUserName = { newName ->
-                                viewModel.saveUserName(newName)
-                            }
-                        )
-                    }
-
-                    // Progress Overview Card
-                    if (totalWishes > 0) {
-                        item {
-                            ProgressOverviewCard(
-                                completionRate = completionRate,
-                                totalWishes = totalWishes,
-                                completedWishes = completedWishes,
-                                savingsProgress = savingsProgress,
-                                totalSaved = totalSaved,
-                                totalSavingsTarget = totalSavingsTarget
-                            )
+                // Enhanced User Greeting Section with improved typography
+                item {
+                    val userName by viewModel.getUserName().collectAsState(initial = "User")
+                    GreetingSection(
+                        greeting = greeting,
+                        currentTime = dateFormat.format(currentTime),
+                        userName = userName,
+                        navController = navController,
+                        onEditUserName = { newName ->
+                            viewModel.updateUserName(newName)
                         }
-                    }
+                    )
+                }
 
-                    // Motivational Message
+                // Progress Overview Card
+                if (totalWishes > 0) {
                     item {
-                        MotivationalCard(
+                        ProgressOverviewCard(
                             completionRate = completionRate,
-                            totalWishes = totalWishes
+                            totalWishes = totalWishes,
+                            completedWishes = completedWishes,
+                            savingsProgress = savingsProgress,
+                            totalSaved = totalSaved,
+                            totalSavingsTarget = totalSavingsTarget
                         )
                     }
+                }
 
-                    // Quick Stats
+                // Motivational Message
+                item {
+                    MotivationalCard(
+                        completionRate = completionRate,
+                        totalWishes = totalWishes
+                    )
+                }
+
+                // Quick Stats
+                item {
+                    QuickStatsSection(wishList = actualWishes)
+                }
+
+                // Category Shortcuts
+                item {
+                    CategoryShortcuts(navController = navController)
+                }
+
+                // Upcoming Items Section
+                if (upcomingItems.isNotEmpty()) {
                     item {
-                        QuickStatsSection(wishList = wishList.value ?: emptyList())
-                    }
-
-                    // Category Shortcuts
-                    item {
-                        CategoryShortcuts(navController = navController)
-                    }
-
-                    // Upcoming Items Section
-                    if (upcomingItems.isNotEmpty()) {
-                        item {
-                            UpcomingItemsSection(
-                                upcomingItems = upcomingItems,
-                                onItemClick = { item ->
-                                    navController.navigate(Screen.AddScreen.route + "/${item.id}")
-                                }
-                            )
-                        }
-                    }
-                    
-                    // In Progress Section
-                    if (inProgressItems.isNotEmpty()) {
-                        item {
-                            InProgressItemsSection(
-                                inProgressItems = inProgressItems,
-                                onItemClick = { item ->
-                                    navController.navigate(Screen.AddScreen.route + "/${item.id}")
-                                }
-                            )
-                        }
-                    }
-                    
-                    // Recent Wishes (only if there are wishes)
-                    wishList.value?.let { wishes ->
-                        if (wishes.isNotEmpty()) {
-                            item {
-                                RecentWishesSection(
-                                    wishes = wishes.take(3), // Show 3 recent wishes
-                                    onWishClick = { wish ->
-                                        navController.navigate(Screen.AddScreen.route + "/${wish.id}")
-                                    },
-                                    onViewAllClick = {
-                                        navController.navigate(Screen.WishListScreen.route)
-                                    }
-                                )
+                        UpcomingItemsSection(
+                            upcomingItems = upcomingItems.take(5),
+                            onItemClick = { item ->
+                                navController.navigate(Screen.AddScreen.route + "/${item.id}")
                             }
-                        }
+                        )
                     }
-
-                    // Quick Action Buttons
+                }
+                
+                // In Progress Section
+                if (inProgressItems.isNotEmpty()) {
                     item {
-                        QuickActionButtons(navController = navController)
+                        InProgressItemsSection(
+                            inProgressItems = inProgressItems.take(5),
+                            onItemClick = { item ->
+                                navController.navigate(Screen.AddScreen.route + "/${item.id}")
+                            }
+                        )
                     }
+                }
+                
+                // Recent Wishes
+                if (actualWishes.isNotEmpty()) {
+                    item {
+                        RecentWishesSection(
+                            wishes = actualWishes.take(3), // Show 3 recent wishes
+                            onWishClick = { wish ->
+                                navController.navigate(Screen.AddScreen.route + "/${wish.id}")
+                            },
+                            onViewAllClick = {
+                                navController.navigate(Screen.WishListScreen.route)
+                            }
+                        )
+                    }
+                }
+
+                // Quick Action Buttons
+                item {
+                    QuickActionButtons(navController = navController)
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun TopHeaderSection(
@@ -245,7 +252,7 @@ fun TopHeaderSection(
                     Icon(
                         imageVector = Icons.Default.EmojiEvents, // Trophy/Gamify icon
                         contentDescription = "Achievements",
-                        tint = MaterialTheme.colorScheme.onSurface,
+                        tint = Color.Black,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -258,7 +265,7 @@ fun TopHeaderSection(
                         Icon(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = "Notifications",
-                            tint = MaterialTheme.colorScheme.onSurface,
+                            tint = Color.Black,
                             modifier = Modifier.size(24.dp)
                         )
                         // Notification badge (only show when there are notifications)
@@ -290,7 +297,7 @@ fun TopHeaderSection(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onSurface,
+                    tint = Color.Black,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -352,7 +359,7 @@ fun GreetingSection(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = userName.first().uppercase(),
+                            text = if (userName.isNotEmpty()) userName.first().uppercase() else "U",
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium
@@ -367,13 +374,13 @@ fun GreetingSection(
                             .clickable { showEditDialog = true }
                     ) {
                         Text(
-                            text = androidx.compose.ui.res.stringResource(R.string.welcome_back_user, userName),
+                            text = "Welcome back, $userName!",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1A1D29)
                         )
                         Text(
-                            text = androidx.compose.ui.res.stringResource(R.string.your_growth_journey),
+                            text = "Your growth journey continues...",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium,
                             color = Color(0xFF667EEA)

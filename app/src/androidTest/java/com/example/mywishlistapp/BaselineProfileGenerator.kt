@@ -33,11 +33,11 @@ class BaselineProfileGenerator {
             
             // 1. Dashboard interaction - scroll and view statistics
             device.swipe(
-                startX = device.displayWidth / 2,
-                startY = device.displayHeight * 3 / 4,
-                endX = device.displayWidth / 2,
-                endY = device.displayHeight / 4,
-                steps = 20
+                device.displayWidth / 2,
+                device.displayHeight * 3 / 4,
+                device.displayWidth / 2,
+                device.displayHeight / 4,
+                20
             )
             device.waitForIdle(1000)
             
@@ -59,11 +59,11 @@ class BaselineProfileGenerator {
             
             // 6. Scroll the wish list (performance critical)
             device.swipe(
-                startX = device.displayWidth / 2,
-                startY = device.displayHeight * 3 / 4,
-                endX = device.displayWidth / 2,
-                endY = device.displayHeight / 4,
-                steps = 25
+                device.displayWidth / 2,
+                device.displayHeight * 3 / 4,
+                device.displayWidth / 2,
+                device.displayHeight / 4,
+                25
             )
             device.waitForIdle(1000)
             

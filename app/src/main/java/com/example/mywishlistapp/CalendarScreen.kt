@@ -40,7 +40,6 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(navController: NavHostController, viewModel: WishViewModel) {
@@ -60,7 +59,15 @@ fun CalendarScreen(navController: NavHostController, viewModel: WishViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        com.example.mywishlistapp.ui.theme.BackgroundLight,
+                        com.example.mywishlistapp.ui.theme.BackgroundSecondary,
+                        Color(0xFFF8FAFF)
+                    )
+                )
+            )
     ) {
         // Journey View Header
         JourneyHeader(

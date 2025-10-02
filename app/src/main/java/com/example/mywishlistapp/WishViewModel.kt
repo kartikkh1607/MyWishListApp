@@ -42,21 +42,28 @@ class WishViewModel(
     private val wishRepository: WishRepository? = null
     private val userProfileRepository: UserProfileRepository? = null
     private val milestoneRepository: MilestoneRepository? = null
-    
+
     private val actualWishRepository: WishRepository by lazy {
         wishRepository ?: Graph.wishRepository
     }
-    
+
     private val actualUserProfileRepository: UserProfileRepository by lazy {
         userProfileRepository ?: Graph.userProfileRepository
     }
-    
+
     private val actualMilestoneRepository: MilestoneRepository by lazy {
         milestoneRepository ?: Graph.milestoneRepository
     }
 
     private val reminderSystem by lazy { ReminderSystem(getApplication()) }
     private val achievementSystem = AchievementSystem
+
+    // *** ADDED: Missing StateFlows for loading and error states ***
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow("")
+    val errorMessage: StateFlow<String> = _errorMessage.asStateFlow()
 
     // Notification state management
     private val _notifications = MutableStateFlow<List<NotificationItem>>(emptyList())
@@ -81,8 +88,13 @@ class WishViewModel(
             android.util.Log.d("WishViewModel", "WishViewModel initialized successfully")
         } catch (e: Exception) {
             android.util.Log.e("WishViewModel", "Error initializing WishViewModel", e)
-            // Don't rethrow - let the ViewModel be created with minimal state
+            _errorMessage.value = "Failed to initialize: ${e.message}"
         }
+    }
+
+    // *** ADDED: Clear error function ***
+    fun clearError() {
+        _errorMessage.value = ""
     }
 
     // Legacy individual state properties for backward compatibility
@@ -93,7 +105,7 @@ class WishViewModel(
     var wishPriorityState by mutableStateOf(Priority.MEDIUM)
     var wishPriceState by mutableStateOf("")
     var wishImageUrlState by mutableStateOf("")
-    
+
     // Personal Growth Companion state variables
     var wishIsGoalState by mutableStateOf(false)
     var wishTargetDateState by mutableStateOf<Long?>(null)
@@ -138,18 +150,18 @@ class WishViewModel(
         wishImageUrlState = newString
         wishState = wishState.copy(imageUrl = newString)
     }
-    
+
     // Personal Growth Companion handler functions
     fun onWishIsGoalChanged(isGoal: Boolean) {
         wishIsGoalState = isGoal
         wishState = wishState.copy(isGoal = isGoal)
     }
-    
+
     fun onWishTargetDateChanged(targetDate: Long?) {
         wishTargetDateState = targetDate
         wishState = wishState.copy(targetDate = targetDate)
     }
-    
+
     fun onWishProgressChanged(progress: Int) {
         wishProgressState = progress.coerceIn(0, 100)
         wishState = wishState.copy(progress = wishProgressState)
@@ -179,7 +191,7 @@ class WishViewModel(
             kotlinx.coroutines.flow.flowOf(emptyList())
         }
     }
-    
+
     // Optimized flows for specific use cases
     val recentWishes: StateFlow<List<Wish>> by lazy {
         actualWishRepository.getRecentWishes().stateIn(
@@ -188,7 +200,7 @@ class WishViewModel(
             initialValue = emptyList()
         )
     }
-    
+
     val goals: StateFlow<List<Wish>> by lazy {
         actualWishRepository.getGoals().stateIn(
             scope = viewModelScope,
@@ -196,11 +208,11 @@ class WishViewModel(
             initialValue = emptyList()
         )
     }
-    
+
     // Cached stats for dashboard
     private val _wishStats = MutableStateFlow<WishRepository.WishStats?>(null)
     val wishStats: StateFlow<WishRepository.WishStats?> = _wishStats.asStateFlow()
-    
+
     // Dashboard StateFlows for upcoming and in-progress goals
     val upcomingGoals: StateFlow<List<Wish>> by lazy {
         actualWishRepository.getUpcomingGoals(System.currentTimeMillis()).stateIn(
@@ -209,7 +221,7 @@ class WishViewModel(
             initialValue = emptyList()
         )
     }
-    
+
     val inProgressGoals: StateFlow<List<Wish>> by lazy {
         actualWishRepository.getInProgressGoals().stateIn(
             scope = viewModelScope,
@@ -217,14 +229,16 @@ class WishViewModel(
             initialValue = emptyList()
         )
     }
-    
+
     // Calendar/Journey View StateFlow for monthly items
     fun getItemsForMonth(startDate: Long, endDate: Long): Flow<List<Wish>> {
         return actualWishRepository.getItemsForMonth(startDate, endDate)
     }
 
-    fun addWish(wish: Wish){
+    // *** UPDATED: Add loading and error handling ***
+    fun addWish(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.value = true
             try {
                 actualWishRepository.addWish(wish = wish)
 
@@ -233,24 +247,27 @@ class WishViewModel(
                     try {
                         reminderSystem.scheduleSmartReminder(wish)
                     } catch (e: Exception) {
-                        // Log error but don't crash - reminder failure shouldn't block wish creation
                         android.util.Log.e("WishViewModel", "Failed to schedule reminder for wish: ${wish.id}", e)
                     }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to add wish: ${wish.title}", e)
-                // Optionally show error to user via notification
+                _errorMessage.value = "Failed to add wish: ${e.message}"
                 addNotification("Error", "Failed to add wish", NotificationType.SYSTEM)
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
-    fun getWishbyId(id: Long) : Flow<Wish>{
+    fun getWishbyId(id: Long): Flow<Wish> {
         return actualWishRepository.getWishById(id = id)
     }
 
+    // *** UPDATED: Add loading and error handling ***
     fun updateWish(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.value = true
             try {
                 actualWishRepository.updateWish(wish = wish)
 
@@ -267,13 +284,18 @@ class WishViewModel(
                 }
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to update wish: ${wish.title}", e)
+                _errorMessage.value = "Failed to update wish: ${e.message}"
                 addNotification("Error", "Failed to update wish", NotificationType.SYSTEM)
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
+    // *** UPDATED: Add loading and error handling ***
     fun deleteWish(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.value = true
             try {
                 actualWishRepository.deleteWish(wish = wish)
 
@@ -285,7 +307,10 @@ class WishViewModel(
                 }
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to delete wish: ${wish.title}", e)
+                _errorMessage.value = "Failed to delete wish: ${e.message}"
                 addNotification("Error", "Failed to delete wish", NotificationType.SYSTEM)
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -312,6 +337,7 @@ class WishViewModel(
                 }
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to update wish scheduled date: $wishId", e)
+                _errorMessage.value = "Failed to update schedule: ${e.message}"
                 addNotification("Error", "Failed to update schedule", NotificationType.SYSTEM)
             }
         }
@@ -336,6 +362,7 @@ class WishViewModel(
                 }
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to toggle wish reminder: $wishId", e)
+                _errorMessage.value = "Failed to update reminder: ${e.message}"
                 addNotification("Error", "Failed to update reminder", NotificationType.SYSTEM)
             }
         }
@@ -425,6 +452,7 @@ class WishViewModel(
                     val defaultProfile = UserProfile(
                         id = 1,
                         username = "Player",
+                        name = "", // Explicitly set empty name to trigger onboarding
                         level = 1,
                         experiencePoints = 0,
                         totalWishes = 0,
@@ -437,6 +465,7 @@ class WishViewModel(
                 }
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to load user profile", e)
+                _errorMessage.value = "Failed to load profile: ${e.message}"
                 // Use default profile if loading fails
                 _userProfile.value = UserProfile()
             }
@@ -445,22 +474,28 @@ class WishViewModel(
 
     private fun loadAchievements() {
         viewModelScope.launch {
-            _achievements.value = achievementSystem.getAllAchievements()
+            try {
+                _achievements.value = achievementSystem.getAllAchievements()
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to load achievements", e)
+                _errorMessage.value = "Failed to load achievements: ${e.message}"
+            }
         }
     }
-    
+
     private fun loadWishStats() {
         viewModelScope.launch {
             try {
                 _wishStats.value = actualWishRepository.getWishStats()
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to load wish stats", e)
+                _errorMessage.value = "Failed to load stats: ${e.message}"
                 // Use default stats if loading fails
                 _wishStats.value = WishRepository.WishStats(0, 0, 0, 0)
             }
         }
     }
-    
+
     fun refreshWishStats() {
         loadWishStats()
     }
@@ -473,29 +508,33 @@ class WishViewModel(
             actualUserProfileRepository.saveUserProfile(updatedProfile)
         } catch (e: Exception) {
             android.util.Log.e("WishViewModel", "Failed to update user profile", e)
-            // Don't crash on profile update failure, just log the error
+            _errorMessage.value = "Failed to update profile: ${e.message}"
         }
     }
 
     private suspend fun checkAndUnlockAchievements(profile: UserProfile) {
-        val unlockedAchievements = achievementSystem.checkAchievements(profile)
-        val newAchievements = unlockedAchievements.filter { !it.isUnlocked }
+        try {
+            val unlockedAchievements = achievementSystem.checkAchievements(profile)
+            val newAchievements = unlockedAchievements.filter { !it.isUnlocked }
 
-        if (newAchievements.isNotEmpty()) {
-            // Mark achievements as unlocked
-            achievementSystem.unlockAchievements(newAchievements.map { it.id })
+            if (newAchievements.isNotEmpty()) {
+                // Mark achievements as unlocked
+                achievementSystem.unlockAchievements(newAchievements.map { it.id })
 
-            // Update achievements list
-            _achievements.value = achievementSystem.getAllAchievements()
+                // Update achievements list
+                _achievements.value = achievementSystem.getAllAchievements()
 
-            // Notify user about new achievements
-            newAchievements.forEach { achievement ->
-                addNotification(
-                    title = "Achievement Unlocked!",
-                    message = "🏆 ${achievement.name}: ${achievement.description}",
-                    type = NotificationType.ACHIEVEMENT
-                )
+                // Notify user about new achievements
+                newAchievements.forEach { achievement ->
+                    addNotification(
+                        title = "Achievement Unlocked!",
+                        message = "🏆 ${achievement.name}: ${achievement.description}",
+                        type = NotificationType.ACHIEVEMENT
+                    )
+                }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("WishViewModel", "Failed to check achievements", e)
         }
     }
 
@@ -535,7 +574,7 @@ class WishViewModel(
             }
         }
     }
-    
+
     // Save user name for onboarding/personalization
     fun saveUserName(name: String) {
         viewModelScope.launch {
@@ -546,10 +585,27 @@ class WishViewModel(
                 android.util.Log.d("WishViewModel", "User name saved: $name")
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to save user name", e)
+                _errorMessage.value = "Failed to save name: ${e.message}"
             }
         }
     }
-    
+
+    // Get user's display name as StateFlow for reactive UI updates
+    fun getUserName(): StateFlow<String> {
+        return _userProfile.map { profile ->
+            profile.name.ifEmpty { "User" } // Default to "User" if name is empty
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = _userProfile.value.name.ifEmpty { "User" }
+        )
+    }
+
+    // Update user name (alias for saveUserName for consistency with DashboardScreen)
+    fun updateUserName(newName: String) {
+        saveUserName(newName)
+    }
+
     // Theme management
     val currentTheme: StateFlow<String> = _userProfile.map { profile ->
         profile.theme
@@ -558,7 +614,7 @@ class WishViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = "System"
     )
-    
+
     fun setTheme(theme: String) {
         viewModelScope.launch {
             try {
@@ -568,6 +624,7 @@ class WishViewModel(
                 android.util.Log.d("WishViewModel", "Theme updated to: $theme")
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to update theme", e)
+                _errorMessage.value = "Failed to update theme: ${e.message}"
             }
         }
     }
@@ -575,51 +632,75 @@ class WishViewModel(
     // Enhanced wish management with gamification
     fun addWishWithGamification(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
-            actualWishRepository.addWish(wish = wish)
+            _isLoading.value = true
+            try {
+                actualWishRepository.addWish(wish = wish)
 
-            // Schedule reminder for high-priority wishes
-            if (wish.priority == Priority.HIGH && reminderSystem != null) {
-                reminderSystem.scheduleSmartReminder(wish)
+                // Schedule reminder for high-priority wishes
+                if (wish.priority == Priority.HIGH && reminderSystem != null) {
+                    reminderSystem.scheduleSmartReminder(wish)
+                }
+
+                // Update gamification stats
+                onWishAdded()
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to add wish with gamification", e)
+                _errorMessage.value = "Failed to add wish: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
-
-            // Update gamification stats
-            onWishAdded()
         }
     }
 
     fun completeWish(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
-            val completedWish = wish.copy(isCompleted = true)
-            actualWishRepository.updateWish(completedWish)
+            _isLoading.value = true
+            try {
+                val completedWish = wish.copy(isCompleted = true)
+                actualWishRepository.updateWish(completedWish)
 
-            // Cancel reminders for completed wishes
-            if (reminderSystem != null) {
-                reminderSystem.cancelReminder(wish.id)
+                // Cancel reminders for completed wishes
+                if (reminderSystem != null) {
+                    reminderSystem.cancelReminder(wish.id)
+                }
+
+                // Update gamification stats
+                onWishCompleted()
+
+                // Add completion notification
+                addNotification(
+                    title = "Wish Completed!",
+                    message = "🎉 Congratulations! You've completed '${wish.title}'",
+                    type = NotificationType.WISH_UPDATE
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to complete wish", e)
+                _errorMessage.value = "Failed to complete wish: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
-
-            // Update gamification stats
-            onWishCompleted()
-
-            // Add completion notification
-            addNotification(
-                title = "Wish Completed!",
-                message = "🎉 Congratulations! You've completed '${wish.title}'",
-                type = NotificationType.WISH_UPDATE
-            )
         }
     }
 
     fun deleteWishWithGamification(wish: Wish) {
         viewModelScope.launch(Dispatchers.IO) {
-            actualWishRepository.deleteWish(wish = wish)
+            _isLoading.value = true
+            try {
+                actualWishRepository.deleteWish(wish = wish)
 
-            // Cancel any existing reminders for deleted wish
-            if (reminderSystem != null) {
-                reminderSystem.cancelReminder(wish.id)
+                // Cancel any existing reminders for deleted wish
+                if (reminderSystem != null) {
+                    reminderSystem.cancelReminder(wish.id)
+                }
+
+                // Update gamification stats
+                onWishDeleted()
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to delete wish with gamification", e)
+                _errorMessage.value = "Failed to delete wish: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
-
-            // Update gamification stats
-            onWishDeleted()
         }
     }
 
@@ -659,7 +740,7 @@ class WishViewModel(
             initialValue = emptyList()
         )
     }
-    
+
     // Saving Goals Feature
     fun addFundsToWish(wishId: Long, amount: Double) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -667,14 +748,14 @@ class WishViewModel(
                 val currentWish = actualWishRepository.getWishById(wishId).first()
                 val updatedWish = currentWish.copy(savedAmount = currentWish.savedAmount + amount)
                 actualWishRepository.updateWish(updatedWish)
-                
+
                 // Add notification for funds added
                 addNotification(
                     title = "Funds Added! 💰",
                     message = "Added $${String.format("%.2f", amount)} to '${currentWish.title}'",
                     type = NotificationType.WISH_UPDATE
                 )
-                
+
                 // Check if goal is reached
                 val targetPrice = currentWish.price.toDoubleOrNull() ?: 0.0
                 if (targetPrice > 0 && updatedWish.savedAmount >= targetPrice) {
@@ -685,13 +766,14 @@ class WishViewModel(
                     )
                 }
             } catch (e: Exception) {
-                // Handle error - could add error notification here
+                android.util.Log.e("WishViewModel", "Failed to add funds", e)
+                _errorMessage.value = "Failed to add funds: ${e.message}"
             }
         }
     }
-    
+
     // ===== PERSONAL GROWTH COMPANION ANALYTICS =====
-    
+
     // Data classes for analytics
     data class GoalAnalytics(
         val totalGoals: Int = 0,
@@ -702,30 +784,29 @@ class WishViewModel(
         val overdue: Int = 0,
         val completionRate: Float = 0f
     )
-    
+
     data class MotivationalInsight(
         val message: String,
         val type: InsightType,
         val actionSuggestion: String? = null,
         val emoji: String = "💪"
     )
-    
+
     enum class InsightType {
         ENCOURAGEMENT, CELEBRATION, REMINDER, TIP, MILESTONE
     }
-    
+
     data class UpcomingDeadline(
         val wish: Wish,
         val daysUntilDeadline: Long,
         val urgencyLevel: UrgencyLevel
     )
-    
+
     enum class UrgencyLevel {
         OVERDUE, URGENT, SOON, NORMAL
     }
-    
+
     // Analytics Functions
-    
     fun getGoalAnalytics(): Flow<GoalAnalytics> {
         return getAllWishes.map { wishes ->
             val goals = wishes.filter { it.isGoal }
@@ -735,7 +816,7 @@ class WishViewModel(
             val overdue = getOverdueGoalsCount(goals)
             val avgProgress = if (goals.isNotEmpty()) goals.map { it.progress }.average().toFloat() else 0f
             val completionRate = if (goals.isNotEmpty()) completed.toFloat() / goals.size.toFloat() else 0f
-            
+
             GoalAnalytics(
                 totalGoals = goals.size,
                 completedGoals = completed,
@@ -747,14 +828,14 @@ class WishViewModel(
             )
         }
     }
-    
+
     fun getActiveGoalsWithProgress(): Flow<List<Wish>> {
         return getAllWishes.map { wishes ->
             wishes.filter { it.isGoal && it.progress < 100 && !it.isCompleted }
                 .sortedByDescending { it.progress }
         }
     }
-    
+
     fun getUpcomingDeadlines(): Flow<List<UpcomingDeadline>> {
         return getAllWishes.map { wishes ->
             val now = System.currentTimeMillis()
@@ -774,14 +855,14 @@ class WishViewModel(
                 .sortedBy { it.daysUntilDeadline }
         }
     }
-    
+
     fun getMotivationalInsights(): Flow<List<MotivationalInsight>> {
         return getAllWishes.map { wishes ->
             val insights = mutableListOf<MotivationalInsight>()
             val goals = wishes.filter { it.isGoal }
             val completed = goals.count { it.progress >= 100 }
             val totalGoals = goals.size
-            
+
             // Completion rate insights
             when {
                 totalGoals == 0 -> {
@@ -824,7 +905,7 @@ class WishViewModel(
                     )
                 }
             }
-            
+
             // Progress insights
             val highProgressGoals = goals.filter { it.progress >= 80 && it.progress < 100 }
             if (highProgressGoals.isNotEmpty()) {
@@ -837,13 +918,13 @@ class WishViewModel(
                     )
                 )
             }
-            
+
             // Deadline insights
             val now = System.currentTimeMillis()
-            val urgentGoals = goals.filter { 
-                it.targetDate != null && 
-                TimeUnit.MILLISECONDS.toDays(it.targetDate!! - now) <= 7 &&
-                it.progress < 100
+            val urgentGoals = goals.filter {
+                it.targetDate != null &&
+                        TimeUnit.MILLISECONDS.toDays(it.targetDate!! - now) <= 7 &&
+                        it.progress < 100
             }
             if (urgentGoals.isNotEmpty()) {
                 insights.add(
@@ -855,7 +936,7 @@ class WishViewModel(
                     )
                 )
             }
-            
+
             // Stagnant goals insight
             val stagnantGoals = goals.filter { it.progress == 0 && it.targetDate != null }
             if (stagnantGoals.size >= 3) {
@@ -868,11 +949,11 @@ class WishViewModel(
                     )
                 )
             }
-            
+
             insights.take(3) // Limit to 3 insights to avoid overwhelming the user
         }
     }
-    
+
     fun getCompletionStats(): Flow<Pair<Int, Int>> {
         return getAllWishes.map { wishes ->
             val totalWishes = wishes.size
@@ -880,7 +961,7 @@ class WishViewModel(
             Pair(totalWishes - totalGoals, totalGoals) // (wishes, goals)
         }
     }
-    
+
     fun getAverageGoalProgress(): Flow<Float> {
         return getAllWishes.map { wishes ->
             val activeGoals = wishes.filter { it.isGoal && it.progress < 100 }
@@ -889,27 +970,27 @@ class WishViewModel(
             } else 0f
         }
     }
-    
+
     fun getStreakData(): Flow<Int> {
         // For now, return current streak from user profile
         // In a real implementation, you'd calculate streaks based on goal completion dates
         return _userProfile.map { it.currentStreak }
     }
-    
+
     private fun getOverdueGoalsCount(goals: List<Wish>): Int {
         val now = System.currentTimeMillis()
         return goals.count { goal ->
             goal.targetDate != null && goal.targetDate!! < now && goal.progress < 100
         }
     }
-    
+
     // ===== MILESTONE MANAGEMENT =====
-    
+
     // Get milestones for a specific goal
     fun getMilestonesForGoal(wishId: Long): Flow<List<Milestone>> {
         return actualMilestoneRepository.getMilestonesForGoal(wishId)
     }
-    
+
     // Add a new milestone to a goal
     fun addMilestone(wishId: Long, title: String, description: String? = null, dueDate: Long? = null) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -924,7 +1005,7 @@ class WishViewModel(
                     createdDate = System.currentTimeMillis()
                 )
                 actualMilestoneRepository.insertMilestone(milestone)
-                
+
                 addNotification(
                     title = "Milestone Added! 🎯",
                     message = "Added milestone: $title",
@@ -932,6 +1013,7 @@ class WishViewModel(
                 )
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to add milestone", e)
+                _errorMessage.value = "Failed to add milestone: ${e.message}"
                 addNotification(
                     title = "Error",
                     message = "Failed to add milestone",
@@ -940,7 +1022,7 @@ class WishViewModel(
             }
         }
     }
-    
+
     // Update an existing milestone
     fun updateMilestone(milestone: Milestone) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -948,16 +1030,17 @@ class WishViewModel(
                 actualMilestoneRepository.updateMilestone(milestone)
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to update milestone", e)
+                _errorMessage.value = "Failed to update milestone: ${e.message}"
             }
         }
     }
-    
+
     // Delete a milestone
     fun deleteMilestone(milestone: Milestone) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 actualMilestoneRepository.deleteMilestone(milestone)
-                
+
                 addNotification(
                     title = "Milestone Removed",
                     message = "Milestone '${milestone.title}' has been deleted",
@@ -965,16 +1048,17 @@ class WishViewModel(
                 )
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to delete milestone", e)
+                _errorMessage.value = "Failed to delete milestone: ${e.message}"
             }
         }
     }
-    
+
     // Complete a milestone
     fun completeMilestone(milestoneId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 actualMilestoneRepository.completeMilestone(milestoneId)
-                
+
                 // Get the milestone to show notification
                 val milestone = actualMilestoneRepository.getMilestoneById(milestoneId)
                 milestone?.let {
@@ -984,30 +1068,32 @@ class WishViewModel(
                         type = NotificationType.ACHIEVEMENT
                     )
                 }
-                
+
                 // Update goal progress automatically based on milestone completion
                 updateGoalProgressFromMilestones(milestone?.wishId ?: 0L)
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to complete milestone", e)
+                _errorMessage.value = "Failed to complete milestone: ${e.message}"
             }
         }
     }
-    
+
     // Uncomplete a milestone
     fun uncompleteMilestone(milestoneId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 actualMilestoneRepository.uncompleteMilestone(milestoneId)
-                
+
                 // Get the milestone to update goal progress
                 val milestone = actualMilestoneRepository.getMilestoneById(milestoneId)
                 updateGoalProgressFromMilestones(milestone?.wishId ?: 0L)
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to uncomplete milestone", e)
+                _errorMessage.value = "Failed to uncomplete milestone: ${e.message}"
             }
         }
     }
-    
+
     // Automatically update goal progress based on milestone completion
     private suspend fun updateGoalProgressFromMilestones(wishId: Long) {
         try {
@@ -1017,34 +1103,51 @@ class WishViewModel(
             actualWishRepository.updateWish(updatedWish)
         } catch (e: Exception) {
             android.util.Log.e("WishViewModel", "Failed to update goal progress from milestones", e)
+            _errorMessage.value = "Failed to update progress: ${e.message}"
         }
     }
-    
+
     // Get suggested milestones for a goal
     fun getSuggestedMilestones(goalTitle: String, goalCategory: String): List<String> {
         return actualMilestoneRepository.getSuggestedMilestones(goalTitle, goalCategory)
     }
-    
+
     // Get overdue milestones
     fun getOverdueMilestones(): Flow<List<Milestone>> {
         return actualMilestoneRepository.getOverdueMilestones()
     }
-    
+
     // Get upcoming milestones
     fun getUpcomingMilestones(): Flow<List<Milestone>> {
         return actualMilestoneRepository.getUpcomingMilestones()
     }
-    
+
+    // Reset user name to trigger onboarding
+    fun resetUserName() {
+        viewModelScope.launch {
+            try {
+                updateUserProfile { profile ->
+                    profile.copy(name = "")
+                }
+                android.util.Log.d("WishViewModel", "User name reset - onboarding will be triggered")
+            } catch (e: Exception) {
+                android.util.Log.e("WishViewModel", "Failed to reset user name", e)
+                _errorMessage.value = "Failed to reset name: ${e.message}"
+            }
+        }
+    }
+
     // Clear all data function for settings
     fun clearAllData() {
         viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.value = true
             try {
                 // Clear all wishes
                 actualWishRepository.deleteAllWishes()
-                
+
                 // Reset user profile to default state
                 actualUserProfileRepository.resetProfile()
-                
+
                 // Update local profile state
                 _userProfile.value = UserProfile(
                     id = 1,
@@ -1052,28 +1155,31 @@ class WishViewModel(
                     name = "",
                     theme = "System"
                 )
-                
+
                 // Clear notifications
                 _notifications.value = emptyList()
-                
+
                 // Reset achievements
                 _achievements.value = AchievementSystem.getAllAchievements()
-                
+
                 // Add confirmation notification
                 addNotification(
                     title = "Data Cleared",
                     message = "All wishes and data have been successfully removed.",
                     type = NotificationType.SYSTEM
                 )
-                
+
                 android.util.Log.d("WishViewModel", "All data cleared successfully")
             } catch (e: Exception) {
                 android.util.Log.e("WishViewModel", "Failed to clear all data", e)
+                _errorMessage.value = "Failed to clear data: ${e.message}"
                 addNotification(
                     title = "Error",
                     message = "Failed to clear data. Please try again.",
                     type = NotificationType.SYSTEM
                 )
+            } finally {
+                _isLoading.value = false
             }
         }
     }

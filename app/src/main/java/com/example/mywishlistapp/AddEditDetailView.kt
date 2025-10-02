@@ -177,7 +177,15 @@ fun AddEditDetailView(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            com.example.mywishlistapp.ui.theme.BackgroundLight,
+                            com.example.mywishlistapp.ui.theme.BackgroundSecondary,
+                            Color(0xFFF8FAFF)
+                        )
+                    )
+                )
         ) {
             AnimatedContent(
                 targetState = isEditMode,
@@ -278,7 +286,7 @@ fun StandardTextField(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = Color.White
             ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = animatedElevation
@@ -380,7 +388,7 @@ fun CurrencyTextField(
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.White
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = animatedElevation
@@ -458,7 +466,7 @@ fun ImageUrlField(
                 .padding(vertical = 8.dp),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = Color.White
             ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = animatedElevation
@@ -520,9 +528,9 @@ fun ImageUrlField(
                     .padding(top = 12.dp),
                 shape = RoundedCornerShape(16.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            )
             ) {
                 Column {
                     AsyncImage(
@@ -633,7 +641,7 @@ fun CategoryDropdown(
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         ExposedDropdownMenuBox(
@@ -714,73 +722,73 @@ fun PrioritySelector(
         title = "⭐ Priority",
         subtitle = "Set the importance level"
     ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Priority.values().forEach { priority ->
-                    val isSelected = selectedPriority == priority
-                    val (containerColor, contentColor, priorityLabel, priorityIcon) = when (priority) {
-                        Priority.LOW -> Tuple4(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            MaterialTheme.colorScheme.onPrimaryContainer,
-                            "Low",
-                            Icons.Default.KeyboardArrowDown
-                        )
-                        Priority.MEDIUM -> Tuple4(
-                            MaterialTheme.colorScheme.secondaryContainer,
-                            MaterialTheme.colorScheme.onSecondaryContainer,
-                            "Medium", 
-                            Icons.Default.Remove
-                        )
-                        Priority.HIGH -> Tuple4(
-                            MaterialTheme.colorScheme.errorContainer,
-                            MaterialTheme.colorScheme.onErrorContainer,
-                            "High",
-                            Icons.Default.KeyboardArrowUp
-                        )
-                    }
-                    
-                    Card(
-                        onClick = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onPrioritySelected(priority)
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = containerColor.copy(alpha = if (isSelected) 1.0f else 0.4f)
-                        ),
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = if (isSelected) 8.dp else 1.dp
-                        ),
-                        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = priorityIcon,
-                                contentDescription = "$priorityLabel priority icon",
-                                modifier = Modifier.size(24.dp),
-                                tint = contentColor
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = priorityLabel,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = contentColor,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-            }
+//        Column {
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.spacedBy(8.dp)
+//            ) {
+//                Priority.values().forEach { priority ->
+//                    val isSelected = selectedPriority == priority
+////                    val (containerColor, contentColor, priorityLabel, priorityIcon) = when (priority) {
+////                        Priority.LOW -> Tuple4(
+////                            MaterialTheme.colorScheme.primaryContainer,
+////                            MaterialTheme.colorScheme.onPrimaryContainer,
+////                            "Low",
+////                            Icons.Default.KeyboardArrowDown
+////                        )
+////                        Priority.MEDIUM -> Tuple4(
+////                            MaterialTheme.colorScheme.secondaryContainer,
+////                            MaterialTheme.colorScheme.onSecondaryContainer,
+////                            "Medium",
+////                            Icons.Default.Remove
+////                        )
+////                        Priority.HIGH -> Tuple4(
+////                            MaterialTheme.colorScheme.errorContainer,
+////                            MaterialTheme.colorScheme.onErrorContainer,
+////                            "High",
+////                            Icons.Default.KeyboardArrowUp
+////                        )
+////                    }
+////
+//                    Card(
+//                        onClick = {
+//                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+//                            onPrioritySelected(priority)
+//                        },
+//                        modifier = Modifier.weight(1f),
+//                        shape = RoundedCornerShape(16.dp),
+//                        colors = CardDefaults.cardColors(
+//                            containerColor = containerColor.copy(alpha = if (isSelected) 1.0f else 0.4f)
+//                        ),
+//                        elevation = CardDefaults.cardElevation(
+//                            defaultElevation = if (isSelected) 8.dp else 1.dp
+//                        ),
+//                        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+//                    ) {
+//                        Column(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(16.dp),
+////                            horizontalAlignment = Alignment.CenterHorizontally
+////                        ) {
+////                            Icon(
+////                                imageVector = priorityIcon,
+////                                contentDescription = "$priorityLabel priority icon",
+////                                modifier = Modifier.size(24.dp),
+////                                tint = contentColor
+////                            )
+////                            Spacer(modifier = Modifier.height(8.dp))
+////                            Text(
+////                                text = priorityLabel,
+////                                style = MaterialTheme.typography.labelLarge,
+////                                fontWeight = FontWeight.Bold,
+////                                color = contentColor,
+////                                textAlign = TextAlign.Center
+////                            )
+//                        }
+//                    }
+//                }
+//            }
             
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -798,7 +806,7 @@ fun PrioritySelector(
             )
         }
     }
-}
+
 
 // Data class for priority selector is defined in HomeView.kt
 
@@ -1288,7 +1296,7 @@ fun DisplayCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -1421,7 +1429,7 @@ fun SavingsProgressCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -1574,7 +1582,7 @@ fun EnhancedSectionCard(
             .padding(vertical = 12.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.White
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 8.dp

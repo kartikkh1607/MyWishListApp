@@ -135,7 +135,7 @@ fun SearchScreen(
                     }
                     
                     items(filteredWishes, key = { it.id }) { wish ->
-                        EnhancedWishItem(wish = wish) {
+                        WishItemECommerce(wish = wish) {
                             navController.navigate(Screen.AddScreen.route + "/${wish.id}")
                         }
                     }
