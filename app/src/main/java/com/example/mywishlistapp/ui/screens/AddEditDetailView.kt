@@ -1,11 +1,10 @@
-package com.example.mywishlistapp
+package com.example.mywishlistapp.ui.screens
 
 import android.content.Intent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,13 +46,21 @@ import com.example.mywishlistapp.ui.components.ItemTypeSelector
 import com.example.mywishlistapp.ui.components.TargetDatePicker
 import com.example.mywishlistapp.ui.components.ProgressTracker
 import com.example.mywishlistapp.ui.components.MilestoneManager
-import com.example.mywishlistapp.Data.Milestone
 import com.example.mywishlistapp.GoalProgressBar
+import com.example.mywishlistapp.R
+import com.example.mywishlistapp.WishViewModel
+import com.example.mywishlistapp.ui.theme.BackgroundLight
+import com.example.mywishlistapp.ui.theme.BackgroundSecondary
 import com.example.mywishlistapp.ui.theme.MyWishListAppTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -163,7 +170,7 @@ fun AddEditDetailView(
                             wish.description
                         )
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
+                            setType("text/plain")
                             putExtra(Intent.EXTRA_TEXT, shareText)
                         }
                         context.startActivity(Intent.createChooser(shareIntent, null))
@@ -180,8 +187,8 @@ fun AddEditDetailView(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            com.example.mywishlistapp.ui.theme.BackgroundLight,
-                            com.example.mywishlistapp.ui.theme.BackgroundSecondary,
+                            BackgroundLight,
+                            BackgroundSecondary,
                             Color(0xFFF8FAFF)
                         )
                     )
@@ -989,10 +996,10 @@ fun DisplayModeContent(
                         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
                         val formattedDate = dateFormat.format(Date(targetDate))
                         val now = System.currentTimeMillis()
-                        val daysUntil = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(targetDate - now)
+                        val daysUntil = TimeUnit.MILLISECONDS.toDays(targetDate - now)
                         
                         Column {
-                            androidx.compose.material3.Text(
+                            Text(
                                 text = formattedDate,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
@@ -1004,7 +1011,7 @@ fun DisplayModeContent(
                                 modifier = Modifier.padding(top = 4.dp)
                             ) {
                                 val (statusText, statusColor) = when {
-                                    daysUntil < 0 -> Pair("${kotlin.math.abs(daysUntil)} days overdue", MaterialTheme.colorScheme.error)
+                                    daysUntil < 0 -> Pair("${abs(daysUntil)} days overdue", MaterialTheme.colorScheme.error)
                                     daysUntil == 0L -> Pair("Due today!", MaterialTheme.colorScheme.secondary)
                                     daysUntil <= 7 -> Pair("$daysUntil days remaining", MaterialTheme.colorScheme.secondary)
                                     else -> Pair("$daysUntil days remaining", MaterialTheme.colorScheme.tertiary)
@@ -1167,7 +1174,8 @@ fun EditModeContent(
 
         item {
             EnhancedActionButtonWithValidation(
-                text = if (id != 0L) stringResource(R.string.update_wish_button) else stringResource(R.string.add_wish_button),
+                text = if (id != 0L) stringResource(R.string.update_wish_button) else stringResource(
+                    R.string.add_wish_button),
                 isFormValid = viewModel.wishTitleState.isNotBlank(),
                 onClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -1657,8 +1665,8 @@ fun EnhancedActionButtonWithValidation(
                 isLoading = true
                 onClick()
                 // Reset loading after a brief delay for user feedback
-                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-                    kotlinx.coroutines.delay(800)
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(800)
                     isLoading = false
                 }
             } else {

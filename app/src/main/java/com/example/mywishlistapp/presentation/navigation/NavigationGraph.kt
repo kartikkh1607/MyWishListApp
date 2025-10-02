@@ -8,7 +8,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,6 +20,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.mywishlistapp.*
 import com.example.mywishlistapp.WishViewModel
+import com.example.mywishlistapp.ui.screens.AddEditDetailView
+import com.example.mywishlistapp.ui.screens.CalendarScreen
+import com.example.mywishlistapp.ui.screens.DashboardScreen
+import com.example.mywishlistapp.ui.screens.HomeView
+import com.example.mywishlistapp.ui.screens.SearchScreen
+import com.example.mywishlistapp.ui.screens.SettingsScreen
 
 /**
  * Sealed class for navigation routes - Clean and type-safe navigation

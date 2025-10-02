@@ -1,4 +1,4 @@
-package com.example.mywishlistapp
+package com.example.mywishlistapp.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +19,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.mywishlistapp.AppBarView
+import com.example.mywishlistapp.Screen
+import com.example.mywishlistapp.WishViewModel
 import com.example.mywishlistapp.ui.theme.*
 
 // Theme options enum
@@ -381,7 +384,7 @@ fun SettingsClickableItem(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
-    textColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface
+    textColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
     Row(
         modifier = Modifier

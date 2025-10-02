@@ -1,28 +1,26 @@
 package com.example.mywishlistapp
 
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.mywishlistapp.ui.screens.AddEditDetailView
+import com.example.mywishlistapp.ui.screens.CalendarScreen
+import com.example.mywishlistapp.ui.screens.DashboardScreen
+import com.example.mywishlistapp.ui.screens.HomeView
+import com.example.mywishlistapp.ui.screens.SearchScreen
+import com.example.mywishlistapp.ui.screens.SettingsScreen
 
 @Composable
 fun Navigation(

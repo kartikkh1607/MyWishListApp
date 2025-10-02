@@ -1,4 +1,4 @@
-package com.example.mywishlistapp
+package com.example.mywishlistapp.ui.screens
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,14 +19,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.mywishlistapp.Data.UserProfile
 import com.example.mywishlistapp.Data.Wish
+import com.example.mywishlistapp.Screen
+import com.example.mywishlistapp.WishViewModel
+import com.example.mywishlistapp.ui.theme.BackgroundLight
+import com.example.mywishlistapp.ui.theme.BackgroundSecondary
+import java.time.Instant
 // Calendar library imports temporarily disabled
 // import com.kizitonwose.calendar.compose.HorizontalCalendar
 // import com.kizitonwose.calendar.compose.rememberCalendarState
@@ -36,6 +40,7 @@ import com.example.mywishlistapp.Data.Wish
 // import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
@@ -62,8 +67,8 @@ fun CalendarScreen(navController: NavHostController, viewModel: WishViewModel) {
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        com.example.mywishlistapp.ui.theme.BackgroundLight,
-                        com.example.mywishlistapp.ui.theme.BackgroundSecondary,
+                        BackgroundLight,
+                        BackgroundSecondary,
                         Color(0xFFF8FAFF)
                     )
                 )
@@ -262,7 +267,7 @@ fun JourneyWishItem(
 @RequiresApi(Build.VERSION_CODES.O)
 fun getActivitiesForDate(allWishes: List<Wish>, date: LocalDate): DayActivity {
     val dateString = date.toString()
-    val currentTimeMillis = date.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val currentTimeMillis = date.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     val endOfDayMillis = currentTimeMillis + 24 * 60 * 60 * 1000
     
     // Find wishes created on this date
@@ -283,8 +288,8 @@ fun getActivitiesForDate(allWishes: List<Wish>, date: LocalDate): DayActivity {
     // Find deadlines on this date
     val deadlines = allWishes.filter { wish ->
         wish.targetDate?.let { targetDate ->
-            val targetDateLocal = java.time.Instant.ofEpochMilli(targetDate)
-                .atZone(java.time.ZoneId.systemDefault())
+            val targetDateLocal = Instant.ofEpochMilli(targetDate)
+                .atZone(ZoneId.systemDefault())
                 .toLocalDate()
             targetDateLocal == date
         } ?: false
@@ -314,8 +319,8 @@ fun getActivitiesForDate(allWishes: List<Wish>, date: LocalDate): DayActivity {
 fun getMonthlyStats(allWishes: List<Wish>, currentMonth: YearMonth): MonthlyStats {
     val monthStart = currentMonth.atDay(1)
     val monthEnd = currentMonth.atEndOfMonth()
-    val monthStartMillis = monthStart.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-    val monthEndMillis = monthEnd.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() + 24 * 60 * 60 * 1000
+    val monthStartMillis = monthStart.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val monthEndMillis = monthEnd.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() + 24 * 60 * 60 * 1000
     
     val monthWishes = allWishes.filter { wish ->
         wish.createdDate in monthStartMillis..monthEndMillis
@@ -378,8 +383,8 @@ fun findMostProductiveDay(allWishes: List<Wish>, currentMonth: YearMonth): Local
     val monthEnd = currentMonth.atEndOfMonth()
     
     val completedWishesThisMonth = allWishes.filter { wish ->
-        wish.isCompleted && wish.createdDate >= monthStart.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-            && wish.createdDate <= monthEnd.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() + 24 * 60 * 60 * 1000
+        wish.isCompleted && wish.createdDate >= monthStart.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            && wish.createdDate <= monthEnd.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() + 24 * 60 * 60 * 1000
     }
     
     if (completedWishesThisMonth.isEmpty()) return null
@@ -415,7 +420,7 @@ data class MonthlyStats(
 fun JourneyHeader(
     currentMonth: YearMonth,
     monthlyStats: MonthlyStats,
-    userProfile: com.example.mywishlistapp.Data.UserProfile,
+    userProfile: UserProfile,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onTodayClick: () -> Unit

@@ -1,4 +1,4 @@
-package com.example.mywishlistapp
+package com.example.mywishlistapp.ui.screens
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -28,11 +28,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Wish
+import com.example.mywishlistapp.Screen
+import com.example.mywishlistapp.WishViewModel
 import com.example.mywishlistapp.ui.theme.*
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 
 // Data class for category items
 data class CategoryItem(
@@ -558,7 +561,7 @@ fun StatCard(
         val animationDelay = remember { (0..300).random() }
 
         LaunchedEffect(Unit) {
-            kotlinx.coroutines.delay(animationDelay.toLong())
+            delay(animationDelay.toLong())
             visible = true
         }
 
@@ -1259,7 +1262,7 @@ fun UpcomingItemCard(
             
             // Due date
             item.targetDate?.let { targetDate ->
-                val daysUntil = kotlin.math.max(0, TimeUnit.MILLISECONDS.toDays(targetDate - System.currentTimeMillis()))
+                val daysUntil = max(0, TimeUnit.MILLISECONDS.toDays(targetDate - System.currentTimeMillis()))
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {

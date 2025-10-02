@@ -1,6 +1,5 @@
-package com.example.mywishlistapp
+package com.example.mywishlistapp.ui.screens
 
-import androidx.compose.animation.*
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -36,8 +35,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Priority
 import com.example.mywishlistapp.Data.Wish
+import com.example.mywishlistapp.Screen
+import com.example.mywishlistapp.WishViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 // ADDED: Screen navigation sealed class
 //sealed class Screen(val route: String) {
@@ -128,7 +130,7 @@ fun HomeView(navController: NavHostController, viewModel: WishViewModel) {
 
     // Get current time for greeting
     val currentHour =
-        remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
+        remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
     val greeting = remember(currentHour) {
         when (currentHour) {
             in 0..5 -> "Good Night"
