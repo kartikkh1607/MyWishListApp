@@ -91,8 +91,8 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun MyWishListAppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = false,       // Always use light theme
+    dynamicColor: Boolean = false,    // Disable dynamic color so our palette is always applied
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

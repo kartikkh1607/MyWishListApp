@@ -13,7 +13,7 @@ class WishListApp : Application() {
     override fun onCreate() {
         super.onCreate()
         val db = Room.databaseBuilder(this, WishDataBase::class.java, "wishlist.db")
-            .fallbackToDestructiveMigration(dropAllTables = true)
+            .fallbackToDestructiveMigration()
             .build()
         wishRepository = WishRepository(db.wishDao())
     }

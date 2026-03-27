@@ -47,7 +47,12 @@ fun StaggeredEntrance(
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn(spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow)) +
-                slideInVertically(spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow)) { it / 3 }
+                slideInVertically(
+                    spring(
+                        Spring.DampingRatioMediumBouncy,
+                        Spring.StiffnessLow
+                    )
+                ) { it / 3 }
     ) {
         content()
     }

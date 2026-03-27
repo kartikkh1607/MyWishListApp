@@ -89,7 +89,9 @@ fun WishListScreen(navController: NavHostController, viewModel: WishViewModel) {
         filterWishes(wishes = wishList, query = searchQuery)
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(BackgroundLight)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(BackgroundLight)) {
 
         // Header
         Row(
@@ -226,7 +228,12 @@ fun StaggeredAnimatedWishCard(
     viewModel: WishViewModel
 ) {
     StaggeredEntrance(index = index, delayPerItemMs = 50) {
-        SwipeToDeleteWishCard(wish = wish, onWishClick = onWishClick, onDelete = onDelete, viewModel = viewModel)
+        SwipeToDeleteWishCard(
+            wish = wish,
+            onWishClick = onWishClick,
+            onDelete = onDelete,
+            viewModel = viewModel
+        )
     }
 }
 
@@ -247,6 +254,7 @@ fun SwipeToDeleteWishCard(
                     onDelete()
                     true
                 }
+
                 SwipeToDismissBoxValue.StartToEnd -> {
                     if (!wish.isCompleted) {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -254,6 +262,7 @@ fun SwipeToDeleteWishCard(
                         true
                     } else false
                 }
+
                 else -> false
             }
         }
@@ -271,6 +280,7 @@ fun SwipeToDeleteWishCard(
                         alignment = Alignment.CenterEnd,
                         label = "Delete"
                     )
+
                 SwipeToDismissBoxValue.StartToEnd ->
                     SwipeBackground(
                         color = AccentGreen.copy(alpha = 0.9f),
@@ -278,7 +288,12 @@ fun SwipeToDeleteWishCard(
                         alignment = Alignment.CenterStart,
                         label = if (wish.isCompleted) "Done" else "Complete"
                     )
-                else -> Box(Modifier.fillMaxSize().background(Color.Transparent, RoundedCornerShape(16.dp)))
+
+                else -> Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Transparent, RoundedCornerShape(16.dp))
+                )
             }
         },
         enableDismissFromStartToEnd = !wish.isCompleted
@@ -304,8 +319,10 @@ private fun SwipeBackground(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(icon, label, tint = Color.White, modifier = Modifier.size(28.dp))
             Spacer(Modifier.height(4.dp))
-            Text(label, style = MaterialTheme.typography.labelSmall,
-                color = Color.White, fontWeight = FontWeight.Bold)
+            Text(
+                label, style = MaterialTheme.typography.labelSmall,
+                color = Color.White, fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -315,19 +332,19 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
     val haptic = LocalHapticFeedback.current
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue   = if (isPressed) 0.98f else 1f,
+        targetValue = if (isPressed) 0.98f else 1f,
         animationSpec = BounceSpring,
-        label         = "card_scale"
+        label = "card_scale"
     )
     val priorityColor = when (wish.priority) {
-        Priority.HIGH   -> AccentRed
+        Priority.HIGH -> AccentRed
         Priority.MEDIUM -> AccentOrange
-        Priority.LOW    -> AccentGreen
+        Priority.LOW -> AccentGreen
     }
     val priorityEmoji = when (wish.priority) {
-        Priority.HIGH   -> "🔥"
+        Priority.HIGH -> "🔥"
         Priority.MEDIUM -> "⚡"
-        Priority.LOW    -> "🌱"
+        Priority.LOW -> "🌱"
     }
     val priorityLabel = wish.priority.name.lowercase().replaceFirstChar { it.uppercase() }
 
@@ -340,10 +357,12 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
                 onClick()
             }
             .pointerInput(Unit) {
-                detectTapGestures(onPress = { isPressed = true; tryAwaitRelease(); isPressed = false })
+                detectTapGestures(onPress = {
+                    isPressed = true; tryAwaitRelease(); isPressed = false
+                })
             },
-        shape           = RoundedCornerShape(16.dp),
-        color           = SurfaceWhite,
+        shape = RoundedCornerShape(16.dp),
+        color = SurfaceWhite,
         shadowElevation = if (isPressed) 6.dp else 2.dp
     ) {
         Column(
@@ -353,16 +372,19 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
         ) {
             // ── Title row + checkbox ─────────────────────────────────────────
             Row(
-                modifier          = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(priorityColor))
+                Box(modifier = Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(priorityColor))
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    text       = wish.title,
+                    text = wish.title,
                     fontWeight = FontWeight.SemiBold,
-                    color      = TextPrimary,
-                    style      = MaterialTheme.typography.titleMedium.copy(
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.titleMedium.copy(
                         textDecoration = if (wish.isCompleted) TextDecoration.LineThrough else TextDecoration.None
                     ),
                     maxLines = 1,
@@ -372,12 +394,12 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
                 Spacer(Modifier.width(8.dp))
                 var checkboxPressed by remember { mutableStateOf(false) }
                 val cbScale by animateFloatAsState(
-                    targetValue   = if (checkboxPressed) 1.15f else 1f,
+                    targetValue = if (checkboxPressed) 1.15f else 1f,
                     animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessHigh),
-                    label         = "cb_scale"
+                    label = "cb_scale"
                 )
                 Checkbox(
-                    checked         = wish.isCompleted,
+                    checked = wish.isCompleted,
                     onCheckedChange = { checked ->
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         viewModel.updateWish(wish.copy(isCompleted = checked))
@@ -385,10 +407,12 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
                     modifier = Modifier
                         .graphicsLayer(scaleX = cbScale, scaleY = cbScale)
                         .pointerInput(Unit) {
-                            detectTapGestures(onPress = { checkboxPressed = true; tryAwaitRelease(); checkboxPressed = false })
+                            detectTapGestures(onPress = {
+                                checkboxPressed = true; tryAwaitRelease(); checkboxPressed = false
+                            })
                         },
                     colors = CheckboxDefaults.colors(
-                        checkedColor   = AccentGreen,
+                        checkedColor = AccentGreen,
                         uncheckedColor = TextTertiary
                     )
                 )
@@ -398,8 +422,8 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
             if (wish.description.isNotEmpty()) {
                 Text(
                     wish.description,
-                    style    = MaterialTheme.typography.bodySmall,
-                    color    = TextSecondary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 6.dp, start = 20.dp)
@@ -408,36 +432,45 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
 
             // ── Chips: priority · category · price ───────────────────────────
             Row(
-                modifier              = Modifier.padding(top = 10.dp, start = 20.dp),
+                modifier = Modifier.padding(top = 10.dp, start = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Surface(shape = RoundedCornerShape(20.dp), color = priorityColor.copy(alpha = 0.12f)) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = priorityColor.copy(alpha = 0.12f)
+                ) {
                     Text(
-                        text       = "$priorityEmoji $priorityLabel",
-                        style      = MaterialTheme.typography.labelSmall,
-                        color      = priorityColor,
+                        text = "$priorityEmoji $priorityLabel",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = priorityColor,
                         fontWeight = FontWeight.SemiBold,
-                        modifier   = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
                 if (wish.category.isNotEmpty()) {
-                    Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)) {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                    ) {
                         Text(
-                            text     = wish.category,
-                            style    = MaterialTheme.typography.labelSmall,
-                            color    = MaterialTheme.colorScheme.primary,
+                            text = wish.category,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
                 }
                 if (wish.price.isNotEmpty()) {
-                    Surface(shape = RoundedCornerShape(20.dp), color = AccentGreen.copy(alpha = 0.10f)) {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = AccentGreen.copy(alpha = 0.10f)
+                    ) {
                         Text(
-                            text       = "₹${wish.price}",
-                            style      = MaterialTheme.typography.labelSmall,
-                            color      = AccentGreen,
+                            text = "₹${wish.price}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = AccentGreen,
                             fontWeight = FontWeight.SemiBold,
-                            modifier   = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
                 }
@@ -446,23 +479,42 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
             // ── Tags ─────────────────────────────────────────────────────────
             if (wish.tags.isNotEmpty()) {
                 Row(
-                    modifier              = Modifier.padding(top = 6.dp, start = 20.dp),
+                    modifier = Modifier.padding(top = 6.dp, start = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    wish.tags.take(3).forEach { tag -> Text("#$tag", style = MaterialTheme.typography.labelSmall, color = TextTertiary) }
-                    if (wish.tags.size > 3) Text("+${wish.tags.size - 3}", style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                    wish.tags.take(3).forEach { tag ->
+                        Text(
+                            "#$tag",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextTertiary
+                        )
+                    }
+                    if (wish.tags.size > 3) Text(
+                        "+${wish.tags.size - 3}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextTertiary
+                    )
                 }
             }
 
             // ── Completed badge ───────────────────────────────────────────────
             if (wish.isCompleted) {
                 Row(
-                    modifier          = Modifier.padding(top = 6.dp, start = 20.dp),
+                    modifier = Modifier.padding(top = 6.dp, start = 20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.CheckCircle, null, tint = AccentGreen, modifier = Modifier.size(12.dp))
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        null,
+                        tint = AccentGreen,
+                        modifier = Modifier.size(12.dp)
+                    )
                     Spacer(Modifier.width(4.dp))
-                    Text("Completed", style = MaterialTheme.typography.labelSmall, color = AccentGreen)
+                    Text(
+                        "Completed",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = AccentGreen
+                    )
                 }
             }
         }

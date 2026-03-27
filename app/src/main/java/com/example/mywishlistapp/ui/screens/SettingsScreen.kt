@@ -29,9 +29,9 @@ import com.example.mywishlistapp.ui.theme.*
 @Composable
 fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
     var showClearDataDialog by remember { mutableStateOf(false) }
-    var showVersionDialog   by remember { mutableStateOf(false) }
+    var showVersionDialog by remember { mutableStateOf(false) }
     // Fix #9 — state for help and feedback dialogs
-    var showHelpDialog      by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
 
     // Fix #9 — needed to launch intents for Rate and Help
     val context = LocalContext.current
@@ -54,25 +54,25 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
             title = { Text("Settings", fontWeight = FontWeight.Bold) },
             windowInsets = WindowInsets(0.dp),
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor             = MaterialTheme.colorScheme.primary,
-                titleContentColor          = MaterialTheme.colorScheme.onPrimary,
+                containerColor = MaterialTheme.colorScheme.primary,
+                titleContentColor = MaterialTheme.colorScheme.onPrimary,
                 navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
             )
         )
 
         LazyColumn(
-            modifier            = Modifier.fillMaxSize(),
-            contentPadding      = PaddingValues(16.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Data Management
             item {
                 SettingsSection(title = "Data") {
                     SettingsClickableItem(
-                        icon      = Icons.Default.DeleteSweep,
-                        title     = "Clear All Data",
-                        subtitle  = "Permanently delete all wishes",
-                        onClick   = { showClearDataDialog = true },
+                        icon = Icons.Default.DeleteSweep,
+                        title = "Clear All Data",
+                        subtitle = "Permanently delete all wishes",
+                        onClick = { showClearDataDialog = true },
                         textColor = AccentRed
                     )
                 }
@@ -82,36 +82,40 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
             item {
                 SettingsSection(title = "About") {
                     SettingsClickableItem(
-                        icon     = Icons.Default.Info,
-                        title    = "App Version",
+                        icon = Icons.Default.Info,
+                        title = "App Version",
                         subtitle = "1.0.0",
-                        onClick  = { showVersionDialog = true }
+                        onClick = { showVersionDialog = true }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     // Fix #9 — Help now opens a dialog with contact info
                     SettingsClickableItem(
-                        icon     = Icons.AutoMirrored.Filled.Help,
-                        title    = "Help & Support",
+                        icon = Icons.AutoMirrored.Filled.Help,
+                        title = "Help & Support",
                         subtitle = "Get help and contact support",
-                        onClick  = { showHelpDialog = true }
+                        onClick = { showHelpDialog = true }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     // Fix #9 — Rate now launches Play Store (or browser fallback)
                     SettingsClickableItem(
-                        icon     = Icons.Default.Star,
-                        title    = "Rate This App",
+                        icon = Icons.Default.Star,
+                        title = "Rate This App",
                         subtitle = "Share your feedback on the app store",
-                        onClick  = {
+                        onClick = {
                             val packageName = context.packageName
                             try {
                                 context.startActivity(
-                                    Intent(Intent.ACTION_VIEW,
-                                        Uri.parse("market://details?id=$packageName"))
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("market://details?id=$packageName")
+                                    )
                                 )
                             } catch (e: android.content.ActivityNotFoundException) {
                                 context.startActivity(
-                                    Intent(Intent.ACTION_VIEW,
-                                        Uri.parse("https://play.google.com/store/apps/details?id=$packageName"))
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+                                    )
                                 )
                             }
                         }
@@ -125,12 +129,12 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
     if (showClearDataDialog) {
         AlertDialog(
             onDismissRequest = { showClearDataDialog = false },
-            title   = { Text("Clear All Data?") },
-            text    = { Text("Are you sure you want to delete all your wishes? This cannot be undone.") },
+            title = { Text("Clear All Data?") },
+            text = { Text("Are you sure you want to delete all your wishes? This cannot be undone.") },
             confirmButton = {
                 Button(
                     onClick = { viewModel.deleteAllWishes(); showClearDataDialog = false },
-                    colors  = ButtonDefaults.buttonColors(containerColor = AccentRed)
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentRed)
                 ) { Text("Clear", color = Color.White) }
             },
             dismissButton = {
@@ -143,8 +147,8 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
     if (showVersionDialog) {
         AlertDialog(
             onDismissRequest = { showVersionDialog = false },
-            title   = { Text("App Version") },
-            text    = {
+            title = { Text("App Version") },
+            text = {
                 Column {
                     Text("MyWishListApp")
                     Text("Version 1.0.0")
@@ -161,8 +165,8 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
     if (showHelpDialog) {
         AlertDialog(
             onDismissRequest = { showHelpDialog = false },
-            title   = { Text("Help & Support") },
-            text    = {
+            title = { Text("Help & Support") },
+            text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Having trouble with MyWishListApp?")
                     Text("• Swipe left on a wish to delete it")
@@ -187,19 +191,21 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
 @Composable
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Card(
-        modifier  = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         // Fix #7 — use theme surface instead of hardcoded Color.White
-        colors    = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(4.dp),
-        shape     = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp)) {
             Text(
-                text       = title,
-                style      = MaterialTheme.typography.titleMedium,
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color      = MaterialTheme.colorScheme.primary,
-                modifier   = Modifier.padding(bottom = 12.dp)
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 12.dp)
             )
             content()
         }
@@ -223,32 +229,32 @@ fun SettingsClickableItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector        = icon,
+            imageVector = icon,
             contentDescription = null,
-            modifier           = Modifier.size(24.dp),
+            modifier = Modifier.size(24.dp),
             // Fix #7 — use AccentRed token and theme primary, not hardcoded Color(0xFF667EEA)
             tint = if (textColor == AccentRed) AccentRed else MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text       = title,
-                style      = MaterialTheme.typography.bodyLarge,
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
-                color      = if (textColor == AccentRed) AccentRed else MaterialTheme.colorScheme.onSurface
+                color = if (textColor == AccentRed) AccentRed else MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text     = subtitle,
-                style    = MaterialTheme.typography.bodySmall,
-                color    = if (textColor == AccentRed) AccentRed.copy(alpha = 0.7f)
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (textColor == AccentRed) AccentRed.copy(alpha = 0.7f)
                 else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 2.dp)
             )
         }
         Icon(
-            imageVector        = Icons.Default.ChevronRight,
+            imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
-            modifier           = Modifier.size(20.dp),
+            modifier = Modifier.size(20.dp),
             // Fix #7 — use theme token
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )

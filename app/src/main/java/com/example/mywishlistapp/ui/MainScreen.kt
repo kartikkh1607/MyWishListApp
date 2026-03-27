@@ -41,9 +41,9 @@ fun MainScreen() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val isTopLevelDestination = navBackStackEntry?.destination?.let { dest ->
         dest.hasRoute<Screen.DashboardScreen>() ||
-        dest.hasRoute<Screen.WishListScreen>() ||
-        dest.hasRoute<Screen.SearchScreen>() ||
-        dest.hasRoute<Screen.SettingsScreen>()
+                dest.hasRoute<Screen.WishListScreen>() ||
+                dest.hasRoute<Screen.SearchScreen>() ||
+                dest.hasRoute<Screen.SettingsScreen>()
     } ?: true
 
     Scaffold(
@@ -68,11 +68,11 @@ fun MainScreen() {
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
     val items = listOf(
-        NavItem.Tab("Home",     Icons.Default.Home,             Screen.DashboardScreen),
-        NavItem.Tab("Wishes",   Icons.AutoMirrored.Filled.List, Screen.WishListScreen),
+        NavItem.Tab("Home", Icons.Default.Home, Screen.DashboardScreen),
+        NavItem.Tab("Wishes", Icons.AutoMirrored.Filled.List, Screen.WishListScreen),
         NavItem.AddFab,
-        NavItem.Tab("Search",   Icons.Default.Search,           Screen.SearchScreen),
-        NavItem.Tab("Settings", Icons.Default.Settings,         Screen.SettingsScreen)
+        NavItem.Tab("Search", Icons.Default.Search, Screen.SearchScreen),
+        NavItem.Tab("Settings", Icons.Default.Settings, Screen.SettingsScreen)
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -90,18 +90,18 @@ fun BottomNavigationBar(navController: NavHostController) {
             when (item) {
                 is NavItem.AddFab -> {
                     Box(
-                        modifier         = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
                         Surface(
-                            shape           = CircleShape,
-                            color           = MaterialTheme.colorScheme.primary,
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
                             shadowElevation = 6.dp,
-                            modifier        = Modifier
+                            modifier = Modifier
                                 .size(52.dp)
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
-                                    indication        = null
+                                    indication = null
                                 ) {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     navController.navigate(Screen.AddScreen(id = 0L)) {
@@ -111,13 +111,13 @@ fun BottomNavigationBar(navController: NavHostController) {
                         ) {
                             Box(
                                 contentAlignment = Alignment.Center,
-                                modifier         = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize()
                             ) {
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "Add Wish",
-                                    tint               = Color.White,
-                                    modifier           = Modifier.size(28.dp)
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp)
                                 )
                             }
                         }
@@ -128,45 +128,45 @@ fun BottomNavigationBar(navController: NavHostController) {
                     val isSelected = navBackStackEntry?.destination?.let { dest ->
                         when (item.route) {
                             is Screen.DashboardScreen -> dest.hasRoute<Screen.DashboardScreen>()
-                            is Screen.WishListScreen  -> dest.hasRoute<Screen.WishListScreen>()
-                            is Screen.SearchScreen    -> dest.hasRoute<Screen.SearchScreen>()
-                            is Screen.SettingsScreen  -> dest.hasRoute<Screen.SettingsScreen>()
+                            is Screen.WishListScreen -> dest.hasRoute<Screen.WishListScreen>()
+                            is Screen.SearchScreen -> dest.hasRoute<Screen.SearchScreen>()
+                            is Screen.SettingsScreen -> dest.hasRoute<Screen.SettingsScreen>()
                             else -> false
                         }
                     } ?: false
 
                     val iconScale by animateFloatAsState(
-                        targetValue   = if (isSelected) 1.15f else 1f,
+                        targetValue = if (isSelected) 1.15f else 1f,
                         animationSpec = NavIconSpring,
-                        label         = "icon_${item.label}"
+                        label = "icon_${item.label}"
                     )
 
                     NavigationBarItem(
                         icon = {
                             Icon(
-                                imageVector        = item.icon,
+                                imageVector = item.icon,
                                 contentDescription = item.label,
-                                modifier           = Modifier
+                                modifier = Modifier
                                     .size(24.dp)
                                     .scale(iconScale)
                             )
                         },
-                        label    = { Text(item.label, style = MaterialTheme.typography.labelSmall) },
+                        label = { Text(item.label, style = MaterialTheme.typography.labelSmall) },
                         selected = isSelected,
-                        onClick  = {
+                        onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             navController.navigate(item.route) {
                                 popUpTo<Screen.DashboardScreen> { saveState = true }
                                 launchSingleTop = true
-                                restoreState    = true
+                                restoreState = true
                             }
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor   = Color.White,
-                            selectedTextColor   = MaterialTheme.colorScheme.primary,
+                            selectedIconColor = Color.White,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            indicatorColor      = MaterialTheme.colorScheme.primary
+                            indicatorColor = MaterialTheme.colorScheme.primary
                         )
                     )
                 }

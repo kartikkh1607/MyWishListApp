@@ -42,10 +42,10 @@ fun SearchScreen(
 
     val filteredWishes = remember(searchQuery, selectedCategories, selectedPriority, allWishes) {
         filterWishes(
-            wishes             = allWishes,
-            query              = searchQuery,
+            wishes = allWishes,
+            query = searchQuery,
             selectedCategories = selectedCategories,
-            selectedPriority   = selectedPriority
+            selectedPriority = selectedPriority
         )
     }
 
@@ -59,8 +59,8 @@ fun SearchScreen(
                 title = { Text("Search Wishes", fontWeight = FontWeight.Bold) },
                 windowInsets = WindowInsets(0.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor             = MaterialTheme.colorScheme.primary,
-                    titleContentColor          = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
                     navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
@@ -81,28 +81,29 @@ fun SearchScreen(
                 )
         ) {
             ModernSearchBar(
-                query         = searchQuery,
+                query = searchQuery,
                 onQueryChange = { searchQuery = it },
                 onFilterClick = { showFilters = !showFilters }
             )
 
             AnimatedVisibility(
                 visible = showFilters,
-                enter   = expandVertically(),
-                exit    = shrinkVertically()
+                enter = expandVertically(),
+                exit = shrinkVertically()
             ) {
                 SearchFilters(
-                    selectedCategories  = selectedCategories,
-                    onCategoriesChange  = { selectedCategories = it },
-                    selectedPriority    = selectedPriority,
-                    onPriorityChange    = { selectedPriority = it },
-                    availableCategories = allWishes.map { it.category }.distinct().filter { it.isNotEmpty() }
+                    selectedCategories = selectedCategories,
+                    onCategoriesChange = { selectedCategories = it },
+                    selectedPriority = selectedPriority,
+                    onPriorityChange = { selectedPriority = it },
+                    availableCategories = allWishes.map { it.category }.distinct()
+                        .filter { it.isNotEmpty() }
                 )
             }
 
             LazyColumn(
-                modifier            = Modifier.fillMaxSize(),
-                contentPadding      = PaddingValues(16.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 val hasActiveFilter = searchQuery.isNotEmpty() ||
@@ -112,11 +113,11 @@ fun SearchScreen(
                 if (filteredWishes.isEmpty() && hasActiveFilter) {
                     item {
                         EmptySearchResults(
-                            query          = searchQuery,
+                            query = searchQuery,
                             onClearFilters = {
-                                searchQuery        = ""
+                                searchQuery = ""
                                 selectedCategories = emptySet()
-                                selectedPriority   = null
+                                selectedPriority = null
                             }
                         )
                     }
@@ -126,8 +127,12 @@ fun SearchScreen(
                     }
                     items(filteredWishes, key = { it.id }) { wish ->
                         WishCard(
-                            wish      = wish,
-                            onClick   = { navController.navigate(Screen.AddScreen(id = wish.id)) { launchSingleTop = true } },
+                            wish = wish,
+                            onClick = {
+                                navController.navigate(Screen.AddScreen(id = wish.id)) {
+                                    launchSingleTop = true
+                                }
+                            },
                             viewModel = viewModel
                         )
                     }
@@ -152,7 +157,7 @@ fun ModernSearchBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            shape  = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
@@ -161,7 +166,7 @@ fun ModernSearchBar(
             )
         ) {
             Row(
-                modifier          = Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -169,26 +174,29 @@ fun ModernSearchBar(
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
+                        .background(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector        = Icons.Default.Search,
+                        imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint               = MaterialTheme.colorScheme.primary,
-                        modifier           = Modifier.size(20.dp)
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 OutlinedTextField(
-                    value         = query,
+                    value = query,
                     onValueChange = onQueryChange,
-                    placeholder   = {
+                    placeholder = {
                         Text(
-                            text     = "Search your wishes...",
-                            color    = MaterialTheme.colorScheme.onSurfaceVariant,
+                            text = "Search your wishes...",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 14.sp
                         )
                     },
@@ -197,51 +205,54 @@ fun ModernSearchBar(
                         .onFocusChanged { isSearchActive = it.isFocused },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor      = Color.Transparent,
-                        unfocusedBorderColor    = Color.Transparent,
-                        focusedContainerColor   = Color.Transparent,
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
-                        cursorColor             = MaterialTheme.colorScheme.primary
+                        cursorColor = MaterialTheme.colorScheme.primary
                     ),
                     textStyle = LocalTextStyle.current.copy(
-                        fontSize   = 14.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
                     )
                 )
 
                 AnimatedVisibility(
                     visible = query.isNotEmpty(),
-                    enter   = scaleIn() + fadeIn(),
-                    exit    = scaleOut() + fadeOut()
+                    enter = scaleIn() + fadeIn(),
+                    exit = scaleOut() + fadeOut()
                 ) {
                     IconButton(
-                        onClick  = { onQueryChange("") },
+                        onClick = { onQueryChange("") },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
-                            imageVector        = Icons.Default.Clear,
+                            imageVector = Icons.Default.Clear,
                             contentDescription = "Clear",
-                            tint               = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier           = Modifier.size(18.dp)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
 
                 IconButton(
-                    onClick  = onFilterClick,
+                    onClick = onFilterClick,
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .size(32.dp)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
+                            .background(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                CircleShape
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector        = Icons.Default.FilterList,
+                            imageVector = Icons.Default.FilterList,
                             contentDescription = "Filters",
-                            tint               = MaterialTheme.colorScheme.primary,
-                            modifier           = Modifier.size(18.dp)
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -263,47 +274,49 @@ fun SearchFilters(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        shape     = RoundedCornerShape(16.dp),
-        colors    = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier            = Modifier.padding(16.dp),
+            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text       = "Filters",
-                fontSize   = 18.sp,
+                text = "Filters",
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color      = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             if (availableCategories.isNotEmpty()) {
                 Text(
-                    text       = "Categories",
-                    fontSize   = 14.sp,
+                    text = "Categories",
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color      = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement   = Arrangement.spacedBy(8.dp),
-                    modifier              = Modifier.fillMaxWidth()
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     availableCategories.forEach { category ->
                         val isSelected = category in selectedCategories
                         FilterChip(
                             selected = isSelected,
-                            onClick  = {
+                            onClick = {
                                 onCategoriesChange(
                                     if (isSelected) selectedCategories - category
                                     else selectedCategories + category
                                 )
                             },
-                            label  = { Text(category, fontSize = 12.sp) },
+                            label = { Text(category, fontSize = 12.sp) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                selectedLabelColor     = MaterialTheme.colorScheme.primary
+                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(
+                                    alpha = 0.2f
+                                ),
+                                selectedLabelColor = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
@@ -311,29 +324,34 @@ fun SearchFilters(
             }
 
             Text(
-                text       = "Priority",
-                fontSize   = 14.sp,
+                text = "Priority",
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color      = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement   = Arrangement.spacedBy(8.dp),
-                modifier              = Modifier.fillMaxWidth()
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Priority.entries.forEach { priority ->
                     val isSelected = priority == selectedPriority
-                    val pColor     = priorityColor(priority)
+                    val pColor = priorityColor(priority)
                     FilterChip(
                         selected = isSelected,
-                        onClick  = {
+                        onClick = {
                             // tap same chip → deselect; tap different → select only that one
                             onPriorityChange(if (isSelected) null else priority)
                         },
-                        label  = { Text("${priorityEmoji(priority)} ${priority.name}", fontSize = 12.sp) },
+                        label = {
+                            Text(
+                                "${priorityEmoji(priority)} ${priority.name}",
+                                fontSize = 12.sp
+                            )
+                        },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = pColor.copy(alpha = 0.2f),
-                            selectedLabelColor     = pColor
+                            selectedLabelColor = pColor
                         )
                     )
                 }
@@ -341,7 +359,7 @@ fun SearchFilters(
 
             if (selectedCategories.isNotEmpty() || selectedPriority != null) {
                 OutlinedButton(
-                    onClick  = { onCategoriesChange(emptySet()); onPriorityChange(null) },
+                    onClick = { onCategoriesChange(emptySet()); onPriorityChange(null) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Clear All Filters")
@@ -360,14 +378,14 @@ fun EmptySearchResults(query: String, onClearFilters: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text       = "No wishes found",
-            style      = MaterialTheme.typography.headlineSmall,
+            text = "No wishes found",
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color      = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text  = if (query.isNotEmpty()) "No wishes match \"$query\""
+            text = if (query.isNotEmpty()) "No wishes match \"$query\""
             else "Try adjusting your filters",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -387,9 +405,9 @@ fun SearchResultsHeader(count: Int, query: String) {
         } else {
             "$count wish${if (count != 1) "es" else ""} found"
         },
-        style    = MaterialTheme.typography.bodyMedium,
-        color    = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(bottom = 8.dp)
     )
 }
-
+

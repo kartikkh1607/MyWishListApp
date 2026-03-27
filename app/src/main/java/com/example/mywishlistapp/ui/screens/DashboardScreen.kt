@@ -33,8 +33,8 @@ import com.example.mywishlistapp.ui.theme.AccentRed
 @Composable
 fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) {
     val wishList by viewModel.getAllWishes.collectAsState()
-    val completed    = wishList.count { it.isCompleted }
-    val total        = wishList.size
+    val completed = wishList.count { it.isCompleted }
+    val total = wishList.size
     val highPriority = wishList.count { it.priority == Priority.HIGH }
 
     Scaffold(
@@ -42,7 +42,11 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    Text("My Wishlist", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(
+                        "My Wishlist",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 windowInsets = WindowInsets(0.dp),
                 actions = {
@@ -76,8 +80,13 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    StatCard(Modifier.weight(1f), "Total",   total.toString(),        MaterialTheme.colorScheme.primary)
-                    StatCard(Modifier.weight(1f), "Done",    completed.toString(),    AccentGreen)
+                    StatCard(
+                        Modifier.weight(1f),
+                        "Total",
+                        total.toString(),
+                        MaterialTheme.colorScheme.primary
+                    )
+                    StatCard(Modifier.weight(1f), "Done", completed.toString(), AccentGreen)
                     StatCard(Modifier.weight(1f), "High ⚡", highPriority.toString(), AccentRed)
                 }
             }
@@ -105,7 +114,11 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
                     StaggeredEntrance(index = index) {
                         SwipeToDeleteWishCard(
                             wish = wish,
-                            onWishClick = { navController.navigate(Screen.AddScreen(id = wish.id)) { launchSingleTop = true } },
+                            onWishClick = {
+                                navController.navigate(Screen.AddScreen(id = wish.id)) {
+                                    launchSingleTop = true
+                                }
+                            },
                             onDelete = { viewModel.deleteWish(wish) },
                             viewModel = viewModel
                         )
@@ -160,7 +173,10 @@ private fun ProgressCard(completed: Int, total: Int) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -180,7 +196,10 @@ private fun ProgressCard(completed: Int, total: Int) {
             }
             LinearProgressIndicator(
                 progress = { animatedProgress },
-                modifier = Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(6.dp)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(6.dp)),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
             )
@@ -204,14 +223,23 @@ private fun StatCard(modifier: Modifier, label: String, value: String, color: Co
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = color)
-            Text(label, style = MaterialTheme.typography.labelSmall,
+            Text(
+                value,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+            Text(
+                label, style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                textAlign = TextAlign.Center)
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

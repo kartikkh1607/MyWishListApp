@@ -11,15 +11,15 @@ import com.example.mywishlistapp.ui.theme.AccentRed
 // ─── Shared Priority Helpers ──────────────────────────────────────────────────
 
 fun priorityEmoji(priority: Priority): String = when (priority) {
-    Priority.HIGH   -> "🔥"
+    Priority.HIGH -> "🔥"
     Priority.MEDIUM -> "⚡"
-    Priority.LOW    -> "🌱"
+    Priority.LOW -> "🌱"
 }
 
 fun priorityColor(priority: Priority): Color = when (priority) {
-    Priority.HIGH   -> AccentRed
+    Priority.HIGH -> AccentRed
     Priority.MEDIUM -> AccentOrange
-    Priority.LOW    -> AccentGreen
+    Priority.LOW -> AccentGreen
 }
 
 // ─── Filter Utility ───────────────────────────────────────────────────────────
