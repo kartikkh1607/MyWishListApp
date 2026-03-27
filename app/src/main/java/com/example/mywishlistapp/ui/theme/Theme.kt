@@ -11,7 +11,6 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -22,29 +21,29 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = TextOnDark,
     primaryContainer = DeepPurple,
     onPrimaryContainer = TextOnDark,
-    
+
     secondary = AccentTeal,
     onSecondary = TextOnDark,
     secondaryContainer = AccentBlue,
     onSecondaryContainer = TextOnDark,
-    
+
     tertiary = AccentOrange,
     onTertiary = Color.Black,
     tertiaryContainer = AccentGreen,
     onTertiaryContainer = TextOnDark,
-    
+
     background = Color(0xFF0F0F23),
     onBackground = TextOnDark,
     surface = Color(0xFF1A1A2E),
     onSurface = TextOnDark,
     surfaceVariant = Color(0xFF2A2A3E),
     onSurfaceVariant = Color(0xFFE0E0E6),
-    
+
     error = AccentRed,
     onError = TextOnDark,
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
-    
+
     outline = Color(0xFF6B7280),
     outlineVariant = Color(0xFF374151),
     scrim = Color(0xFF000000),
@@ -59,29 +58,29 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = TextOnDark,
     primaryContainer = Color(0xFFE8F0FE),
     onPrimaryContainer = TextPrimary,
-    
+
     secondary = AccentTeal,
     onSecondary = TextOnDark,
     secondaryContainer = Color(0xFFE0F7FA),
     onSecondaryContainer = TextPrimary,
-    
+
     tertiary = AccentGreen,
     onTertiary = TextOnDark,
     tertiaryContainer = Color(0xFFE8F5E8),
     onTertiaryContainer = TextPrimary,
-    
+
     background = BackgroundGradientStart,
     onBackground = TextPrimary,
     surface = SurfaceWhite,
     onSurface = TextPrimary,
     surfaceVariant = BackgroundSecondary,
     onSurfaceVariant = TextSecondary,
-    
+
     error = AccentRed,
     onError = TextOnDark,
     errorContainer = Color(0xFFFFEBEE),
     onErrorContainer = Color(0xFFB71C1C),
-    
+
     outline = Color(0xFFE2E8F0),
     outlineVariant = Color(0xFFF1F5F9),
     scrim = Color(0xFF000000),
@@ -93,7 +92,6 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun MyWishListAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -102,18 +100,18 @@ fun MyWishListAppTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
-    
-    // Handle system bars
+
+    // FIX: removed WindowCompat.setDecorFitsSystemWindows(window, false) from here.
+    // Edge-to-edge is now handled by enableEdgeToEdge() in MainActivity before setContent,
+    // so insets are available correctly from the very first frame.
+    // We only keep status bar icon appearance here.
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Use WindowInsetsControllerCompat for handling status bar color
-            WindowCompat.setDecorFitsSystemWindows(window, false)
             val insetsController = WindowCompat.getInsetsController(window, view)
             insetsController.isAppearanceLightStatusBars = !darkTheme
         }

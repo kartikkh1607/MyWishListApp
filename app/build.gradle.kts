@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     id("com.google.devtools.ksp") version "2.0.0-1.0.21"
 }
 
@@ -71,7 +72,8 @@ compileSdk = 35
 
 dependencies {
     implementation(libs.material3)
-    val nav_version = "2.7.7"
+    implementation(libs.androidx.compose.animation.core)
+    val nav_version = "2.8.7"
     val room_version = "2.6.1"
 
     // Room
@@ -83,6 +85,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     // Navigation
     implementation("androidx.navigation:navigation-compose:$nav_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
 
     // Core & Compose BOM
@@ -97,7 +100,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
-    
+
+    implementation("androidx.compose.material3:material3:1.3.2")
+
     // Gson for TypeConverters
     implementation("com.google.code.gson:gson:2.11.0")
     
