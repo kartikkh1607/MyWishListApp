@@ -37,10 +37,10 @@ fun StaggeredEntrance(
     content: @Composable () -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
-    val delay = remember { (index * delayPerItemMs).coerceAtMost(maxDelayMs) }
+    val delayMs = remember { (index * delayPerItemMs).coerceAtMost(maxDelayMs) }
 
     LaunchedEffect(Unit) {
-        delay(delay.toLong())
+        delay(delayMs.toLong())
         visible = true
     }
 

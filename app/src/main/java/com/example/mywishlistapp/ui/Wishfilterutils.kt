@@ -2,6 +2,7 @@ package com.example.mywishlistapp.ui
 
 import androidx.compose.ui.graphics.Color
 import com.example.mywishlistapp.Data.Priority
+
 import com.example.mywishlistapp.Data.Wish
 import com.example.mywishlistapp.ui.theme.AccentGreen
 import com.example.mywishlistapp.ui.theme.AccentOrange

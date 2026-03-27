@@ -86,7 +86,6 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:$nav_version")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-    implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
 
     // Core & Compose BOM
     implementation(libs.androidx.core.ktx)
