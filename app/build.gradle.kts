@@ -13,7 +13,7 @@ compileSdk = 35
     defaultConfig {
         applicationId = "com.example.mywishlistapp"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -102,20 +102,11 @@ dependencies {
 
     implementation("androidx.compose.material3:material3:1.3.2")
 
-    // Gson for TypeConverters
-    implementation("com.google.code.gson:gson:2.11.0")
-    
-    // Image loading
-    implementation("io.coil-kt:coil-compose:2.6.0")
-    
-    // Date picker
-    implementation("io.github.vanpra.compose-material-dialogs:datetime:0.9.0")
-    
     // Calendar Compose for Journey View (temporarily commented out - will fix version later)
     // implementation("io.github.kizitonwose.calendar:compose:2.4.1")
     
     // Baseline Profile
-    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
+    // implementation("androidx.profileinstaller:profileinstaller:1.3.1") // enable if you generate a baseline profile
 
     // Testing
     testImplementation(libs.junit)

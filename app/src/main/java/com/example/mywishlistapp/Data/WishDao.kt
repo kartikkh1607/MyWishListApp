@@ -24,7 +24,7 @@ interface WishDao {
     fun getAllWishes(): Flow<List<Wish>>
 
     @Query("SELECT * FROM `Wish-Table` WHERE id = :id")
-    fun getWishById(id: Long): Flow<Wish>
+    fun getWishById(id: Long): Flow<Wish?>
 
     @Query("DELETE FROM `Wish-Table`")
     suspend fun deleteAll()

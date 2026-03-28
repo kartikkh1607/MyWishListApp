@@ -16,8 +16,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// Fix #1 — Form state is now a proper StateFlow data class,
-//           not raw mutable public vars.
 data class WishFormState(
     val title: String = "",
     val description: String = "",
@@ -29,9 +27,12 @@ data class WishFormState(
 
 class WishViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repo = (application as WishListApp).wishRepository
+    // FIX: Safe cast with a clear error message instead of a silent crash
+    private val repo = checkNotNull((application as? WishListApp)?.wishRepository) {
+        "WishListApp not found — make sure AndroidManifest.xml has android:name='.WishListApp'"
+    }
 
-    // ─── Form State (StateFlow) ───────────────────────────────────────────────
+    // ─── Form State ───────────────────────────────────────────────────────────
     private val _formState = MutableStateFlow(WishFormState())
     val formState: StateFlow<WishFormState> = _formState.asStateFlow()
 
@@ -58,18 +59,40 @@ class WishViewModel(application: Application) : AndroidViewModel(application) {
     fun getTagsList(): List<String> =
         _formState.value.tags.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
+    // ─── Saving State ─────────────────────────────────────────────────────────
+    // FIX: Real loading state that reflects actual DB operation status.
+    // The button observes this instead of using a fake 600ms delay.
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
+
     // ─── Data ─────────────────────────────────────────────────────────────────
     val getAllWishes: StateFlow<List<Wish>> = repo.getWishes()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun getWishById(id: Long): Flow<Wish> = repo.getWishById(id)
+    fun getWishById(id: Long): Flow<Wish?> = repo.getWishById(id)
 
     // ─── CRUD ─────────────────────────────────────────────────────────────────
-    fun addWish(wish: Wish) = viewModelScope.launch(Dispatchers.IO) { repo.addWish(wish) }
-    fun updateWish(wish: Wish) = viewModelScope.launch(Dispatchers.IO) { repo.updateWish(wish) }
-    fun deleteWish(wish: Wish) = viewModelScope.launch(Dispatchers.IO) { repo.deleteWish(wish) }
-    fun deleteAllWishes() = viewModelScope.launch(Dispatchers.IO) { repo.deleteAllWishes() }
+    fun addWish(wish: Wish) = viewModelScope.launch(Dispatchers.IO) {
+        _isSaving.value = true
+        repo.addWish(wish)
+        _isSaving.value = false
+    }
 
-    fun completeWish(wish: Wish) =
-        viewModelScope.launch(Dispatchers.IO) { repo.updateWish(wish.copy(isCompleted = true)) }
+    fun updateWish(wish: Wish) = viewModelScope.launch(Dispatchers.IO) {
+        _isSaving.value = true
+        repo.updateWish(wish)
+        _isSaving.value = false
+    }
+
+    fun deleteWish(wish: Wish) = viewModelScope.launch(Dispatchers.IO) {
+        repo.deleteWish(wish)
+    }
+
+    fun deleteAllWishes() = viewModelScope.launch(Dispatchers.IO) {
+        repo.deleteAllWishes()
+    }
+
+    fun completeWish(wish: Wish) = viewModelScope.launch(Dispatchers.IO) {
+        repo.updateWish(wish.copy(isCompleted = true))
+    }
 }

@@ -106,7 +106,6 @@ import com.example.mywishlistapp.ui.WishViewModel
 import com.example.mywishlistapp.ui.priorityEmoji
 import com.example.mywishlistapp.ui.theme.BackgroundLight
 import com.example.mywishlistapp.ui.theme.BackgroundSecondary
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,22 +120,26 @@ fun AddEditDetailView(
     val hapticFeedback = LocalHapticFeedback.current
 
     var isEditMode by rememberSaveable { mutableStateOf(id == 0L) }
-    // Guard: once we start navigating away, ignore any further nav calls (prevents double-tap sticking)
+
+    // Guard against double-tap / multiple navigateUp calls
     var navigated by rememberSaveable { mutableStateOf(false) }
     val safeNavigateUp: () -> Unit = {
         if (!navigated) {
-            navigated = true; navController.navigateUp()
+            navigated = true
+            navController.navigateUp()
         }
     }
 
-    val currentWish by if (id != 0L) {
-        viewModel.getWishById(id).collectAsState(initial = null)
-    } else {
-        remember { mutableStateOf(null) }
-    }
+    // FIX 1: Always collect unconditionally — no conditional collectAsState.
+    // For new wishes (id == 0L), getWishById returns an empty flow so currentWish stays null.
+    val currentWish by viewModel.getWishById(id).collectAsState(initial = null)
 
     val formState by viewModel.formState.collectAsState()
 
+    // FIX 2: Use `id` as the key, not `currentWish`.
+    // This runs exactly once when the screen opens for a given id.
+    // Using currentWish as key caused the form to reset every time the DB emitted an update
+    // (e.g. while the user was mid-edit).
     LaunchedEffect(key1 = id) {
         if (id == 0L) {
             viewModel.resetForm()
@@ -144,18 +147,22 @@ fun AddEditDetailView(
         }
     }
 
-    LaunchedEffect(key1 = currentWish) {
-        currentWish?.let { wish ->
-            if (wish.id != 0L) {
-                viewModel.loadWishIntoForm(wish)
+    // FIX 3: Guard with formLoaded so we only load the wish into the form once.
+    // Without this, every DB emission (e.g. from a Flow update) would call
+    // loadWishIntoForm again and overwrite whatever the user has typed.
+    var formLoaded by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(key1 = id) {
+        if (id != 0L && !formLoaded) {
+            viewModel.getWishById(id).collect { wish ->
+                if (wish != null && !formLoaded) {
+                    viewModel.loadWishIntoForm(wish)
+                    formLoaded = true
+                }
             }
         }
     }
 
     Scaffold(
-        // FIX: removed modifier = Modifier.navigationBarsPadding() and replaced with
-        // contentWindowInsets = WindowInsets(0.dp) so the outer Scaffold in MainScreen
-        // keeps full control of insets (fixes floating bottom nav bar).
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             EnhancedAppBarView(
@@ -195,6 +202,7 @@ fun AddEditDetailView(
                     )
                 )
         ) {
+            // Show a spinner while the wish is still loading from the DB
             if (id != 0L && currentWish == null) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -207,24 +215,15 @@ fun AddEditDetailView(
                 transitionSpec = {
                     fadeIn(spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium)) +
                             slideInHorizontally(
-                                spring(
-                                    Spring.DampingRatioMediumBouncy,
-                                    Spring.StiffnessMedium
-                                )
+                                spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium)
                             ) {
                                 if (targetState) it / 4 else -it / 4
                             } togetherWith
                             fadeOut(
-                                spring(
-                                    Spring.DampingRatioMediumBouncy,
-                                    Spring.StiffnessMedium
-                                )
+                                spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium)
                             ) +
                             slideOutHorizontally(
-                                spring(
-                                    Spring.DampingRatioMediumBouncy,
-                                    Spring.StiffnessMedium
-                                )
+                                spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium)
                             ) {
                                 if (targetState) -it / 4 else it / 4
                             }
@@ -259,6 +258,7 @@ fun EditModeContent(
 ) {
     val scope = rememberCoroutineScope()
     val hapticFeedback = LocalHapticFeedback.current
+    val isSaving by viewModel.isSaving.collectAsState()
 
     LazyColumn(
         modifier = Modifier
@@ -344,6 +344,7 @@ fun EditModeContent(
                 text = if (id != 0L) stringResource(R.string.update_wish_button)
                 else stringResource(R.string.add_wish_button),
                 isFormValid = formState.title.isNotBlank(),
+                isSaving = isSaving,
                 onClick = {
                     hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     if (id != 0L) {
@@ -373,8 +374,6 @@ fun EditModeContent(
                         onNavigateUp()
                     }
                 },
-                showLoadingOnClick = id != 0L,
-                scope = scope,
                 onInvalidForm = {
                     scope.launch {
                         snackbarHostState.showSnackbar(
@@ -409,7 +408,7 @@ fun DisplayModeContent(wish: Wish) {
                         value = wish.description
                     )
                     if (wish.price.isNotBlank()) {
-                        DisplayField(label = "Price", value = "$${wish.price}")
+                        DisplayField(label = "Price", value = "₹${wish.price}")
                     }
                 }
             }
@@ -708,9 +707,11 @@ fun DisplayCard(title: String, icon: ImageVector, content: @Composable () -> Uni
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .padding(20.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -827,9 +828,11 @@ fun EnhancedSectionCard(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .padding(20.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -857,14 +860,12 @@ fun EnhancedSectionCard(
 fun EnhancedActionButtonWithValidation(
     text: String,
     isFormValid: Boolean,
+    isSaving: Boolean = false,
     onClick: () -> Unit,
-    showLoadingOnClick: Boolean = false,
-    scope: kotlinx.coroutines.CoroutineScope,
     onInvalidForm: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var isPressed by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
@@ -880,16 +881,7 @@ fun EnhancedActionButtonWithValidation(
     Button(
         onClick = {
             if (isFormValid) {
-                if (showLoadingOnClick) {
-                    isLoading = true
-                    scope.launch {
-                        onClick()
-                        delay(600)
-                        isLoading = false
-                    }
-                } else {
-                    onClick()
-                }
+                onClick()
             } else {
                 onInvalidForm()
             }
@@ -900,12 +892,12 @@ fun EnhancedActionButtonWithValidation(
             .graphicsLayer(scaleX = scale, scaleY = scale)
             .pointerInput(Unit) {
                 detectTapGestures(onPress = {
-                    if (isFormValid) {
+                    if (isFormValid && !isSaving) {
                         isPressed = true; tryAwaitRelease(); isPressed = false
                     }
                 })
             },
-        enabled = !isLoading,
+        enabled = !isSaving,
         shape = RoundedCornerShape(28.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = buttonColor,
@@ -915,7 +907,7 @@ fun EnhancedActionButtonWithValidation(
             if (isFormValid) 8.dp else 4.dp, 12.dp
         )
     ) {
-        if (isLoading) {
+        if (isSaving) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center

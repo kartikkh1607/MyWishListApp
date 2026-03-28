@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -49,15 +50,27 @@ fun SearchScreen(
         )
     }
 
+    // Show a back arrow only when SearchScreen was pushed on top of another
+    // destination (e.g., tapping the search icon on the Dashboard). When it is
+    // reached via the bottom-nav tab there is no previous entry so the arrow hides.
+    val canNavigateBack = navController.previousBackStackEntry != null
+
     Scaffold(
-        // FIX: removed .statusBarsPadding().navigationBarsPadding() from modifier,
-        // and added contentWindowInsets = WindowInsets(0.dp) so the outer Scaffold
-        // in MainScreen retains full control of insets (fixes floating bottom nav).
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = { Text("Search Wishes", fontWeight = FontWeight.Bold) },
                 windowInsets = WindowInsets(0.dp),
+                navigationIcon = {
+                    if (canNavigateBack) {
+                        IconButton(onClick = { navController.navigateUp() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,

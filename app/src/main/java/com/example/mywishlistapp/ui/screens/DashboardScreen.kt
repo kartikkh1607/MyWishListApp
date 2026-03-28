@@ -50,7 +50,11 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
                 },
                 windowInsets = WindowInsets(0.dp),
                 actions = {
-                    IconButton(onClick = { navController.navigate(Screen.SearchScreen) }) {
+                    IconButton(onClick = {
+                        navController.navigate(Screen.SearchScreen) {
+                            launchSingleTop = true
+                        }
+                    }) {
                         Icon(Icons.Default.Search, "Search")
                     }
                 },

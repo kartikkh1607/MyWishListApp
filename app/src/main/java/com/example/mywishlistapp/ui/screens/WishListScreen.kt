@@ -63,15 +63,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.mywishlistapp.Data.Priority
 import com.example.mywishlistapp.Data.Wish
 import com.example.mywishlistapp.ui.BounceSpring
 import com.example.mywishlistapp.ui.Screen
 import com.example.mywishlistapp.ui.StaggeredEntrance
 import com.example.mywishlistapp.ui.WishViewModel
 import com.example.mywishlistapp.ui.filterWishes
+import com.example.mywishlistapp.ui.priorityColor
+import com.example.mywishlistapp.ui.priorityEmoji
 import com.example.mywishlistapp.ui.theme.AccentGreen
-import com.example.mywishlistapp.ui.theme.AccentOrange
 import com.example.mywishlistapp.ui.theme.AccentRed
 import com.example.mywishlistapp.ui.theme.BackgroundLight
 import com.example.mywishlistapp.ui.theme.SurfaceWhite
@@ -336,16 +336,10 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
         animationSpec = BounceSpring,
         label = "card_scale"
     )
-    val priorityColor = when (wish.priority) {
-        Priority.HIGH -> AccentRed
-        Priority.MEDIUM -> AccentOrange
-        Priority.LOW -> AccentGreen
-    }
-    val priorityEmoji = when (wish.priority) {
-        Priority.HIGH -> "🔥"
-        Priority.MEDIUM -> "⚡"
-        Priority.LOW -> "🌱"
-    }
+
+    // FIX: Use shared helpers from Wishfilterutils.kt instead of duplicating the when() blocks
+    val priorityColor = priorityColor(wish.priority)
+    val priorityEmoji = priorityEmoji(wish.priority)
     val priorityLabel = wish.priority.name.lowercase().replaceFirstChar { it.uppercase() }
 
     Surface(
@@ -375,10 +369,12 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(priorityColor))
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(priorityColor)
+                )
                 Spacer(Modifier.width(10.dp))
                 Text(
                     text = wish.title,
@@ -392,6 +388,7 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(Modifier.width(8.dp))
+
                 var checkboxPressed by remember { mutableStateOf(false) }
                 val cbScale by animateFloatAsState(
                     targetValue = if (checkboxPressed) 1.15f else 1f,
@@ -421,7 +418,7 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
             // ── Description ──────────────────────────────────────────────────
             if (wish.description.isNotEmpty()) {
                 Text(
-                    wish.description,
+                    text = wish.description,
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary,
                     maxLines = 2,
@@ -484,16 +481,18 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
                 ) {
                     wish.tags.take(3).forEach { tag ->
                         Text(
-                            "#$tag",
+                            text = "#$tag",
                             style = MaterialTheme.typography.labelSmall,
                             color = TextTertiary
                         )
                     }
-                    if (wish.tags.size > 3) Text(
-                        "+${wish.tags.size - 3}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary
-                    )
+                    if (wish.tags.size > 3) {
+                        Text(
+                            text = "+${wish.tags.size - 3}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextTertiary
+                        )
+                    }
                 }
             }
 
@@ -505,13 +504,13 @@ fun WishCard(wish: Wish, onClick: () -> Unit, viewModel: WishViewModel) {
                 ) {
                     Icon(
                         Icons.Default.CheckCircle,
-                        null,
+                        contentDescription = null,
                         tint = AccentGreen,
                         modifier = Modifier.size(12.dp)
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        "Completed",
+                        text = "Completed",
                         style = MaterialTheme.typography.labelSmall,
                         color = AccentGreen
                     )
