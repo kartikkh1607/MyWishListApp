@@ -22,7 +22,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Priority
-import com.example.mywishlistapp.ui.Screen
 import com.example.mywishlistapp.ui.WishViewModel
 import com.example.mywishlistapp.ui.ProgressTween
 import com.example.mywishlistapp.ui.StaggeredEntrance

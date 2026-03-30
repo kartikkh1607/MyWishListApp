@@ -65,7 +65,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Wish
 import com.example.mywishlistapp.ui.BounceSpring
-import com.example.mywishlistapp.ui.Screen
 import com.example.mywishlistapp.ui.StaggeredEntrance
 import com.example.mywishlistapp.ui.WishViewModel
 import com.example.mywishlistapp.ui.filterWishes
@@ -271,17 +270,22 @@ fun SwipeToDeleteWishCard(
     SwipeToDismissBox(
         state = dismissState,
         backgroundContent = {
-            when (dismissState.targetValue) {
-                SwipeToDismissBoxValue.EndToStart ->
+            // FIX: Only show coloured backgrounds while the swipe is in progress
+            // (currentValue == Settled). Once the dismiss threshold is crossed and
+            // confirmValueChange returns true, currentValue flips to EndToStart /
+            // StartToEnd. At that point we render transparent so the card doesn't
+            // turn solid red/green while Room's Flow is still propagating the delete.
+            val isSettled = dismissState.currentValue == SwipeToDismissBoxValue.Settled
+            when {
+                isSettled && dismissState.targetValue == SwipeToDismissBoxValue.EndToStart ->
                     SwipeBackground(
-                        // Fix #7 — use a theme-adjacent color from your defined palette
                         color = AccentRed.copy(alpha = 0.9f),
                         icon = Icons.Default.Delete,
                         alignment = Alignment.CenterEnd,
                         label = "Delete"
                     )
 
-                SwipeToDismissBoxValue.StartToEnd ->
+                isSettled && dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd ->
                     SwipeBackground(
                         color = AccentGreen.copy(alpha = 0.9f),
                         icon = Icons.Default.CheckCircle,

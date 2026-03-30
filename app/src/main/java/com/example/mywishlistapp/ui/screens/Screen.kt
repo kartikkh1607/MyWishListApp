@@ -1,4 +1,4 @@
-package com.example.mywishlistapp.ui
+package com.example.mywishlistapp.ui.screens
 
 import kotlinx.serialization.Serializable
 

@@ -1,4 +1,4 @@
-package com.example.mywishlistapp.ui
+package com.example.mywishlistapp.ui.screens
 
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -10,11 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import com.example.mywishlistapp.ui.screens.AddEditDetailView
-import com.example.mywishlistapp.ui.screens.DashboardScreen
-import com.example.mywishlistapp.ui.screens.SearchScreen
-import com.example.mywishlistapp.ui.screens.SettingsScreen
-import com.example.mywishlistapp.ui.screens.WishListScreen
+import com.example.mywishlistapp.ui.WishViewModel
 
 @Composable
 fun Navigation(
@@ -24,10 +20,10 @@ fun Navigation(
     NavHost(
         navController    = navController,
         startDestination = Screen.DashboardScreen,
-        enterTransition = { fadeIn(animationSpec = tween(300)) },
-        exitTransition = { fadeOut(animationSpec = tween(300)) },
-        popEnterTransition = { fadeIn(animationSpec = tween(300)) },
-        popExitTransition = { fadeOut(animationSpec = tween(300)) }
+        enterTransition  = { fadeIn(animationSpec = tween(300)) },
+        exitTransition   = { fadeOut(animationSpec = tween(300)) },
+        popEnterTransition  = { fadeIn(animationSpec = tween(300)) },
+        popExitTransition   = { fadeOut(animationSpec = tween(300)) }
     ) {
         composable<Screen.DashboardScreen> {
             DashboardScreen(navController = navController, viewModel = viewModel)

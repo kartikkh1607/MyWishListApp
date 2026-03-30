@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Priority
-import com.example.mywishlistapp.ui.Screen
 import com.example.mywishlistapp.ui.WishViewModel
 import com.example.mywishlistapp.ui.filterWishes
 import com.example.mywishlistapp.ui.priorityColor

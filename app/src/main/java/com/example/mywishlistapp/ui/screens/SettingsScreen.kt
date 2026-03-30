@@ -2,6 +2,7 @@ package com.example.mywishlistapp.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -133,7 +134,11 @@ fun SettingsScreen(navController: NavHostController, viewModel: WishViewModel) {
             text = { Text("Are you sure you want to delete all your wishes? This cannot be undone.") },
             confirmButton = {
                 Button(
-                    onClick = { viewModel.deleteAllWishes(); showClearDataDialog = false },
+                    onClick = {
+                        viewModel.deleteAllWishes()
+                        Toast.makeText(context, "All wishes cleared!", Toast.LENGTH_SHORT).show()
+                        showClearDataDialog = false
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = AccentRed)
                 ) { Text("Clear", color = Color.White) }
             },

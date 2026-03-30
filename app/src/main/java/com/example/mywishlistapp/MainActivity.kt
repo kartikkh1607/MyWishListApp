@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.mywishlistapp.ui.MainScreen
+import com.example.mywishlistapp.ui.screens.MainScreen
 import com.example.mywishlistapp.ui.theme.MyWishListAppTheme
 
 class MainActivity : ComponentActivity() {

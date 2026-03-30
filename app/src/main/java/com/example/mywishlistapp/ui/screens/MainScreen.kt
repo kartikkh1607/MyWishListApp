@@ -1,4 +1,4 @@
-package com.example.mywishlistapp.ui
+package com.example.mywishlistapp.ui.screens
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.clickable
@@ -19,14 +19,12 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.statusBars
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.mywishlistapp.ui.NavIconSpring
+import com.example.mywishlistapp.ui.WishViewModel
 
 private sealed class NavItem {
     data class Tab(val label: String, val icon: ImageVector, val route: Any) : NavItem()
@@ -128,10 +126,10 @@ fun BottomNavigationBar(navController: NavHostController) {
                     val isSelected = navBackStackEntry?.destination?.let { dest ->
                         when (item.route) {
                             is Screen.DashboardScreen -> dest.hasRoute<Screen.DashboardScreen>()
-                            is Screen.WishListScreen -> dest.hasRoute<Screen.WishListScreen>()
-                            is Screen.SearchScreen -> dest.hasRoute<Screen.SearchScreen>()
-                            is Screen.SettingsScreen -> dest.hasRoute<Screen.SettingsScreen>()
-                            else -> false
+                            is Screen.WishListScreen  -> dest.hasRoute<Screen.WishListScreen>()
+                            is Screen.SearchScreen    -> dest.hasRoute<Screen.SearchScreen>()
+                            is Screen.SettingsScreen  -> dest.hasRoute<Screen.SettingsScreen>()
+                            else                      -> false
                         }
                     } ?: false
 
