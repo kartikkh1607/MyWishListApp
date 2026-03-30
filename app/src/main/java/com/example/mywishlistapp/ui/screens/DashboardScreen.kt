@@ -1,32 +1,58 @@
 package com.example.mywishlistapp.ui.screens
 
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.mywishlistapp.Data.Priority
-import com.example.mywishlistapp.ui.WishViewModel
 import com.example.mywishlistapp.ui.ProgressTween
 import com.example.mywishlistapp.ui.StaggeredEntrance
+import com.example.mywishlistapp.ui.WishViewModel
 import com.example.mywishlistapp.ui.theme.AccentGreen
 import com.example.mywishlistapp.ui.theme.AccentRed
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +61,8 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
     val completed = wishList.count { it.isCompleted }
     val total = wishList.size
     val highPriority = wishList.count { it.priority == Priority.HIGH }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -62,6 +90,7 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
                 )
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0.dp)  // ← FIX: prevents inner Scaffold from stealing insets
     ) { padding ->
@@ -90,7 +119,7 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
                         MaterialTheme.colorScheme.primary
                     )
                     StatCard(Modifier.weight(1f), "Done", completed.toString(), AccentGreen)
-                    StatCard(Modifier.weight(1f), "High ⚡", highPriority.toString(), AccentRed)
+                    StatCard(Modifier.weight(1f), "High 🔥", highPriority.toString(), AccentRed)
                 }
             }
 
@@ -113,19 +142,30 @@ fun DashboardScreen(navController: NavHostController, viewModel: WishViewModel) 
                     }
                 }
 
-                itemsIndexed(wishList.take(5)) { index, wish ->
-                    StaggeredEntrance(index = index) {
-                        SwipeToDeleteWishCard(
-                            wish = wish,
-                            onWishClick = {
-                                navController.navigate(Screen.AddScreen(id = wish.id)) {
-                                    launchSingleTop = true
+                itemsIndexed(wishList.take(5), key = { _, wish -> wish.id }) { _, wish ->
+                    SwipeToDeleteWishCard(
+                        modifier = Modifier.animateItem(),
+                        wish = wish,
+                        onWishClick = {
+                            navController.navigate(Screen.AddScreen(id = wish.id)) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onDelete = {
+                            viewModel.deleteWish(wish)
+                            scope.launch {
+                                val result = snackbarHostState.showSnackbar(
+                                    message = "Wish deleted",
+                                    actionLabel = "Undo",
+                                    duration = SnackbarDuration.Short
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    viewModel.addWish(wish)
                                 }
-                            },
-                            onDelete = { viewModel.deleteWish(wish) },
-                            viewModel = viewModel
-                        )
-                    }
+                            }
+                        },
+                        viewModel = viewModel
+                    )
                 }
             }
 
@@ -174,6 +214,7 @@ private fun ProgressCard(completed: Int, total: Int) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.12f)),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(
@@ -223,6 +264,7 @@ private fun StatCard(modifier: Modifier, label: String, value: String, color: Co
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f)),
+        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.12f)),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
